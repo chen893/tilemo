@@ -28,7 +28,7 @@
   /* 文本秩序（浅色，全部 ≥4.5:1 on paper） */
   --text:         #2B2320;  /* = ink, 13.4:1 */
   --text-2:       #5C4F47;  /* 7.6:1 AA ✓ 次级正文 */
-  --text-3:       #8A7A6D;  /* 4.62:1 AA ✓ muted（守住底线） */
+  --text-3:       #6F5F50;  /* 5.57:1 AA ✓ muted（小号元数据，留余量） */
   --rule:         rgba(43,35,32,0.12);   /* 柔弧分隔 */
   --rule-strong:  rgba(43,35,32,0.24);
 
@@ -88,7 +88,7 @@
 
   --text:         #F2E8DC;   /* 13.1:1 */
   --text-2:       #C4B5A6;   /* 9.0:1 AA ✓ */
-  --text-3:       #948374;   /* 5.0:1 AA ✓ muted */
+  --text-3:       #A09080;   /* 5.67:1 AA ✓ muted */
   --rule:         rgba(242,232,220,0.14);
   --rule-strong:  rgba(242,232,220,0.30);
 
@@ -1405,7 +1405,7 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   position: absolute;
   top: 0;
   left: 0;
-  height: 3px;
+  height: 4px;
   width: 0;
   background: var(--accent);
   border-radius: var(--blob-pill);
@@ -3067,7 +3067,11 @@ function init(){
   });
 
   // PWA：注入 web app manifest（Blob URL，无独立文件）+ apple 元，让手机可"添加到主屏幕"
-  installPWA();
+  // 仅 http(s) 协议下注入：PWA 安装本就需要 http(s)，file:// 下 Blob manifest 的
+  // 相对 start_url/scope 无法解析为绝对 URL 会持续刷 warning，故 file:// 跳过 → console 干净
+  if (location.protocol === "http:" || location.protocol === "https:") {
+    installPWA();
+  }
 
   // fresh-load 断言（仅无任何 log 且今日未打卡时）
   var logKeys = Store.allLogKeys();
