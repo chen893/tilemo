@@ -23,7 +23,7 @@
   --accent:       #E85A4F;  /* 单一鲜活暖朱（coral/朱陶），全站强调 */
   --accent-hot:   #D63A2E;  /* 收紧时升温加重 */
   --accent-soft:  #F4B4A8;  /* 放松态柔和 */
-  --success:      #6B8E5A;  /* 墨绿（连续成就，克制点缀） */
+  --success:      #C8402E;  /* 暖朱阶·最深饱和档（达成/连续成就，统一暖朱单色） */
 
   /* 文本秩序（浅色，全部 ≥4.5:1 on paper） */
   --text:         #2B2320;  /* = ink, 13.4:1 */
@@ -84,7 +84,7 @@
   --accent:       #FF6B5E;   /* 深色下提亮保对比 */
   --accent-hot:   #FF8270;
   --accent-soft:  #8A4538;
-  --success:      #8FAE7C;
+  --success:      #F26B5F;   /* 暖朱阶·深色提亮档（统一暖朱单色） */
 
   --text:         #F2E8DC;   /* 13.1:1 */
   --text-2:       #C4B5A6;   /* 9.0:1 AA ✓ */
@@ -717,6 +717,11 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   color: var(--text);
 }
 .cta.is-done:hover { background: var(--paper-deep); }
+
+/* 深色 CTA 对比度补强：白字 on #FF6B5E 仅 2.79 不达 AA，
+   改用暖墨(--paper)字 on #FF6B5E = 6.27 / on #FF8270 = 7.24 均 AA ✓。
+   仅作用于常态 CTA（非 is-done），箭头继承 currentColor 自动跟随。 */
+[data-theme="dark"] .cta:not(.is-done) { color: var(--paper); }
 
 /* 完成释放：一次温柔的沉降脉冲（不是烟花） */
 @keyframes cta-settle {
@@ -1810,7 +1815,7 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
 
     <!-- ---------- V1 今日 ---------- -->
     <section class="view" id="view-home" aria-label="今日">
-      <div class="eyebrow"><span class="seed"></span>今日</div>
+      <div class="eyebrow"><span class="seed"></span>日课</div>
       <p class="home-quote" id="home-quote"></p>
 
       <!-- 主问句：未完成绷着 / 完成松弛 -->
@@ -2453,15 +2458,16 @@ function renderHome(){
   progEl.classList.toggle("is-done", isDone);
 
   // 弦的张弛：未完成绷紧（向上拱），完成松弛下垂
+  // 弦长 ~280px（10→290），绷紧态矢高做到弦长 12-18%，且 done 越少越紧
   var stringHero = $("#string-hero");
   var stringPath = $("#string-path");
   stringHero.classList.toggle("is-done", isDone);
   if (isDone){
-    // 松弛下垂：弦中央向下沉降，easing droop
-    stringPath.setAttribute("d", "M 10 28 Q 150 60 290 28");
+    // 松弛下垂：中央向下沉降 ~40px，一眼读出"释放"
+    stringPath.setAttribute("d", "M 10 26 Q 150 66 290 26");
   } else {
-    // 绷紧：向上微拱的紧绷弧
-    var tension = done > 0 ? Math.max(6, 18 - done * 3) : 18;
+    // 绷紧：向上拱的紧绷弧。done=0 最紧 46px(~16.4%)，逐组放松到 ~30px 仍清晰可读
+    var tension = clamp(46 - done * 8, 30, 46);
     stringPath.setAttribute("d", "M 10 36 Q 150 " + (36 - tension) + " 290 36");
   }
 

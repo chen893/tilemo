@@ -1,0 +1,109 @@
+{
+  "round": 6,
+  "verdict": "minor",
+  "scores": {
+    "design_quality": 9,
+    "originality": 9,
+    "usability": 8,
+    "interaction_fluency": 8
+  },
+  "weighted_total": 8.55,
+  "interaction_log": [
+    "localStorage.clear() + reload (1440×900 桌面起点)",
+    "resize 1440×900：测量 .app width=1440 (ratio 1.000)，view-home grid 768px+455px，question 93.6px / progress 129.6px / CTA 76px；webnav flex、tabbar none、masthead none",
+    "resize 1920×1080：.app 1920，content inner 1728 (padding 96)，home grid 1029+610，question 96px → 满屏宽多区随视口放大，确认非窄列居中",
+    "桌面点击 nav-btn 今日→训练→记录→设置：webnav 顶导四项 + nav-indicator 滑动；今日 grid 1.35fr/0.8fr 主舞台+侧栏「日志·最近」；训练 grid 0.7fr/1.3fr sticky 标题+2列方案；记录 stat-row 3列 + cal-wrap grid 1.15fr/0.85fr（cal-grid 620 + day-detail 458 并列）；设置 settings-grid 2列 + about 通栏",
+    "桌面点击 cal-cell.is-today → day-detail 渲染「6.17 / 这一天没有记录。安静的一天。」并 grid 第二列",
+    "桌面 #home-cta 点击 → metronome.is-open，metro-stage 1440×712，breath-organism 520×520（=min(42vw,520px)），phase=放·松 count=3 → 提前结束 → 写 session {reps:7, dur:47, finished:false}",
+    "桌面再次 #home-cta → 入门 10 次跑完 → 写 session {reps:10, dur:60, finished:true}（durationSec>0，M1 修复保留）→ 回 home 进度 2/3",
+    "切记录 → 点今日格 → day-detail 两条 session：「入门 · 7 次 / 0.8 分钟 / 部分」「入门 · 10 次 / 1 分钟 / 完成」",
+    "resize 1024：webnav 出现、tabbar 隐藏、nav-indicator 64×36 与 active nav-btn 对齐",
+    "resize 1023：webnav none、tabbar grid、home block 单列（平板过渡，无破版）",
+    "resize 900：scrollWidth=900 无水平溢出，home 单列 question 72px（平板）",
+    "resize 768：app 768、home block、plan-list grid 331×2 双列（平板 2 列方案）",
+    "resize 375/500（移动）：app=视口宽、home block 单列、question 55px、progress 80px、CTA 64×440、7 个 mini-dot、tabbar grid 显示、webnav none、masthead flex 显示",
+    "移动 tabbar 点 home/train/history/settings：tab-indicator 与 active .tab 对齐（settings: ind 360×110 vs tab 360×110 ✓；home: ind 30×110 vs 30×110 ✓）",
+    "桌面 nav-btn 顺序点 train/history/settings/home 测 nav-indicator 滑动：ind 1166/1230/1300/1107 vs btn 1168/1234/1300/1102（history 4px、home 5px 微偏，肉眼不可辨）",
+    "localStorage.clear + reload×1：activeElement=BODY、metroOpen=false、todayLog=null、activeView=view-home、ctaFocused=false、inert 非active view 3 个（无自动启动回归）",
+    "切设置 → 点深 → data-theme=dark，paper #1F1814 / text #F2E8DC / accent #FF6B5E（深色 token 与 preview 一致）；切回浅 → 14.0:1 / 7.17:1 / 3.76:1 / 3.18:1",
+    "cal-prev/cal-next 点：月标题从 06→05→06→07（YYYYMM 渲染），月份切换正常",
+    "Store.exportAll() → {settings, plans, logs, streak} 4 键齐全；#btn-export 绑定正常",
+    "Console（reload 后）：2 条 manifest warning（start_url/scope URL invalid from file://），无其他 error/warn；preserve 含我测试期曾误查 getElementById('metro')→null 的 1 条 error（非应用代码）"
+  ],
+  "contract_results": [
+    { "criterion": "桌面 ≥1024px 满屏宽多区网页布局（非窄列居中）", "result": "PASS", "finding": "1440 视口 .app width=1440 (ratio 1.000)，view-home grid 768+455 / 训练 grid 428+795 / 记录 cal-wrap grid 620+458 / 设置 grid 546+546；1920 视口 .app 1920、content inner 1728、home grid 1029+610。实测主内容区宽度=视口宽度（100%），padding clamp(32px,5vw,96px)。绝非窄列居中。" },
+    { "criterion": "桌面 .webnav 常驻（字标+日期+状态+四项 nav+nav-indicator 滑动）", "result": "PASS", "finding": "webnav display=flex position=sticky top:0 z-index:20；含 brand「今天提了么」(wordmark accent 暖朱) + stamp「6.17 周三」+ status「待打卡」+ .webnav-nav 四项 + nav-indicator 滑动。" },
+    { "criterion": "桌面底部 tabbar 隐藏（≥1024px）", "result": "PASS", "finding": "tabbar display=none @ 1440/1920/1024；display=grid @ 1023/900/768/375。" },
+    { "criterion": "移动 <768px 单列流 + 底部 tabbar 四项 + webnav 隐藏", "result": "PASS", "finding": "@ 375/500：home display=block grid-cols=none、tabbar grid、webnav none、masthead flex、CTA 64×440、7 mini-dot、tab-indicator 与 active tab 对齐。" },
+    { "criterion": "平板 768-1023px 过渡合理不破版", "result": "PASS", "finding": "@ 768：home 单列、plan-list grid 331×2 双列方案；@ 900：scrollWidth=900 无溢出；@ 1023：webnav none tabbar grid；@ 1024：webnav flex tabbar none 切换干净。无破版。" },
+    { "criterion": "双导航切换都驱动 switchView；非 active view 有 inert", "result": "PASS", "finding": "switchView() 同步切 .is-active + .tab/.nav-btn + inert；@ home active 时 view-home 无 inert，view-train/history/settings 均 inert（inertCount=3）。" },
+    { "criterion": "v5 视觉语言完整保留（有机曲线/呼吸/弦张弛/节拍器有机呼吸形/暖朱）", "result": "PASS", "finding": "grep 67 处 blob/breath/morph、5 处非对称 border-radius 百分比；CTA cta-breath 4.5s + ambient-1/2 反向 ambient-breath；seed-breath（masthead-word/webnav brand）；string-path d 未完成 Q150 21（上拱绷紧）/ 完成 Q150 60（下垂松弛）+ 字距 -1.404px 收紧；节拍器 breath-organism min(42vw,520px) 桌面放大；暖朱 paper #FAF3EC/ink #2B2320/accent #E85A4F/accent-hot #D63A2E/accent-soft #F4B4A8 全在；ease-breath/ease-droop token 保留。" },
+    { "criterion": "今日打卡+进度+连续天数（M1 durationSec 修复保留）", "result": "PASS", "finding": "提前结束 → session {reps:7, dur:47, finished:false}；自然结束 → {reps:10, dur:60, finished:true}；durationSec >0，M1 修复在 v6 保留。day-detail 显示「0.8 分钟」「1 分钟」。「部分/完成」标签。" },
+    { "criterion": "训练 4 方案→全屏节拍器（准备/收紧放松/倒计时/提示音/触感/暂停/提前结束 finished:false/完成回首页）", "result": "PASS", "finding": "metronome.is-open + metro-stage 1440×712 + breath-organism 520；metro-progress「01/01 组 · 04/10 次」；phase 收·紧/放·松 + count 倒计时；提前结束 → finished:false 写入 + 回 home；自然结束 → finished:true 回 home。" },
+    { "criterion": "记录三数字+月历热力(4档/月份切换/今日锚点/点格展开日详情/durationSec 分钟)", "result": "PASS", "finding": "stat-row 3 cells（连续/总天/总组）；cal-grid 31 cal-cell + 4 档色；cal-prev/next 月切换（06→05→06→07）；is-today cal-cell outline 锚点；点格 → day-detail 渲染（grid 第二列 桌面 / 块状 移动）+ durationSec/60 分钟 + 部分/完成标签。" },
+    { "criterion": "设置(目标/默认方案/声音/触感/每日一句/主题三选/导出)", "result": "PASS", "finding": "settings-grid 2 列 5 group + about 通栏；#seg-theme 三选（浅/深/跟随系统）点深→data-theme=dark 即时切换；Store.exportAll 返回 {settings,plans,logs,streak}；#btn-export 绑定 Blob 下载 + showToast「已导出 JSON 文件到本地」。" },
+    { "criterion": "bug 不回归：清 localStorage + reload 不自动触发节拍器/不写 session；durationSec 完成 >0；Tab 不穿透非 active view", "result": "PASS", "finding": "clear+reload：activeElement=BODY、metroOpen=false、todayLog=null、activeView=view-home、ctaFocused=false；durationSec=60>0；inertCount=3（非 active 三个 view 全 inert）。" },
+    { "criterion": "浅深色 + reduced-motion 过一遍", "result": "PASS", "finding": "深色 token 暖夜炭 #1F1814/text #F2E8DC/accent #FF6B5E 与 preview 一致；prefers-reduced-motion 块（行 1754-1770）含 cta/ambient/breath-shape/string-path/mini-dot/masthead-word seed 全部降级 + 节拍器形静态切换 scale 0.9/1.0。" },
+    { "criterion": "PWA manifest Blob 注入无报错（console 无错）", "result": "FAIL", "finding": "reload 后 console 持续 2 条 manifest warning：「property 'start_url' ignored, URL is invalid」「property 'scope' ignored, URL is invalid」（file:// 协议下 Blob manifest 的相对 start_url/scope 无法解析为绝对 URL）。preview.md 声称「不产生任何网络请求」属实（确无网络请求），但「无报错」与实测不符。在 http(s) 托管下会自动消失，但 file:// 预览路径下有 2 条警告。" },
+    { "criterion": "桌面节拍器沉浸放大（min(42vw,520px)）", "result": "PASS", "finding": "grep 行 1519-1521 .breath-organism @ min-width:1024 width:min(42vw,520px) height:min(42vw,520px)；实测 breath-organism rect 520×520（@1440）=clamp 满值。" }
+  ],
+  "issues": [
+    {
+      "severity": "major",
+      "area": "craft",
+      "title": "浅色模式 --text-3 (#8A7A6D) on --paper (#FAF3EC) 对比度 3.76:1，小号元数据未达 WCAG AA 4.5:1",
+      "detail": "实测 --text-3 #8A7A6D on --paper #FAF3EC = 3.76:1（WCAG 相对亮度公式）。--text-3 被 24+ 处用于小号元数据（masthead-word/stamp/dow、webnav stamp dow、status、home-quote、streak text、mini-dot label、cal-nav .y、section-head、plan-meta、cal-cell muted 等），font-size 多为 12-14px（--t-xs/--t-sm），远未达 14px 粗体或 18.66px 常规阈值，3.76:1 全部不达 AA。spec.md §成功标准 7 明确要求 WCAG AA。深色模式 --text-3 #948374 on #1F1814 待复核（本次因主题已切深未单独采浅样）。修复（所有视口，CSS 单点）：把浅色 --text-3 从 #8A7A6D 加深到约 #6F5F50（≈4.6:1）或更暗 #6A5A4D（≈5.0:1），保持与 --text-2 (#5C4F44 实测 7.17:1) 的层级差 ≥0.5:1 不破正文秩序；深色 --text-3 同步提亮复核。"
+    },
+    {
+      "severity": "minor",
+      "area": "responsive",
+      "title": "#tab-indicator 高度仍为 3px，contract-v3 §5.3 明确要求 4px（v3 修复在 v6 未保留）",
+      "detail": "getComputedStyle(#tab-indicator).height === '3px'（行 1408 height:3px）。contract-v3 §5.3 n1 把此值从 3px→4px 修复，v6 回退到 3px。属字面回归，视觉差异不可辨但与契约字面不符。修复（移动/平板视口，CSS 单点）：行 1408 height:3px → height:4px。"
+    },
+    {
+      "severity": "minor",
+      "area": "general",
+      "title": "PWA manifest 在 file:// 预览下持续 2 条 warning，与 preview.md「无报错」声明不符",
+      "detail": "console reload 后 2 条稳定 warning：「Manifest: property 'start_url' ignored, URL is invalid」「property 'scope' ignored, URL is invalid」。根因：installPWA() 用 Blob URL 注入 manifest，其 start_url/scope 为相对值，file:// 协议下无法解析为绝对 URL。无网络请求（preview 该声明属实），但 warning 持续刷屏影响 console 干净度。修复（所有视口，installPWA() 内）：给 manifest 的 start_url/scope 显式赋值 '.' 或 location.href 的绝对化形式（file:// 路径下也能解析），或在 file:// 协议下跳过 manifest 注入（仅 http(s) 注入）。"
+    },
+    {
+      "severity": "minor",
+      "area": "interaction_fluency",
+      "title": "桌面 .nav-indicator 滑动到目标后与 active .nav-btn 存在 4-5px 微偏",
+      "detail": "桌面 1440 视口顺序点击 train/history/settings/home，nav-indicator 与 active nav-btn 的 offsetLeft 差值：train -2px、history -4px、settings 0、home +5px。肉眼几乎不可辨，但非零偏差。根因猜测：moveTabIndicator 读 navTarget.offsetLeft 但 .webnav-nav 有 padding:4px，nav-indicator 绝对定位 top:4px left:0 而 nav-btn 在 padding 内，offsetLeft 已含 padding 偏移但 nav-indicator 的 transform 起点未对齐。修复（桌面视口，moveTabIndicator 内）：nav-indicator 的 transform 用 navTarget.offsetLeft - webnavNav.paddingLeft（或直接用 navTarget.getBoundingClientRect().left - webnavNav.getBoundingClientRect().left 消除 padding 偏移）。"
+    }
+  ],
+  "highlights": [
+    "桌面满屏宽多区是本轮成败线，全数 PASS：1440 视口 .app width=1440 (ratio 1.000)、content inner 1296、home grid 768+455、训练 428+795、记录 cal-wrap 620+458、设置 546+546；1920 视口 .app 1920、content 1728、home grid 1029+610。绝非 v5 的 max-width:480 居中窄列，是真正的 web 式多区编辑布局，随视口放大自适应。",
+    "双导航双指示条系统干净：webnav 顶导（字标+日期戳+状态徽+四项分段 nav+nav-indicator 单条 transform 滑动）桌面常驻，tabbar 底部 4 项移动/平板常驻，switchView() 一处同步驱动两套导航的 is-active 与指示条；跨 1024 断点 resize 时切换无破版。",
+    "v5「会呼吸的张弛体」视觉语言 1:1 完整保留并桌面沉浸化：grep 67 处 blob/breath/morph、5 处非对称百分比 border-radius；CTA 4.5s cta-breath + ambient-1/2 反向 ambient-breath 桌面放大到 min(560px,32vw)；string-path d 属性 CSS transition（Q150 21 绷紧 / Q150 60 松弛下垂）+ question letter-spacing 张弛；节拍器 breath-organism 桌面 min(42vw,520px) 实测 520×520 沉浸态。",
+    "今日页双区是布局 PIVOT 最成功的决策：左主舞台（eyebrow/quote/question/string/progress/cta 六行 grid-area）+ 右「日志·最近」侧栏（streak + 最近 7 天呼吸点），桌面看到完整 web 信息密度，移动单列保留 app 聚焦感，同一份 DOM 两端复用。",
+    "M1 durationSec 修复在 v6 保留且验证充分：自然结束 session {reps:10, dur:60, finished:true}、提前结束 {reps:7, dur:47, finished:false}，day-detail 显示「1 分钟」「0.8 分钟」+ 部分/完成标签。",
+    "inert 屏蔽键盘 Tab 穿透保留：home active 时 train/history/settings 三个 view 全 inert（inertCount=3），active view 无 inert；M1 自动启动无回归（clear+reload activeElement=BODY metro closed no session）。"
+  ],
+  "desktop_fullwidth_measurement": {
+    "viewport_1440": { "app_width": 1440, "view_width": 1440, "content_inner": 1296, "padding_lr": "72px", "ratio_to_viewport": "1.000", "home_grid_cols": "768.55px / 455.44px" },
+    "viewport_1920": { "app_width": 1920, "view_width": 1920, "content_inner": 1728, "padding_lr": "96px", "ratio_to_viewport": "1.000", "home_grid_cols": "1029.77px / 610.23px" },
+    "verdict": "桌面满屏宽多区，非窄列居中，本轮核心诉求达成"
+  },
+  "v5_visual_language_preserved": {
+    "organic_blob_border_radius": "PASS（67 处 blob/breath/morph 引用，5 处非对称百分比 border-radius，--blob-1/2/3 token）",
+    "breath_keyframes": "PASS（cta-breath 4.5s、ambient-breath 4.5s 正反、seed-breath、blob-morph 12s、--dur-breath-cycle 4500ms 全局签名）",
+    "tense_string_path": "PASS（string-path d 未完成 Q150 21 上拱绷紧 / 完成 Q150 60 下垂松弛 + question letter-spacing 张弛 + ease-droop cubic-bezier(0.34,1.2,0.64,1)）",
+    "metronome_organic_breath": "PASS（breath-organism 桌面 min(42vw,520px) 实测 520；.metronome.is-contract scale 收紧升温 accent-hot / is-relax scale 放松降温 accent-soft）",
+    "warm_clay_palette": "PASS（paper #FAF3EC 暖纸白 / ink #2B2320 暖墨 / accent #E85A4F 单一暖朱 / accent-hot #D63A2E 收紧升温 / accent-soft #F4B4A8 放松降温 / 深色 accent #FF6B5E）"
+  },
+  "navigation_dual_drive": {
+    "desktop_webnav": "PASS（顶导四项 nav-btn + nav-indicator 单条 transform 滑动 260ms ease-breath，顺序点击四项 indicator 跟随）",
+    "mobile_tabbar": "PASS（底部四项 tab + tab-indicator 单条 transform 滑动，与 active tab offsetLeft/Width 对齐）",
+    "switchView_sync": "PASS（一处函数同步切 .is-active + .tab/.nav-btn + inert + moveTabIndicator/moveNavIndicator）"
+  },
+  "functionality_and_bugs": {
+    "core_loop": "PASS（今日打卡→训练→完成→进度+1→历史热力点亮全链路无断点）",
+    "durationSec_M1": "PASS（自然结束 dur=60>0、提前结束 dur=47>0，day-detail 分钟显示正确）",
+    "inert_tab_trap": "PASS（非 active 3 view 全 inert，键盘 Tab 不穿透）",
+    "no_autostart_regression": "PASS（clear+reload：activeElement=BODY、metro closed、no session）",
+    "no_horizontal_overflow": "PASS（375/500/768/900/1023/1024/1440/1920 全档 scrollWidth ≤ innerWidth）",
+    "pwa_manifest_warnings": "FAIL（file:// 下 2 条 start_url/scope warning 持续，preview 声明不符）"
+  }
+}
