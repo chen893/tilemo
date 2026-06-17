@@ -56,11 +56,22 @@
   --font: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Source Han Sans SC", "Microsoft YaHei", system-ui, sans-serif;
   --font-num: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", system-ui, sans-serif;
 
-  /* —— 有机圆角（非对称 blob 语法） —— */
+  /* —— 有机圆角（非对称 blob 语法）—— 仅用于无边缘文字的装饰形 —— */
   --blob-1: 60% 40% 55% 45% / 50% 60% 40% 50%;
   --blob-2: 45% 55% 60% 40% / 60% 45% 55% 40%;
   --blob-3: 55% 45% 40% 60% / 45% 55% 45% 55%;
   --blob-pill: 999px;
+
+  /* —— 克制圆角（承载文字/数字的内容容器专用，px + 轻微不对称保留有机感）——
+     硬约束：使用这些值的容器 padding 必须 ≥ 最大角半径，保证角弧不跨过内容 bbox。
+     内容卡默认 padding 24px，故最大角半径 ≤ 24px */
+  --card-radius-a: 22px 24px 23px 21px;   /* 主内容卡（plan-card / stat-cell / day-detail / settings-card） */
+  --card-radius-b: 24px 21px 22px 23px;   /* 交替（nth-child 2） */
+  --card-radius-c: 21px 23px 24px 22px;   /* 交替（nth-child 3） */
+  --card-radius-streak: 20px 22px 21px 19px;  /* streak-block：max 22px */
+  --card-radius-about:  22px 20px 23px 21px;  /* about 块：max 23px */
+  --card-radius-cal:    12px 14px 12px 14px;  /* cal-cell：小方格，单字居中，max 14px */
+
   --radius-md: 18px;
   --radius-lg: 28px;
 
@@ -654,13 +665,14 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   font-family: var(--font-num);
   font-variant-numeric: tabular-nums;
   font-size: clamp(18px, 4.5vw, 24px);
-  font-weight: 600;
-  color: var(--text-3);
+  font-weight: 700;          /* 提一档（600→700），桌面远观可读 */
+  color: var(--text-2);      /* 提一档（text-3 → text-2，7.6:1 AA ✓），副字层级更清晰 */
 }
 .home-progress .goal .unit {
   font-family: var(--font);
   font-size: var(--t-sm);
-  color: var(--text-3);
+  font-weight: 700;
+  color: var(--text-2);
   margin-left: 4px;
 }
 .home-progress.is-done .big { color: var(--accent); }
@@ -712,16 +724,18 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   transition: transform var(--dur) var(--ease);
 }
 .cta:hover .arrow { transform: translateX(5px); }
+/* 完成 CTA：保持实心胶囊形态（与进行中同形），只换文案 + 降饱和到暖朱阶最深档 --success。
+   主行动始终是同一形态，避免描边/实心的跳变。 */
 .cta.is-done {
-  background: var(--paper-soft);
-  color: var(--text);
+  background: var(--success);
+  color: #fff;
 }
-.cta.is-done:hover { background: var(--paper-deep); }
+.cta.is-done:hover { background: var(--accent-hot); }
 
 /* 深色 CTA 对比度补强：白字 on #FF6B5E 仅 2.79 不达 AA，
-   改用暖墨(--paper)字 on #FF6B5E = 6.27 / on #FF8270 = 7.24 均 AA ✓。
-   仅作用于常态 CTA（非 is-done），箭头继承 currentColor 自动跟随。 */
-[data-theme="dark"] .cta:not(.is-done) { color: var(--paper); }
+   改用暖墨(--paper)字 on #FF6B5E = 6.27 / on #FF8270 = 7.24 / on #F26B5E(success) = 5.8 均 AA ✓。
+   覆盖常态与完成态（同一形态同一文本色规则），箭头继承 currentColor。 */
+[data-theme="dark"] .cta { color: var(--paper); }
 
 /* 完成释放：一次温柔的沉降脉冲（不是烟花） */
 @keyframes cta-settle {
@@ -740,9 +754,9 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   display: flex;
   align-items: center;
   gap: var(--s-4);
-  padding: var(--s-4) var(--s-5);
+  padding: var(--s-5);                       /* 24px ≥ 最大半径 22px ✓ */
   background: var(--paper-soft);
-  border-radius: var(--blob-3);
+  border-radius: var(--card-radius-streak);  /* 20/22/21/19 px */
   opacity: 0;
   pointer-events: none;
   max-height: 0;
@@ -864,6 +878,9 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
+/* 今日点：进行中（未达标，level 0/1）= 空心环（白色内点）；
+   完成时（达标，level 2/3）= 实心（隐藏内点，露出底色 = 与已达标日同色）。
+   图例：环=进行中 / 实心=完成。 */
 .mini-dot.is-today .blob::after {
   content: "";
   position: absolute;
@@ -872,7 +889,10 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   border-radius: var(--blob-1);
   opacity: 0.7;
 }
-.mini-dot[data-level="3"].is-today .blob::after { background: #fff; }
+.mini-dot.is-today[data-level="2"] .blob::after,
+.mini-dot.is-today[data-level="3"] .blob::after {
+  display: none;                            /* 完成态：实心，无内点 */
+}
 .mini-dot .lbl {
   font-size: 10px;
   color: var(--text-3);
@@ -914,17 +934,16 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   display: block;
   width: 100%;
   text-align: left;
-  padding: var(--s-5);
+  padding: var(--s-5);                   /* 24px ≥ 最大半径 24px ✓ */
   background: var(--paper-soft);
-  border-radius: var(--blob-1);
+  border-radius: var(--card-radius-a);   /* 22/24/23/21 px */
   position: relative;
   transition: transform var(--dur) var(--ease-breath),
-              background-color var(--dur-fast) var(--ease),
-              border-radius 8s var(--ease-breath);
+              background-color var(--dur-fast) var(--ease);
   overflow: hidden;
 }
-.plan-card:nth-child(even) { border-radius: var(--blob-2); }
-.plan-card:nth-child(3n) { border-radius: var(--blob-3); }
+.plan-card:nth-child(even) { border-radius: var(--card-radius-b); }   /* 24/21/22/23 */
+.plan-card:nth-child(3n) { border-radius: var(--card-radius-c); }     /* 21/23/24/22 */
 .plan-card:hover {
   transform: translateY(-3px) scale(1.01);
   background: var(--paper-deep);
@@ -1018,17 +1037,17 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   margin: var(--s-5) 0 var(--s-7);
 }
 .stat-cell {
-  padding: var(--s-4) var(--s-3);
+  padding: var(--s-4);                    /* 16px ≥ 最大半径 16px ✓（原 16/12，统一为 16，保证水平 padding ≥ radius） */
   background: var(--paper-soft);
-  border-radius: var(--blob-3);
+  border-radius: 15px 16px 14px 16px;     /* max 16px，文字大号"7"+标签到边距 16px ≥ 16 ✓ */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   min-height: 120px;
 }
-.stat-cell:nth-child(1) { border-radius: 55% 45% 40% 60% / 60% 50% 50% 40%; }
-.stat-cell:nth-child(2) { border-radius: 40% 60% 55% 45% / 45% 55% 45% 55%; }
-.stat-cell:nth-child(3) { border-radius: 60% 40% 60% 40% / 50% 50% 50% 50%; }
+.stat-cell:nth-child(1) { border-radius: 14px 16px 15px 13px; }
+.stat-cell:nth-child(2) { border-radius: 16px 13px 14px 15px; }
+.stat-cell:nth-child(3) { border-radius: 13px 15px 16px 14px; }
 .stat-cell.is-accent { background: var(--accent); color: #fff; }
 .stat-cell .l {
   font-size: var(--t-xs);
@@ -1102,19 +1121,19 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4px;
+  padding: 6px;                            /* 6px；角半径 ≤ 14px 仍可能 > 6，但单字居中、bounding box 远离四角 → 见下方自测 */
   font-family: var(--font-num);
   font-variant-numeric: tabular-nums;
   font-size: var(--t-sm);
   font-weight: 700;
   color: var(--text-3);
   position: relative;
-  border-radius: var(--blob-1);
+  border-radius: var(--card-radius-cal);   /* 12/14/12/14 px — 单字符居中 */
   background: transparent;
   transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
-.cal-cell:nth-child(odd) { border-radius: var(--blob-2); }
-.cal-cell:nth-child(3n) { border-radius: var(--blob-3); }
+.cal-cell:nth-child(odd) { border-radius: 14px 12px 14px 12px; }
+.cal-cell:nth-child(3n) { border-radius: 12px 14px 13px 11px; }
 .cal-cell.empty { background: transparent; pointer-events: none; opacity: 0; }
 .cal-cell:not(.empty):hover {
   background: var(--paper-soft);
@@ -1146,9 +1165,9 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
 /* 日详情 */
 .day-detail {
   margin-top: var(--s-6);
-  padding: var(--s-5);
+  padding: var(--s-5);                     /* 24px ≥ 最大半径 24px ✓ */
   background: var(--paper-soft);
-  border-radius: var(--blob-3);
+  border-radius: var(--card-radius-a);     /* 22/24/23/21 px */
   animation: fadeUp var(--dur) var(--ease);
 }
 @keyframes fadeUp {
@@ -1228,7 +1247,7 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
 
 .settings-card {
   background: var(--paper-soft);
-  border-radius: var(--blob-3);
+  border-radius: var(--card-radius-a);   /* 22/24/23/21 px；setting-row 水平 padding 24px ≥ 最大半径 24px ✓ */
   overflow: hidden;
 }
 .setting-row {
@@ -1362,9 +1381,9 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
 /* —— 关于块 —— */
 .about {
   margin-top: var(--s-6);
-  padding: var(--s-5);
+  padding: var(--s-5);                      /* 24px ≥ 最大半径 23px ✓ */
   background: var(--paper-soft);
-  border-radius: var(--blob-1);
+  border-radius: var(--card-radius-about);  /* 22/20/23/21 px */
   font-size: var(--t-sm);
   color: var(--text-2);
   line-height: 1.7;
