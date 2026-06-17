@@ -63,15 +63,8 @@ pnpm exec eas build --profile development --platform ios   # 先跑通一次
    - Output:`apps/web/dist`
 5. Deploy。之后每次 push `main` 自动部署。
 
-### 方式 B:CLI(可选,配 GH Action 显式部署)
-
-```bash
-npx vercel link                       # 在仓库根,关联项目(生成 .vercel/,内含 org/project id)
-npx vercel --prod
-```
-
-若用 `.github/workflows/web-deploy.yml`,补三个 secret:
-`VERCEL_TOKEN`、`VERCEL_ORG_ID`、`VERCEL_PROJECT_ID`(`vercel link` 后在 `.vercel/project.json` 里能看到后两个)。
+> 网页端只走 Vercel 原生 GitHub 集成(导入仓库即可,**无需任何 secret**)。
+> 曾经可选的 `web-deploy.yml` GH Action 已移除——它需要 `VERCEL_TOKEN`/`VERCEL_ORG_ID`/`VERCEL_PROJECT_ID` 三个 secret 才能跑,而原生集成已覆盖,留着只会每次 push 失败。
 
 ---
 
@@ -80,4 +73,4 @@ npx vercel --prod
 | 产物 | 触发 | 在哪看结果 | 需要的凭据 |
 |---|---|---|---|
 | 移动 iOS/Android | push `v*` tag 或手动 | expo.dev Builds | `EXPO_TOKEN`(+ EAS projectId) |
-| 网页 | push `main` | Vercel 项目页 | (导入即可;CLI 方式需 `VERCEL_*`) |
+| 网页 | push `main` | Vercel 项目页 | 无需 secret(Vercel 原生集成) |
