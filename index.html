@@ -1949,6 +1949,58 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
     display: flex; flex-direction: column;
     gap: 12px;
   }
+  /* —— 今日进度常驻指示（侧栏底部全局徽）——
+     把"今日 2/3"从 header 搬到侧栏，让它在所有视图都可见，
+     而非每页 header 重复泄漏。home 视图 header 也由它承担。 */
+  .desk-nav-today {
+    position: relative;
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px 12px 16px;
+    background: var(--paper-soft);
+    border-radius: var(--card-radius-streak);
+    overflow: hidden;
+  }
+  .desk-nav-today::after {
+    /* 左侧 3px 暖朱竖条（与 nav-item 激活态同语言） */
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--accent);
+  }
+  .desk-nav-today.is-done { background: var(--accent); color: #fff; }
+  .desk-nav-today.is-done::after { background: var(--paper); opacity: 0.5; }
+  .desk-nav-today .ring {
+    width: 32px; height: 32px;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .desk-nav-today .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .desk-nav-today .ring .track { fill: none; stroke: var(--paper-deep); stroke-width: 3.5; }
+  .desk-nav-today .ring .fill { fill: none; stroke: var(--accent); stroke-width: 3.5; stroke-linecap: round; transition: stroke-dashoffset 420ms var(--ease-breath); }
+  .desk-nav-today.is-done .ring .track { stroke: rgba(255,255,255,0.35); }
+  .desk-nav-today.is-done .ring .fill { stroke: var(--paper); }
+  .desk-nav-today .ring .n {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-num); font-variant-numeric: tabular-nums;
+    font-size: var(--t-sm); font-weight: 800;
+    color: var(--accent);
+  }
+  .desk-nav-today.is-done .ring .n { color: var(--paper); }
+  .desk-nav-today .meta { min-width: 0; flex: 1; }
+  .desk-nav-today .meta .l {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.06em; color: var(--text-3);
+  }
+  .desk-nav-today.is-done .meta .l { color: rgba(255,255,255,0.82); }
+  .desk-nav-today .meta .v {
+    font-family: var(--font-num); font-variant-numeric: tabular-nums;
+    font-size: var(--t-md); font-weight: 800; color: var(--text);
+    line-height: 1.2;
+  }
+  .desk-nav-today.is-done .meta .v { color: #fff; }
+  .desk-nav-today .meta .v .u { font-family: var(--font); font-size: var(--t-xs); color: var(--text-3); margin-left: 3px; font-weight: 700; }
+  .desk-nav-today.is-done .meta .v .u { color: rgba(255,255,255,0.82); }
   .desk-nav-streak {
     padding: 14px 16px;
     background: var(--paper-soft);
@@ -2048,6 +2100,9 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
     background: var(--accent);
     color: #fff;
   }
+  /* 今日进度（2/3）已移到侧栏常驻徽 .desk-nav-today，
+     header 不再每页重复它。非 home 视图隐藏徽章，header 只留 eyebrow + title。 */
+  .desk-header .status.is-hidden { display: none; }
 
   /* —— 桌面视图容器 —— */
   .desk-views { position: relative; flex: 1; }
@@ -2277,6 +2332,49 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   .desk-legend .l1 { background: var(--heat-1); }
   .desk-legend .l2 { background: var(--heat-2); }
   .desk-legend .l3 { background: var(--heat-3); }
+
+  /* —— 本周节奏（首页右栏第 3 模块，填实侧栏）—— */
+  .desk-cadence-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--s-3);
+    margin-bottom: var(--s-4);
+  }
+  .desk-cadence-stat .l {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+    color: var(--text-3); margin-bottom: 2px;
+  }
+  .desk-cadence-stat .v {
+    font-family: var(--font-num); font-variant-numeric: tabular-nums;
+    font-size: var(--t-xl); font-weight: 800; color: var(--text);
+    letter-spacing: -0.02em; line-height: 1;
+  }
+  .desk-cadence-stat .v .u { font-family: var(--font); font-size: var(--t-xs); color: var(--text-3); font-weight: 700; margin-left: 3px; }
+  .desk-cadence-bar {
+    display: flex; align-items: flex-end; gap: 4px;
+    height: 48px;
+  }
+  .desk-cadence-bar .bar {
+    flex: 1;
+    background: var(--paper-deep);
+    border-radius: 3px 4px 3px 4px;
+    min-height: 4px;
+    position: relative;
+    transition: background-color var(--dur-fast) var(--ease);
+  }
+  .desk-cadence-bar .bar[data-level="1"] { background: var(--heat-1); }
+  .desk-cadence-bar .bar[data-level="2"] { background: var(--heat-2); }
+  .desk-cadence-bar .bar[data-level="3"] { background: var(--heat-3); }
+  .desk-cadence-bar .bar.is-today {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+  .desk-cadence-note {
+    margin-top: var(--s-3);
+    font-size: var(--t-xs);
+    color: var(--text-2);
+    line-height: 1.5;
+  }
 
   /* ============== 桌面 训练 ============== */
   .desk-train {
@@ -2559,6 +2657,9 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   }
   .desk-set-cat {
     position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
     text-align: left;
     padding: 10px 14px 10px 16px;
     color: var(--text-2);
@@ -2567,19 +2668,36 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
     border-radius: 0 12px 12px 0;
     transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
   }
+  .desk-set-cat .ic {
+    width: 16px; height: 16px;
+    margin-bottom: 4px;
+    color: var(--text-3);
+    flex-shrink: 0;
+    transition: color var(--dur-fast) var(--ease);
+  }
+  .desk-set-cat .ic svg { width: 100%; height: 100%; stroke-width: 2.1; }
+  .desk-set-cat .nm { font-weight: 700; }
+  .desk-set-cat .dc {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-3);
+    line-height: 1.35;
+  }
   .desk-set-cat::before {
     content: "";
     position: absolute;
     left: -22px;
     top: 50%;
     transform: translateY(-50%) scaleY(0);
-    width: 3px; height: 18px;
+    width: 3px; height: 22px;
     background: var(--accent);
     border-radius: var(--blob-pill);
     transition: transform 260ms var(--ease-breath);
   }
   .desk-set-cat:hover { background: var(--paper-soft); color: var(--text); }
+  .desk-set-cat:hover .ic { color: var(--text-2); }
   .desk-set-cat.is-active { color: var(--text); background: var(--paper-soft); }
+  .desk-set-cat.is-active .ic { color: var(--accent); }
   .desk-set-cat.is-active::before { transform: translateY(-50%) scaleY(1); }
 
   .desk-set-panels {
@@ -2619,6 +2737,143 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
     margin-top: var(--s-4); padding: 6px 14px;
     background: var(--accent); color: #fff;
     font-size: var(--t-xs); font-weight: 700; border-radius: var(--blob-pill);
+  }
+
+  /* —— 桌面 stepper：对称 +/−（都描边，hover/focus 才填充暖朱）——
+     覆盖 v6 原版「+ 暖朱填充 / − 边框灰」的不对称。 */
+  .desk-set-panel .stepper {
+    background: var(--paper);
+    border: 1.5px solid var(--rule-strong);
+    padding: 2px;
+    gap: 0;
+  }
+  .desk-set-panel .stepper button {
+    width: 40px; height: 40px;
+    background: transparent;
+    color: var(--text-2);
+    border-radius: var(--blob-pill);
+    font-size: var(--t-lg);
+    line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .desk-set-panel .stepper button:hover:not(:disabled),
+  .desk-set-panel .stepper button:focus-visible:not(:disabled) {
+    background: var(--accent);
+    color: #fff;
+  }
+  .desk-set-panel .stepper button:disabled { opacity: 0.3; }
+
+  /* —— 主题分段：清晰标签 + 激活态暖朱底（桌面 .seg 复用）——
+     原版已用 aria-pressed 切换暖朱填充，这里强化字标可读性 + 给非激活态加细底线提示。 */
+  .desk-set-panel .seg { padding: 4px; }
+  .desk-set-panel .seg button {
+    min-width: 84px;
+    padding: 8px 14px;
+    font-size: var(--t-sm);
+    position: relative;
+  }
+
+  /* —— 设置右面板：填充模块（解决"每日目标"分类 80% 空白）—— */
+  .desk-set-extra {
+    margin-top: var(--s-5);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-3);
+  }
+  .desk-set-extra-cell {
+    padding: var(--s-4) var(--s-5);
+    background: var(--paper-soft);
+    border-radius: 15px 16px 14px 16px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    min-height: 92px;
+  }
+  .desk-set-extra-cell:nth-child(2) { border-radius: 16px 13px 15px 14px; }
+  .desk-set-extra-cell:nth-child(3) { border-radius: 14px 15px 16px 13px; }
+  .desk-set-extra-cell:nth-child(4) { border-radius: 15px 14px 13px 16px; }
+  .desk-set-extra-cell .l {
+    font-size: var(--t-xs); letter-spacing: 0.06em; font-weight: 700;
+    color: var(--text-3); margin-bottom: 4px;
+  }
+  .desk-set-extra-cell .v {
+    font-family: var(--font-num); font-variant-numeric: tabular-nums;
+    font-size: var(--t-xl); font-weight: 800; color: var(--text);
+    letter-spacing: -0.02em; line-height: 1;
+  }
+  .desk-set-extra-cell .v .u { font-family: var(--font); font-size: var(--t-sm); color: var(--text-3); font-weight: 700; margin-left: 3px; }
+  .desk-set-extra-cell .dc {
+    font-size: var(--t-xs); color: var(--text-3); line-height: 1.45; margin-top: 6px;
+  }
+  .desk-set-tip {
+    margin-top: var(--s-5);
+    padding: var(--s-4) var(--s-5);
+    background: var(--paper);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 12px 12px 0;
+    font-size: var(--t-sm);
+    color: var(--text-2);
+    line-height: 1.6;
+  }
+  .desk-set-tip .h {
+    font-size: var(--t-xs); letter-spacing: 0.1em; font-weight: 700;
+    color: var(--text); margin-bottom: 4px;
+  }
+  .desk-set-kv {
+    margin-top: var(--s-5);
+    padding: var(--s-5);
+    background: var(--paper-soft);
+    border-radius: var(--card-radius-a);
+  }
+  .desk-set-kv .row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: var(--s-2) 0;
+    border-top: 1px solid var(--rule);
+    gap: var(--s-4);
+  }
+  .desk-set-kv .row:first-of-type { border-top: 0; }
+  .desk-set-kv .row .k { font-size: var(--t-sm); color: var(--text-2); font-weight: 600; }
+  .desk-set-kv .row .vv {
+    font-family: var(--font-num); font-variant-numeric: tabular-nums;
+    font-size: var(--t-sm); color: var(--text); font-weight: 800;
+  }
+
+  /* —— 年度热力图例（v12 重构）——
+     横向 5 档渐变点 + 单独"今日"标注，独占热力图下方一行。 */
+  .desk-heat-legend {
+    display: flex; align-items: center; gap: var(--s-4);
+    margin-top: var(--s-5);
+    padding-top: var(--s-4);
+    border-top: 1px solid var(--rule);
+    font-size: var(--t-xs); color: var(--text-3); font-weight: 700;
+    flex-wrap: wrap;
+  }
+  .desk-heat-legend .scale {
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .desk-heat-legend .scale i {
+    display: inline-block; width: 13px; height: 13px; border-radius: 3px 4px 3px 4px;
+  }
+  .desk-heat-legend .scale i:nth-child(2) { border-radius: 4px 3px 4px 3px; }
+  .desk-heat-legend .scale i:nth-child(3) { border-radius: 3px 4px 4px 3px; }
+  .desk-heat-legend .scale i:nth-child(4) { border-radius: 4px 3px 3px 4px; }
+  .desk-heat-legend .scale i:nth-child(5) { border-radius: 3px 4px 3px 4px; }
+  .desk-heat-legend .scale .s0 { background: var(--paper-deep); }
+  .desk-heat-legend .scale .s1 { background: var(--heat-1); }
+  .desk-heat-legend .scale .s2 { background: var(--heat-2); }
+  .desk-heat-legend .scale .s3 { background: var(--heat-3); }
+  .desk-heat-legend .today-mark {
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .desk-heat-legend .today-mark i {
+    display: inline-block; width: 13px; height: 13px;
+    background: var(--accent);
+    border: 2px solid var(--accent-hot);
+    border-radius: 3px;
+  }
+  .desk-heat-legend .hint {
+    margin-left: auto;
+    color: var(--text-3);
+    font-weight: 600;
+    letter-spacing: 0.02em;
   }
 }
 
@@ -3018,6 +3273,19 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
     </nav>
 
     <div class="desk-nav-foot">
+      <div class="desk-nav-today" id="desk-nav-today" role="status" aria-label="今日打卡进度">
+        <div class="ring" aria-hidden="true">
+          <svg viewBox="0 0 36 36">
+            <circle class="track" cx="18" cy="18" r="15"/>
+            <circle class="fill" id="desk-nav-today-ring" cx="18" cy="18" r="15" stroke-dasharray="94.2" stroke-dashoffset="94.2"/>
+          </svg>
+          <span class="n num" id="desk-nav-today-n">0</span>
+        </div>
+        <div class="meta">
+          <div class="l">今日打卡</div>
+          <div><span class="v"><span id="desk-nav-today-done">0</span><span class="sep" style="opacity:0.5;"> / </span><span id="desk-nav-today-goal">3</span></span><span class="u">组</span></div>
+        </div>
+      </div>
       <div class="desk-nav-streak">
         <div class="leaf" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C7 7 4 11 4 15a8 8 0 0 0 16 0c0-4-3-8-8-13z"/><path d="M12 8v8"/></svg>
@@ -3028,8 +3296,8 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
         </div>
       </div>
       <div class="desk-nav-theme" role="group" aria-label="主题">
-        <button data-v="light" aria-pressed="false">浅</button>
-        <button data-v="dark" aria-pressed="false">深</button>
+        <button data-v="light" aria-pressed="false">浅色</button>
+        <button data-v="dark" aria-pressed="false">深色</button>
         <button data-v="system" aria-pressed="false">跟随</button>
       </div>
     </div>
@@ -3038,7 +3306,7 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   <!-- ===================== 主区 ===================== -->
   <main class="desk-main">
 
-    <!-- 顶部 header（视图名 eyebrow + 今日状态徽） -->
+    <!-- 顶部 header（视图名 eyebrow + title；今日进度已移到侧栏常驻徽） -->
     <header class="desk-header">
       <div>
         <div class="eyebrow" id="desk-eyebrow"><span class="seed"></span>日课</div>
@@ -3102,6 +3370,11 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
                 多
               </div>
             </div>
+
+            <div class="desk-aside-card" id="desk-week-cadence">
+              <div class="h">本周节奏</div>
+              <div class="desk-cadence-stats" id="desk-cadence-stats"></div>
+            </div>
           </aside>
         </div>
       </section>
@@ -3134,9 +3407,9 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
               <span class="sub">组</span>
             </div>
             <div class="desk-stat-cell">
-              <span class="l">本年累计</span>
-              <span class="v num" id="desk-stat-year">0</span>
-              <span class="sub">组</span>
+              <span class="l">达标天数</span>
+              <span class="v num" id="desk-stat-met">0</span>
+              <span class="sub">天 · 累计</span>
             </div>
           </div>
 
@@ -3144,10 +3417,10 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
             <div class="desk-heat-head">
               <div class="t"><span class="y" id="desk-heat-year">2026</span>年度练习</div>
               <div class="desk-heat-nav">
-                <button id="desk-heat-prev" aria-label="上一年">
+                <button id="desk-heat-prev" aria-label="上一年度" title="上一年度">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
                 </button>
-                <button id="desk-heat-next" aria-label="下一年">
+                <button id="desk-heat-next" aria-label="下一年度" title="下一年度">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                 </button>
               </div>
@@ -3157,10 +3430,15 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
               <div class="desk-heat-grid" id="desk-heat-grid"></div>
             </div>
             <div class="desk-heat-legend">
-              少
-              <i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i>
-              多
-              <span style="margin-left:14px;">· 今日高亮 · 点击看详情</span>
+              <span class="scale" aria-label="热力档位：无、部分、达标、超额">
+                <i class="s0" title="无"></i>
+                <i class="s1" title="部分"></i>
+                <i class="s2" title="达标"></i>
+                <i class="s3" title="超额"></i>
+                <span style="margin-left:4px;">少 → 多</span>
+              </span>
+              <span class="today-mark"><i></i>今日</span>
+              <span class="hint">点击任一天查看详情</span>
             </div>
           </div>
 
@@ -3172,12 +3450,36 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
       <section class="desk-view" id="desk-settings" aria-label="设置">
         <div class="desk-settings">
           <nav class="desk-set-cats" aria-label="设置分类">
-            <button class="desk-set-cat is-active" data-cat="goal">每日目标</button>
-            <button class="desk-set-cat" data-cat="plan">训练方案</button>
-            <button class="desk-set-cat" data-cat="feedback">反馈</button>
-            <button class="desk-set-cat" data-cat="appearance">外观</button>
-            <button class="desk-set-cat" data-cat="data">数据</button>
-            <button class="desk-set-cat" data-cat="about">关于</button>
+            <button class="desk-set-cat is-active" data-cat="goal">
+              <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg></span>
+              <span class="nm">每日目标</span>
+              <span class="dc">几组算"达标"</span>
+            </button>
+            <button class="desk-set-cat" data-cat="plan">
+              <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c-5-3-9-7-9-12a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 5-4 9-9 12z"/></svg></span>
+              <span class="nm">训练方案</span>
+              <span class="dc">节奏与组数</span>
+            </button>
+            <button class="desk-set-cat" data-cat="feedback">
+              <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h2l3-7 4 14 3-7h6"/></svg></span>
+              <span class="nm">反馈</span>
+              <span class="dc">提示音与触感</span>
+            </button>
+            <button class="desk-set-cat" data-cat="appearance">
+              <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1l2.1-2.1M17 7l2.1-2.1"/></svg></span>
+              <span class="nm">外观与内容</span>
+              <span class="dc">主题与每日一句</span>
+            </button>
+            <button class="desk-set-cat" data-cat="data">
+              <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg></span>
+              <span class="nm">数据</span>
+              <span class="dc">导出与存储</span>
+            </button>
+            <button class="desk-set-cat" data-cat="about">
+              <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg></span>
+              <span class="nm">关于</span>
+              <span class="dc">版本与隐私</span>
+            </button>
           </nav>
 
           <div class="desk-set-panels">
@@ -3198,12 +3500,17 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
                   </div>
                 </div>
               </div>
+              <div class="desk-set-extra" id="desk-goal-extra"></div>
+              <div class="desk-set-tip">
+                <div class="h">小建议</div>
+                <span id="desk-goal-tip">从能稳定坚持的组数开始，宁少勿断。能连续 7 天的组数，就是属于你的"达标"。</span>
+              </div>
             </div>
 
             <!-- 训练方案 -->
             <div class="desk-set-panel" data-cat="plan">
               <h2 class="desk-set-panel-head">训练方案</h2>
-              <p class="desk-set-panel-sub">点开训练页时高亮的默认方案。</p>
+              <p class="desk-set-panel-sub">点开训练页时高亮的默认方案。可以随时在训练页临时切换。</p>
               <div class="settings-card">
                 <div class="setting-row" style="display:block; padding-bottom: var(--s-4);">
                   <div class="lbl" style="margin-bottom: var(--s-1);">默认训练方案</div>
@@ -3211,21 +3518,32 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
                   <div class="plan-select" id="desk-plan-select"></div>
                 </div>
               </div>
+              <div class="desk-set-kv" id="desk-plan-overview"></div>
             </div>
 
             <!-- 反馈 -->
             <div class="desk-set-panel" data-cat="feedback">
               <h2 class="desk-set-panel-head">反馈</h2>
-              <p class="desk-set-panel-sub">节拍收紧/放松时的提示音与轻微触感。</p>
+              <p class="desk-set-panel-sub">节拍收紧/放松时的提示音与轻微触感。收紧一声高音、放松一声低音。</p>
               <div class="settings-card">
                 <div class="setting-row">
-                  <div class="lbl">节拍提示音</div>
+                  <div>
+                    <div class="lbl">节拍提示音</div>
+                    <div class="desc">收紧 880Hz / 放松 660Hz，轻而短</div>
+                  </div>
                   <button class="toggle" id="desk-toggle-sound" role="switch" aria-checked="true"></button>
                 </div>
                 <div class="setting-row">
-                  <div class="lbl">轻微触感反馈</div>
+                  <div>
+                    <div class="lbl">轻微触感反馈</div>
+                    <div class="desc">支持的设备会随节拍轻震一下</div>
+                  </div>
                   <button class="toggle" id="desk-toggle-haptics" role="switch" aria-checked="true"></button>
                 </div>
+              </div>
+              <div class="desk-set-tip">
+                <div class="h">说明</div>
+                静音环境下也能正常训练——提示音与触感都是辅助，节拍器中央的有机呼吸形会始终告诉你"现在收紧还是放松"。
               </div>
             </div>
 
@@ -3235,24 +3553,34 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
               <p class="desk-set-panel-sub">主题三选，是否在今日页显示每日一句。</p>
               <div class="settings-card">
                 <div class="setting-row">
-                  <div class="lbl">主题</div>
+                  <div>
+                    <div class="lbl">主题</div>
+                    <div class="desc">浅色 / 深色 / 跟随系统</div>
+                  </div>
                   <div class="seg" id="desk-seg-theme">
-                    <button data-v="light" aria-pressed="false">浅</button>
-                    <button data-v="dark" aria-pressed="false">深</button>
+                    <button data-v="light" aria-pressed="false">浅色</button>
+                    <button data-v="dark" aria-pressed="false">深色</button>
                     <button data-v="system" aria-pressed="false">跟随系统</button>
                   </div>
                 </div>
                 <div class="setting-row">
-                  <div class="lbl">每日一句</div>
+                  <div>
+                    <div class="lbl">每日一句</div>
+                    <div class="desc">今日页主问句上方的小字鼓励</div>
+                  </div>
                   <button class="toggle" id="desk-toggle-quote" role="switch" aria-checked="true"></button>
                 </div>
+              </div>
+              <div class="desk-set-tip">
+                <div class="h">提示</div>
+                主题切换即时生效。跟随系统时，会监听操作系统的深浅色变化自动跟随。
               </div>
             </div>
 
             <!-- 数据 -->
             <div class="desk-set-panel" data-cat="data">
               <h2 class="desk-set-panel-head">数据</h2>
-              <p class="desk-set-panel-sub">下载为 JSON 文件，纯本地存储。</p>
+              <p class="desk-set-panel-sub">下载为 JSON 文件，纯本地存储。清除浏览器数据会一并丢失。</p>
               <div class="settings-card">
                 <div class="setting-row">
                   <div>
@@ -3264,6 +3592,11 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
                     导出
                   </button>
                 </div>
+              </div>
+              <div class="desk-set-kv" id="desk-data-overview"></div>
+              <div class="desk-set-tip">
+                <div class="h">关于格式</div>
+                导出的是一个标准 JSON 文件，结构为 <code style="font-family:var(--font-num); font-weight:700;">settings / plans / logs / streak</code> 四段。你可以保存它作为备份，或用任意文本编辑器查看。未来若提供导入，结构也会保持兼容。
               </div>
             </div>
 
@@ -3278,6 +3611,12 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2z"/><polyline points="7 11 7 7 12 3 17 7 17 11"/></svg>
                   全部数据仅存于本设备
                 </div>
+              </div>
+              <div class="desk-set-kv">
+                <div class="row"><span class="k">版本</span><span class="vv">v12 · 桌面壳打磨</span></div>
+                <div class="row"><span class="k">数据存储</span><span class="vv">localStorage · 仅本设备</span></div>
+                <div class="row"><span class="k">联网</span><span class="vv">无 · 完全离线可用</span></div>
+                <div class="row"><span class="k">数据条目</span><span class="vv" id="desk-about-counts">—</span></div>
               </div>
             </div>
           </div>
@@ -3596,6 +3935,9 @@ function switchView(name){
 
   moveTabIndicator(name);
 
+  // —— 桌面壳：header 随视图更新（eyebrow + title）——
+  if (isDesktop()) setDeskHeader(name);
+
   // —— 渲染：只渲染当前活动壳的对应视图 ——
   if (isDesktop()){
     if (name === "home") renderDeskHome();
@@ -3677,10 +4019,73 @@ function renderMasthead(){
   // —— 桌面壳 header 同步 ——
   var deskStamp = $("#desk-stamp");
   if (deskStamp) deskStamp.innerHTML = stampHtml;
+  // header 右上 status 徽：只在 home 视图显示（今日进度语义），
+  // 其它视图 header 不再泄漏 2/3。今日进度改由侧栏 .desk-nav-today 常驻承担。
   var deskStatus = $("#desk-status");
   if (deskStatus){
-    if (isOn){ deskStatus.textContent = onText; deskStatus.classList.add("is-on"); }
-    else { deskStatus.textContent = offText; deskStatus.classList.remove("is-on"); }
+    if (currentView === "home"){
+      deskStatus.classList.remove("is-hidden");
+      if (isOn){ deskStatus.textContent = onText; deskStatus.classList.add("is-on"); }
+      else { deskStatus.textContent = offText; deskStatus.classList.remove("is-on"); }
+    } else {
+      deskStatus.classList.add("is-hidden");
+    }
+  }
+  // 侧栏常驻今日进度徽（所有视图都更新）
+  renderDeskTodayIndicator(done, goal, isOn);
+}
+
+/* —— 桌面壳 header：eyebrow + title 随视图切换 ——
+   解决 v11 只有 renderDeskHome 设置 header 的 bug。
+   home: 日课 / 今天，提了么？
+   train: 训练 / 选一组开始
+   history: 记录 / 你的足迹
+   settings: 设置 / 偏好 */
+var DESK_HEADER = {
+  home:    { eyebrow: "日课", title: '今天，<span class="em">提了</span>么？' },
+  train:   { eyebrow: "训练", title: '挑<span class="em">一组</span>开始' },
+  history: { eyebrow: "记录", title: '你的<span class="em">足迹</span>' },
+  settings:{ eyebrow: "设置", title: '调成你的<span class="em">样子</span>' }
+};
+function setDeskHeader(view){
+  var info = DESK_HEADER[view] || DESK_HEADER.home;
+  var eb = $("#desk-eyebrow");
+  if (eb) eb.innerHTML = '<span class="seed"></span>' + info.eyebrow;
+  var title = $("#desk-title");
+  if (title) title.innerHTML = info.title;
+  // 今日进度徽（2/3）只在 home 视图的 header 出现；
+  // 其它视图隐藏 header 徽，进度改由侧栏 .desk-nav-today 常驻承担。
+  var status = $("#desk-status");
+  if (status){
+    if (view === "home"){
+      // home：刷新徽内容（由 renderMasthead 写入文案）并显示
+      status.classList.remove("is-hidden");
+    } else {
+      status.classList.add("is-hidden");
+    }
+  }
+}
+
+/* —— 桌面侧栏常驻今日进度徽（环形 + 数字）—— */
+function renderDeskTodayIndicator(done, goal, isOn){
+  var root = $("#desk-nav-today");
+  if (!root) return;
+  var d = (done == null) ? 0 : done;
+  var g = goal || settings.dailyGoalGroups || 1;
+  var on = isOn || (d >= g && d > 0);
+  root.classList.toggle("is-done", on);
+  var dn = $("#desk-nav-today-done");
+  if (dn) dn.textContent = d;
+  var dg = $("#desk-nav-today-goal");
+  if (dg) dg.textContent = g;
+  var num = $("#desk-nav-today-n");
+  if (num) num.textContent = d;
+  // 环形进度：周长 2πr = 2π·15 ≈ 94.2
+  var ring = $("#desk-nav-today-ring");
+  if (ring){
+    var C = 94.2;
+    var pct = Math.min(1, d / g);
+    ring.setAttribute("stroke-dashoffset", String(C * (1 - pct)));
   }
 }
 
@@ -3811,10 +4216,17 @@ function renderDeskNavFoot(){
   animateCount($("#desk-streak-big"), s.current);
   var longestEl = $("#desk-streak-longest");
   if (longestEl) longestEl.textContent = s.longest || 0;
+  // 同步今日进度徽（数据变化后）
+  var day = Store.getDay(todayKey());
+  var done = day ? day.sessions.length : 0;
+  var goal = settings.dailyGoalGroups;
+  var isOn = (done >= goal && done > 0);
+  renderDeskTodayIndicator(done, goal, isOn);
 }
 
 /* —— 桌面 今日 dashboard —— */
 function renderDeskHome(){
+  setDeskHeader("home");
   renderMasthead();   // 同步 stamp + status（含桌面 header）
 
   // 每日一句
@@ -3892,6 +4304,51 @@ function renderDeskHome(){
 
   // 7 天呼吸点
   renderDeskWeek();
+
+  // 本周节奏（首页右栏第 3 模块）
+  renderDeskCadence();
+}
+
+/* —— 本周节奏：最近 7 天的组数 + 达标率 + 柱条 —— */
+function renderDeskCadence(){
+  var root = $("#desk-cadence-stats");
+  if (!root) return;
+  var goal = settings.dailyGoalGroups || 1;
+  var today = new Date();
+  var todayStr = todayKey();
+  var totalSets = 0, metDays = 0, maxSets = 0;
+  var days = [];
+  for (var i=6;i>=0;i--){
+    var d = new Date(today.getFullYear(), today.getMonth(), today.getDate()-i);
+    var entry = Store.getDay(ymd(d));
+    var n = (entry && entry.sessions && entry.sessions.length) || 0;
+    totalSets += n;
+    if (n >= goal && n > 0) metDays++;
+    if (n > maxSets) maxSets = n;
+    days.push({ key: ymd(d), n: n, goal: goal });
+  }
+  var avg = Math.round(totalSets / 7 * 10) / 10;
+  var statsHtml =
+    '<div class="desk-cadence-stats">'+
+      '<div class="desk-cadence-stat"><div class="l">7 天总组数</div><div class="v">'+totalSets+'<span class="u">组</span></div></div>'+
+      '<div class="desk-cadence-stat"><div class="l">日均</div><div class="v">'+avg+'<span class="u">组</span></div></div>'+
+    '</div>';
+  // 柱条：高度按 maxSets 缩放（max=0 时给统一最小高）
+  var barsHtml = '<div class="desk-cadence-bar">';
+  days.forEach(function(dy){
+    var h = maxSets > 0 ? Math.max(4, Math.round(dy.n / maxSets * 44)) : 4;
+    var lvl = heatLevel({ length: dy.n }, dy.goal);
+    // heatLevel 期望 sessions 数组；这里传伪对象 {length:n}
+    barsHtml += '<div class="bar'+(dy.key===todayStr?' is-today':'')+'" data-level="'+lvl+'" style="height:'+h+'px" title="'+dy.n+' 组"></div>';
+  });
+  barsHtml += '</div>';
+  var note = metDays >= 5
+    ? '本周已达标 '+metDays+' 天，节奏很稳。'
+    : metDays >= 3
+      ? '本周达标 '+metDays+' 天，继续。'
+      : '本周达标 '+metDays+' 天，从今天开始也不晚。';
+  barsHtml += '<div class="desk-cadence-note">'+note+'</div>';
+  root.innerHTML = statsHtml + barsHtml;
 }
 
 function renderDeskWeek(){
@@ -3928,6 +4385,7 @@ function renderDeskWeek(){
 /* —— 桌面 训练（方案列表 + 详情面板） —— */
 var deskSelectedPlanId = null;
 function renderDeskTrain(){
+  setDeskHeader("train");
   // 默认选中 = 默认方案
   if (!deskSelectedPlanId || !plans.filter(function(p){return p.id===deskSelectedPlanId;}).length){
     deskSelectedPlanId = settings.defaultPlanId;
@@ -3990,28 +4448,31 @@ var deskHeatYear = new Date().getFullYear();
 var deskSelectedDayKey = null;
 
 function renderDeskHistory(){
+  setDeskHeader("history");
   var s = recomputeStreak();
   animateCount($("#desk-stat-streak"), s.current);
   var keys = Store.allLogKeys();
-  var totalDays = 0, totalSessions = 0, yearSessions = 0;
+  var totalDays = 0, totalSessions = 0, metDays = 0;
   keys.forEach(function(k){
     var day = Store.getDay(k.substring("tgm:log:".length));
     if (day && day.sessions && day.sessions.length){
       totalDays++;
       totalSessions += day.sessions.length;
-      if (k.substring("tgm:log:".length).indexOf(String(deskHeatYear)+"-") === 0){
-        yearSessions += day.sessions.length;
-      }
+      // 达标天数：sessions 数 ≥ 当日目标
+      if (dayMeetsGoal(day)) metDays++;
     }
   });
   animateCount($("#desk-stat-days"), totalDays);
   animateCount($("#desk-stat-sessions"), totalSessions);
-  animateCount($("#desk-stat-year"), yearSessions);
+  animateCount($("#desk-stat-met"), metDays);
   renderDeskHeatmap();
 }
 
 function renderDeskHeatmap(){
   $("#desk-heat-year").textContent = deskHeatYear;
+  // 下一年度按钮：不能超过当前年份
+  var nextBtn = $("#desk-heat-next");
+  if (nextBtn) nextBtn.disabled = (deskHeatYear >= new Date().getFullYear());
   var monthsEl = $("#desk-heat-months");
   monthsEl.innerHTML = "";
   var monthLabels = ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"];
@@ -4119,6 +4580,7 @@ function renderDeskDayDetail(key, entry, dateObj){
 
 /* —— 桌面 设置（分类分栏） —— */
 function renderDeskSettings(){
+  setDeskHeader("settings");
   $("#desk-goal-val").textContent = settings.dailyGoalGroups;
   $("#desk-goal-minus").disabled = settings.dailyGoalGroups <= 1;
   $("#desk-goal-plus").disabled  = settings.dailyGoalGroups >= 8;
@@ -4142,6 +4604,119 @@ function renderDeskSettings(){
     b.setAttribute("aria-pressed", p.id === settings.defaultPlanId ? "true" : "false");
     sel.appendChild(b);
   });
+
+  // —— 填实各分类右面板（解决 v11 "每日目标" 80% 空白）——
+  renderDeskSetGoalExtra();
+  renderDeskSetPlanOverview();
+  renderDeskSetDataOverview();
+  renderDeskSetAboutCounts();
+  // 目标小建议随目标值微调
+  renderDeskSetGoalTip();
+}
+
+/* —— 目标分类：填充"目标洞察"四宫格 + 建议文案 —— */
+function renderDeskSetGoalExtra(){
+  var root = $("#desk-goal-extra");
+  if (!root) return;
+  var goal = settings.dailyGoalGroups;
+  var keys = Store.allLogKeys();
+  var totalSessions = 0, metDays = 0, recentAvg = 0;
+  var today = new Date();
+  var recentSets = 0;
+  for (var i=0;i<7;i++){
+    var d = new Date(today.getFullYear(), today.getMonth(), today.getDate()-i);
+    var e = Store.getDay(ymd(d));
+    recentSets += (e && e.sessions && e.sessions.length) || 0;
+  }
+  recentAvg = Math.round(recentSets/7*10)/10;
+  keys.forEach(function(k){
+    var day = Store.getDay(k.substring("tgm:log:".length));
+    if (day && day.sessions && day.sessions.length){
+      totalSessions += day.sessions.length;
+      if (dayMeetsGoal(day)) metDays++;
+    }
+  });
+  root.innerHTML =
+    '<div class="desk-set-extra-cell"><div class="l">累计组数</div><div class="v">'+totalSessions+'<span class="u">组</span></div></div>'+
+    '<div class="desk-set-extra-cell"><div class="l">达标天数</div><div class="v">'+metDays+'<span class="u">天</span></div></div>'+
+    '<div class="desk-set-extra-cell"><div class="l">近 7 天日均</div><div class="v">'+recentAvg+'<span class="u">组</span></div></div>'+
+    '<div class="desk-set-extra-cell"><div class="l">当前目标</div><div class="v">'+goal+'<span class="u">组/天</span></div></div>';
+}
+
+function renderDeskSetGoalTip(){
+  var tip = $("#desk-goal-tip");
+  if (!tip) return;
+  var goal = settings.dailyGoalGroups;
+  var keys = Store.allLogKeys();
+  var recentSets = 0;
+  var today = new Date();
+  for (var i=0;i<7;i++){
+    var d = new Date(today.getFullYear(), today.getMonth(), today.getDate()-i);
+    var e = Store.getDay(ymd(d));
+    recentSets += (e && e.sessions && e.sessions.length) || 0;
+  }
+  var recentAvg = recentSets/7;
+  var msg;
+  if (recentAvg === 0){
+    msg = '从能稳定坚持的组数开始，宁少勿断。能连续 7 天的组数，就是属于你的「达标」。';
+  } else if (recentAvg >= goal){
+    msg = "你近 7 天日均 "+recentAvg.toFixed(1)+" 组，已超过当前目标 "+goal+" 组。可以试试调高一档挑战自己。";
+  } else if (recentAvg >= goal * 0.7){
+    msg = "你近 7 天日均 "+recentAvg.toFixed(1)+" 组，距离目标 "+goal+" 组只差一点。保持就好，不必硬调。";
+  } else {
+    msg = "你近 7 天日均 "+recentAvg.toFixed(1)+" 组，低于目标 "+goal+" 组。若连续断打卡，可以考虑先把目标调低，先养习惯再加量。";
+  }
+  tip.textContent = msg;
+}
+
+/* —— 训练方案分类：当前默认方案的参数总览 —— */
+function renderDeskSetPlanOverview(){
+  var root = $("#desk-plan-overview");
+  if (!root) return;
+  var def = plans.filter(function(p){ return p.id === settings.defaultPlanId; })[0] || plans[0];
+  var totalSec = (def.contract + def.relax) * def.reps * def.sets;
+  var totalMin = Math.round(totalSec/60*10)/10;
+  root.innerHTML =
+    '<div class="row"><span class="k">当前默认</span><span class="vv">'+def.name+'</span></div>'+
+    '<div class="row"><span class="k">收紧 / 放松</span><span class="vv">'+def.contract+'s / '+def.relax+'s</span></div>'+
+    '<div class="row"><span class="k">每组次数</span><span class="vv">'+def.reps+' 次</span></div>'+
+    '<div class="row"><span class="k">组数</span><span class="vv">'+def.sets+' 组</span></div>'+
+    '<div class="row"><span class="k">预计耗时</span><span class="vv">'+totalMin+' 分钟</span></div>';
+}
+
+/* —— 数据分类：当前存储的数据概览 —— */
+function renderDeskSetDataOverview(){
+  var root = $("#desk-data-overview");
+  if (!root) return;
+  var keys = Store.allLogKeys();
+  var totalDays = 0, totalSessions = 0;
+  var lastTs = 0;
+  keys.forEach(function(k){
+    var day = Store.getDay(k.substring("tgm:log:".length));
+    if (day && day.sessions && day.sessions.length){
+      totalDays++;
+      totalSessions += day.sessions.length;
+      day.sessions.forEach(function(ses){ if (ses.ts > lastTs) lastTs = ses.ts; });
+    }
+  });
+  var lastStr = lastTs ? new Date(lastTs).toLocaleString("zh-CN", { month:"numeric", day:"numeric", hour:"2-digit", minute:"2-digit" }) : "—";
+  root.innerHTML =
+    '<div class="row"><span class="k">已记录天数</span><span class="vv">'+totalDays+' 天</span></div>'+
+    '<div class="row"><span class="k">已记录组数</span><span class="vv">'+totalSessions+' 组</span></div>'+
+    '<div class="row"><span class="k">最近一次</span><span class="vv">'+lastStr+'</span></div>';
+}
+
+/* —— 关于分类：数据条目计数 —— */
+function renderDeskSetAboutCounts(){
+  var el = $("#desk-about-counts");
+  if (!el) return;
+  var keys = Store.allLogKeys();
+  var totalSessions = 0;
+  keys.forEach(function(k){
+    var day = Store.getDay(k.substring("tgm:log:".length));
+    if (day && day.sessions) totalSessions += day.sessions.length;
+  });
+  el.textContent = totalSessions + " 条训练 / " + keys.length + " 个日子";
 }
 
 /* —— 桌面壳独有事件绑定（仅绑一次） —— */
@@ -4239,13 +4814,14 @@ function bindDeskEvents(){
     showToast("已导出 JSON 文件到本地");
   });
 
-  // 年度热力导航
+  // 年度热力导航（明确为"上一年度/下一年度"年份切换；超过当前年份禁用）
   $("#desk-heat-prev").addEventListener("click", function(){
     deskHeatYear--;
     deskSelectedDayKey = null;
     renderDeskHeatmap();
   });
   $("#desk-heat-next").addEventListener("click", function(){
+    if (deskHeatYear >= new Date().getFullYear()) return;
     deskHeatYear++;
     deskSelectedDayKey = null;
     renderDeskHeatmap();
