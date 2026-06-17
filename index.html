@@ -2254,10 +2254,26 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
     color: var(--text-3); font-size: var(--t-xs); margin-top: 2px;
   }
   .desk-session-row .tag {
-    font-size: var(--t-xs); font-weight: 700; padding: 4px 12px;
-    background: var(--success); color: #fff; border-radius: var(--blob-pill); white-space: nowrap;
+    /* 静态状态标签（非可点）：用描边而非实心胶囊，避免被误读为"完成"动作按钮。
+       已完成 = 描边 + 勾 + "已完成"；部分 = 暖朱描边 + "未完成"。 */
+    font-size: var(--t-xs); font-weight: 700; padding: 4px 11px;
+    background: transparent;
+    color: var(--success);
+    border: 1.5px solid var(--success);
+    border-radius: var(--blob-pill);
+    white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 5px;
+    cursor: default;
+    letter-spacing: 0.02em;
   }
-  .desk-session-row .tag.is-partial { background: var(--accent-soft); color: var(--accent-hot); }
+  .desk-session-row .tag::before {
+    content: "✓"; font-family: var(--font-num); font-weight: 800;
+    font-size: 11px; line-height: 1;
+  }
+  .desk-session-row .tag.is-partial {
+    color: var(--accent-hot); border-color: var(--accent-hot);
+  }
+  .desk-session-row .tag.is-partial::before { content: "○"; }
   .desk-sessions-empty {
     color: var(--text-3); font-size: var(--t-sm); padding: var(--s-2) 0;
   }
@@ -2351,24 +2367,46 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   }
   .desk-cadence-stat .v .u { font-family: var(--font); font-size: var(--t-xs); color: var(--text-3); font-weight: 700; margin-left: 3px; }
   .desk-cadence-bar {
-    display: flex; align-items: flex-end; gap: 4px;
-    height: 48px;
+    display: flex; align-items: flex-end; gap: 6px;
+    height: 96px;
+    padding-top: 4px;
   }
   .desk-cadence-bar .bar {
     flex: 1;
     background: var(--paper-deep);
-    border-radius: 3px 4px 3px 4px;
-    min-height: 4px;
+    border-radius: 4px 5px 4px 5px;
+    min-height: 3px;
     position: relative;
     transition: background-color var(--dur-fast) var(--ease);
   }
   .desk-cadence-bar .bar[data-level="1"] { background: var(--heat-1); }
   .desk-cadence-bar .bar[data-level="2"] { background: var(--heat-2); }
   .desk-cadence-bar .bar[data-level="3"] { background: var(--heat-3); }
-  .desk-cadence-bar .bar.is-today {
-    outline: 2px solid var(--accent);
-    outline-offset: 1px;
+  /* 0 值：不画实心柱，留一个 3px 的底座占位 + 顶端虚线，让"这一天没练"一眼可辨 */
+  .desk-cadence-bar .bar[data-level="0"] {
+    background: transparent;
+    border-top: 2px dashed var(--rule-strong);
+    min-height: 3px;
+    height: 6px !important;
   }
+  /* 今日柱：暖朱实色（无论达标档）+ 描边，让它在 7 根里独占视觉焦点 */
+  .desk-cadence-bar .bar.is-today {
+    background: var(--accent) !important;
+    outline: 2px solid var(--accent-hot);
+    outline-offset: 1px;
+    box-shadow: 0 4px 12px -4px rgba(232,90,79,0.4);
+  }
+  /* 柱顶数值标签（小号 tabular） */
+  .desk-cadence-bar .bar .bv {
+    position: absolute;
+    top: -16px; left: 0; right: 0;
+    text-align: center;
+    font-family: var(--font-num); font-variant-numeric: tabular-nums;
+    font-size: 10px; font-weight: 800;
+    color: var(--text-3);
+    line-height: 1;
+  }
+  .desk-cadence-bar .bar.is-today .bv { color: var(--accent); }
   .desk-cadence-note {
     margin-top: var(--s-3);
     font-size: var(--t-xs);
@@ -2816,6 +2854,14 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   .desk-set-tip .h {
     font-size: var(--t-xs); letter-spacing: 0.1em; font-weight: 700;
     color: var(--text); margin-bottom: 4px;
+  }
+  /* 目标面板底部一行轻说明（配置上下文，区别于上面"建议"决策框） */
+  .desk-set-note {
+    margin-top: var(--s-4);
+    padding: 0 var(--s-2);
+    font-size: var(--t-xs);
+    color: var(--text-3);
+    line-height: 1.55;
   }
   .desk-set-kv {
     margin-top: var(--s-5);
@@ -3483,10 +3529,11 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
           </nav>
 
           <div class="desk-set-panels">
-            <!-- 目标 -->
+            <!-- 目标：配置导向（stepper + 日均动态建议 + 一句说明），
+                 历史统计归首页/记录页，此处不重复稀释配置上下文 -->
             <div class="desk-set-panel is-active" data-cat="goal">
               <h2 class="desk-set-panel-head">每日目标</h2>
-              <p class="desk-set-panel-sub">每天做几组算"达标"。决定今日状态徽、连续天数、热力档位。</p>
+              <p class="desk-set-panel-sub">每天做几组算"达标"。决定今日状态徽、连续天数、热力档位。几组算达标 · 调整即时生效。</p>
               <div class="settings-card">
                 <div class="setting-row">
                   <div>
@@ -3500,10 +3547,12 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
                   </div>
                 </div>
               </div>
-              <div class="desk-set-extra" id="desk-goal-extra"></div>
-              <div class="desk-set-tip">
-                <div class="h">小建议</div>
+              <div class="desk-set-tip" id="desk-goal-tip-wrap">
+                <div class="h">基于你最近 7 天日均</div>
                 <span id="desk-goal-tip">从能稳定坚持的组数开始，宁少勿断。能连续 7 天的组数，就是属于你的"达标"。</span>
+              </div>
+              <div class="desk-set-note">
+                每日目标只影响"今日是否达标"的判定。它不会回溯修改历史记录，随时可以调整。
               </div>
             </div>
 
@@ -4293,7 +4342,7 @@ function renderDeskHome(){
           '<div class="plan">'+name+' · '+ses.completedReps+' 次</div>'+
           '<div class="meta">'+mins+' 分钟</div>'+
         '</div>'+
-        '<span class="tag'+(ses.finished?'':' is-partial')+'">'+(ses.finished?'完成':'部分')+'</span>'+
+        '<span class="tag'+(ses.finished?'':' is-partial')+'">'+(ses.finished?'已完成':'未完成')+'</span>'+
       '</div>';
     });
     mount.innerHTML = html;
@@ -4333,13 +4382,24 @@ function renderDeskCadence(){
       '<div class="desk-cadence-stat"><div class="l">7 天总组数</div><div class="v">'+totalSets+'<span class="u">组</span></div></div>'+
       '<div class="desk-cadence-stat"><div class="l">日均</div><div class="v">'+avg+'<span class="u">组</span></div></div>'+
     '</div>';
-  // 柱条：高度按 maxSets 缩放（max=0 时给统一最小高）
+  // 柱条：高度按 maxSets 缩放映射到 0..88px，让多/少一眼可辨。
+  //   0 值不给实心柱（CSS 里画虚线占位），>0 才按比例填充。
+  //   满高参考 = 容器 96px − 上下边距；公式：h = n/maxSets * 88，clamp 最小 10px（非 0 值至少有可见高度）。
+  var FULL = 88;
   var barsHtml = '<div class="desk-cadence-bar">';
   days.forEach(function(dy){
-    var h = maxSets > 0 ? Math.max(4, Math.round(dy.n / maxSets * 44)) : 4;
     var lvl = heatLevel({ length: dy.n }, dy.goal);
-    // heatLevel 期望 sessions 数组；这里传伪对象 {length:n}
-    barsHtml += '<div class="bar'+(dy.key===todayStr?' is-today':'')+'" data-level="'+lvl+'" style="height:'+h+'px" title="'+dy.n+' 组"></div>';
+    var h, bv;
+    if (dy.n === 0){
+      h = 6;     // CSS 会用 !important 覆盖为虚线占位
+      bv = '·';  // 空心标记
+    } else {
+      h = maxSets > 0 ? Math.max(10, Math.round(dy.n / maxSets * FULL)) : FULL;
+      bv = dy.n;
+    }
+    barsHtml += '<div class="bar'+(dy.key===todayStr?' is-today':'')+'" data-level="'+lvl+'" style="height:'+h+'px" title="'+dy.n+' 组">'+
+      '<span class="bv">'+bv+'</span>'+
+    '</div>';
   });
   barsHtml += '</div>';
   var note = metDays >= 5
@@ -4571,7 +4631,7 @@ function renderDeskDayDetail(key, entry, dateObj){
         '<div class="plan">'+name+' · '+ses.completedReps+' 次</div>'+
         '<div class="meta">'+mins+' 分钟</div>'+
       '</div>'+
-      '<span class="tag'+(ses.finished?'':' is-partial')+'">'+(ses.finished?'完成':'部分')+'</span>'+
+      '<span class="tag'+(ses.finished?'':' is-partial')+'">'+(ses.finished?'已完成':'未完成')+'</span>'+
     '</div>';
   });
   html += '</div>';
@@ -4605,8 +4665,9 @@ function renderDeskSettings(){
     sel.appendChild(b);
   });
 
-  // —— 填实各分类右面板（解决 v11 "每日目标" 80% 空白）——
-  renderDeskSetGoalExtra();
+  // —— 填实各分类右面板 ——
+  // 注：每日目标分类走"配置导向"——stepper + 日均动态建议 + 一句说明，
+  //     不再渲染历史 stat 卡（累计组数/达标天数/当前目标复读），避免与首页/记录页重复稀释配置上下文。
   renderDeskSetPlanOverview();
   renderDeskSetDataOverview();
   renderDeskSetAboutCounts();
@@ -4614,34 +4675,7 @@ function renderDeskSettings(){
   renderDeskSetGoalTip();
 }
 
-/* —— 目标分类：填充"目标洞察"四宫格 + 建议文案 —— */
-function renderDeskSetGoalExtra(){
-  var root = $("#desk-goal-extra");
-  if (!root) return;
-  var goal = settings.dailyGoalGroups;
-  var keys = Store.allLogKeys();
-  var totalSessions = 0, metDays = 0, recentAvg = 0;
-  var today = new Date();
-  var recentSets = 0;
-  for (var i=0;i<7;i++){
-    var d = new Date(today.getFullYear(), today.getMonth(), today.getDate()-i);
-    var e = Store.getDay(ymd(d));
-    recentSets += (e && e.sessions && e.sessions.length) || 0;
-  }
-  recentAvg = Math.round(recentSets/7*10)/10;
-  keys.forEach(function(k){
-    var day = Store.getDay(k.substring("tgm:log:".length));
-    if (day && day.sessions && day.sessions.length){
-      totalSessions += day.sessions.length;
-      if (dayMeetsGoal(day)) metDays++;
-    }
-  });
-  root.innerHTML =
-    '<div class="desk-set-extra-cell"><div class="l">累计组数</div><div class="v">'+totalSessions+'<span class="u">组</span></div></div>'+
-    '<div class="desk-set-extra-cell"><div class="l">达标天数</div><div class="v">'+metDays+'<span class="u">天</span></div></div>'+
-    '<div class="desk-set-extra-cell"><div class="l">近 7 天日均</div><div class="v">'+recentAvg+'<span class="u">组</span></div></div>'+
-    '<div class="desk-set-extra-cell"><div class="l">当前目标</div><div class="v">'+goal+'<span class="u">组/天</span></div></div>';
-}
+/* —— 目标分类：日均动态建议 tip（基于近 7 天日均给目标建议）—— */
 
 function renderDeskSetGoalTip(){
   var tip = $("#desk-goal-tip");
