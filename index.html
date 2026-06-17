@@ -7,14 +7,12 @@
 <title>今天提了么</title>
 <style>
 /* ============================================================
-   v5 — PIVOT「会呼吸的张弛体」
-   设计语言 = 提肛动作本身：肌肉的收缩↔放松
-   · 有机身体曲线（非对称 blob，反矩形反尖角）
-   · 全 app 呼吸（CTA + ambient，4.5s 一个呼吸周期）
-   · 张弛：进度=绷紧的弦，完成=弦松弛下垂（hero 情感回报）
-   · 节拍器=有机呼吸形（收紧缩小升温 / 放松扩大降温）
-   · 暖身体色：纸白 × 暖墨 × 单一鲜活暖朱强调
-   功能逻辑 + localStorage 数据模型 1:1 沿自 v4（tgm:* 不变）
+   v6 — 布局层 PIVOT「PC 网页端 + 移动 app 端」
+   视觉语言 1:1 沿自 v5（有机曲线 / 呼吸 / 绷紧的弦 / 呼吸体 / 暖朱）
+   新增：满屏宽多区网页布局（≥1024px）+ web 式顶导 + 侧边日志栏
+        移动（<768px）= 单列 app + 底部 tabbar（沿用 v5）
+        平板（768-1023px）= 过渡形态
+   功能逻辑 + localStorage 数据模型 1:1 沿自 v5（tgm:* 不变）
    ============================================================ */
 :root {
   /* —— 色彩（暖身体色） —— */
@@ -171,12 +169,27 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   0%, 100% { transform: scale(1) rotate(0deg); border-radius: var(--blob-1); }
   50%      { transform: scale(1.12) rotate(8deg); border-radius: var(--blob-2); }
 }
+/* 桌面：ambient 更大、更舒展，填充大画布 */
+@media (min-width: 1024px){
+  .ambient-1 {
+    width: 32vw; height: 32vw; max-width: 560px; max-height: 560px;
+    top: -12vh; right: -6vw;
+    filter: blur(48px);
+  }
+  .ambient-2 {
+    width: 28vw; height: 28vw; max-width: 480px; max-height: 480px;
+    bottom: -8vh; left: -6vw;
+    filter: blur(56px);
+  }
+}
 
 /* ============================================================
    app 容器
+   移动：单列窄 app（沿用 v5）；桌面：满屏宽多区网页
    ============================================================ */
 .app {
-  max-width: 560px;
+  width: 100%;
+  max-width: 100%;
   margin: 0 auto;
   min-height: 100dvh;
   position: relative;
@@ -184,9 +197,114 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   flex-direction: column;
   z-index: 1;
 }
+@media (min-width: 768px){
+  .app { max-width: 100%; }
+}
 
 /* ============================================================
-   报头 — 柔和日期戳 + 状态
+   webnav — 桌面 web 式顶导（≥1024px 出现）
+   字标 + 日期戳 + 状态 + 导航四项；非底部 tabbar
+   ============================================================ */
+.webnav {
+  display: none;
+}
+@media (min-width: 1024px){
+  .webnav {
+    display: flex;
+    align-items: center;
+    gap: var(--s-5);
+    padding: calc(var(--s-4) + env(safe-area-inset-top)) var(--webnav-gutter, clamp(32px, 5vw, 96px)) var(--s-4);
+    border-bottom: 1px solid var(--rule);
+    background: var(--paper);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    backdrop-filter: saturate(1.05);
+  }
+  .webnav .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: var(--t-lg);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    flex-shrink: 0;
+  }
+  .webnav .brand .seed {
+    width: 12px; height: 12px;
+    background: var(--accent);
+    border-radius: var(--blob-1);
+    animation: seed-breath var(--dur-breath-cycle) var(--ease-breath) infinite;
+  }
+  .webnav .brand .wordmark .accent { color: var(--accent); }
+  .webnav .stamp {
+    font-family: var(--font-num);
+    font-variant-numeric: tabular-nums;
+    font-size: var(--t-sm);
+    font-weight: 700;
+    color: var(--text-3);
+    white-space: nowrap;
+  }
+  .webnav .stamp .dow { margin-left: 6px; }
+  .webnav .spacer { flex: 1; }
+  .webnav .status {
+    font-size: var(--t-xs);
+    font-weight: 700;
+    color: var(--text-3);
+    letter-spacing: 0.04em;
+    padding: 5px 14px;
+    border-radius: var(--blob-pill);
+    background: var(--paper-soft);
+    transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+    margin-right: var(--s-4);
+  }
+  .webnav .status.is-on {
+    background: var(--accent);
+    color: #fff;
+  }
+  .webnav-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    background: var(--paper-soft);
+    border-radius: var(--blob-pill);
+    padding: 4px;
+    position: relative;
+  }
+  .webnav-nav .nav-btn {
+    position: relative;
+    z-index: 1;
+    padding: 8px 18px;
+    font-size: var(--t-sm);
+    font-weight: 700;
+    color: var(--text-2);
+    border-radius: var(--blob-pill);
+    transition: color var(--dur-fast) var(--ease);
+    white-space: nowrap;
+  }
+  .webnav-nav .nav-btn:hover { color: var(--text); }
+  .webnav-nav .nav-btn.is-active { color: #fff; }
+  .webnav-nav .nav-btn:active { transform: scale(0.94); }
+  .webnav-nav .nav-indicator {
+    position: absolute;
+    top: 4px;
+    left: 0;
+    height: calc(100% - 8px);
+    width: 0;
+    background: var(--accent);
+    border-radius: var(--blob-pill);
+    transform: translateX(0);
+    transition: transform 260ms var(--ease-breath), width 260ms var(--ease-breath);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .webnav-nav .nav-indicator.no-anim { transition: none; }
+}
+
+/* ============================================================
+   报头（移动 / 平板）— 柔和日期戳 + 状态
+   桌面隐藏，被 .webnav 取代
    ============================================================ */
 .masthead {
   display: flex;
@@ -242,6 +360,9 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   background: var(--accent);
   color: #fff;
 }
+@media (min-width: 1024px){
+  .masthead { display: none; }
+}
 
 /* ============================================================
    视图层 — 淡入 + 微沉降（呼吸同频）
@@ -263,6 +384,141 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   transform: translateY(0);
   pointer-events: auto;
   z-index: 1;
+}
+
+/* —— 桌面网页布局：满屏宽多区 —— */
+@media (min-width: 1024px){
+  .view {
+    padding-top: var(--s-7);
+    padding-bottom: var(--s-8);
+    padding-left: clamp(32px, 5vw, 96px);
+    padding-right: clamp(32px, 5vw, 96px);
+  }
+
+  /* —— 今日：双区，主舞台 + 右侧日志栏 —— */
+  #view-home {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.8fr);
+    grid-template-areas:
+      "eyebrow  side"
+      "quote    side"
+      "question side"
+      "string   side"
+      "progress side"
+      "cta      side";
+    column-gap: clamp(40px, 5vw, 88px);
+    align-items: start;
+  }
+  #view-home > .eyebrow      { grid-area: eyebrow; }
+  #view-home > .home-quote   { grid-area: quote; }
+  #view-home > .home-question{ grid-area: question; }
+  #view-home > .string-hero  { grid-area: string; height: 96px; }
+  #view-home > .home-progress{ grid-area: progress; }
+  #view-home > #home-cta     { grid-area: cta; max-width: 540px; }
+  #view-home > .home-side    { grid-area: side; display: flex; flex-direction: column; gap: var(--s-5); }
+  #view-home > .home-side::before {
+    content: "日志 · 最近";
+    font-size: var(--t-xs);
+    letter-spacing: 0.14em;
+    font-weight: 700;
+    color: var(--text-3);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  /* 侧栏内：streak 永远显示（桌面有空间），margin 归零 */
+  #view-home .home-side .streak-block {
+    margin-top: 0; max-height: none; opacity: 1; pointer-events: auto;
+    padding: var(--s-5);
+  }
+  #view-home .home-side .streak-block:not(.is-show) {
+    /* 桌面：即便未开始连续也展示占位，作为"日志栏"骨架 */
+    opacity: 0.55;
+  }
+  #view-home .home-side .mini { margin-top: 0; }
+
+  /* 主舞台放大（桌面沉浸） */
+  #view-home .home-question {
+    font-size: clamp(56px, 6.5vw, 96px);
+  }
+  #view-home .home-progress .big {
+    font-size: clamp(96px, 9vw, 140px);
+  }
+  #view-home .string-hero svg { height: 100%; }
+  #view-home .cta { min-height: 76px; }
+
+  /* —— 训练：双区，标题/导览在左，方案阵列在右 —— */
+  #view-train {
+    display: grid;
+    grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
+    column-gap: clamp(40px, 5vw, 88px);
+    align-items: start;
+  }
+  #view-train > .section-head {
+    position: sticky;
+    top: var(--s-7);
+  }
+  #view-train > .plan-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: var(--s-4);
+  }
+
+  /* —— 记录：三栏数据 + 月历/详情并列 —— */
+  #view-history {
+    display: block;
+    max-width: 1280px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  #view-history .stat-row {
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    max-width: none;
+    margin-top: var(--s-6);
+  }
+  #view-history .stat-cell { min-height: 150px; }
+  #view-history .cal-wrap {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+    column-gap: clamp(32px, 4vw, 64px);
+    align-items: start;
+  }
+
+  /* —— 设置：窄阅读列居中网格 + 卡片分栏 —— */
+  #view-settings {
+    display: block;
+    max-width: 1280px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  #view-settings .settings-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: var(--s-4) clamp(24px, 3vw, 48px);
+    align-items: start;
+  }
+  #view-settings .settings-grid .settings-group { margin-bottom: 0; }
+  #view-settings .about { grid-column: 1 / -1; }
+}
+
+/* —— 平板过渡形态（768-1023px）—— */
+@media (min-width: 768px) and (max-width: 1023px){
+  .app { max-width: 100%; }
+  .view {
+    padding-left: clamp(32px, 6vw, 64px);
+    padding-right: clamp(32px, 6vw, 64px);
+  }
+  #view-train .plan-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: var(--s-3);
+  }
+  #view-home .home-question {
+    font-size: clamp(48px, 9vw, 72px);
+  }
+  #view-home .home-progress .big {
+    font-size: clamp(80px, 14vw, 112px);
+  }
 }
 
 /* —— 小标签 —— */
@@ -1178,6 +1434,14 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
 .tab.is-active { color: var(--accent); }
 .tab:active { transform: scale(0.92); }
 
+/* 桌面隐藏底部 tabbar（改用 .webnav） */
+@media (min-width: 1024px){
+  .tabbar { display: none !important; }
+  .view {
+    padding-bottom: var(--s-8) !important;
+  }
+}
+
 /* ============================================================
    V5 节拍器 — 全屏有机呼吸形
    ============================================================ */
@@ -1249,6 +1513,19 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   display: flex;
   align-items: center;
   justify-content: center;
+}
+@media (min-width: 1024px){
+  /* 桌面：呼吸体更舒展更大，沉浸 */
+  .breath-organism {
+    width: min(42vw, 520px);
+    height: min(42vw, 520px);
+  }
+  .breath-count {
+    font-size: clamp(120px, 14vw, 200px);
+  }
+  .prep .num-321 {
+    font-size: clamp(180px, 22vw, 280px);
+  }
 }
 .breath-svg {
   position: absolute;
@@ -1501,7 +1778,25 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
 
 <div class="app" id="app">
 
-  <!-- ===================== 报头 ===================== -->
+  <!-- ===================== 桌面 web 式顶导 ===================== -->
+  <header class="webnav" id="webnav" aria-label="主导航">
+    <div class="brand">
+      <span class="seed" aria-hidden="true"></span>
+      <span class="wordmark">今天<span class="accent">提了</span>么</span>
+    </div>
+    <span class="stamp" id="webnav-stamp"></span>
+    <span class="spacer"></span>
+    <span class="status" id="webnav-status">待打卡</span>
+    <nav class="webnav-nav" aria-label="视图切换">
+      <span class="nav-indicator no-anim" id="nav-indicator" aria-hidden="true"></span>
+      <button class="nav-btn is-active" data-view="home">今日</button>
+      <button class="nav-btn" data-view="train">训练</button>
+      <button class="nav-btn" data-view="history">记录</button>
+      <button class="nav-btn" data-view="settings">设置</button>
+    </nav>
+  </header>
+
+  <!-- ===================== 报头（移动/平板） ===================== -->
   <header class="masthead">
     <div style="display:flex; align-items:center; gap:var(--s-3); min-width:0;">
       <span class="masthead-stamp" id="masthead-stamp"></span>
@@ -1545,27 +1840,29 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
         <span class="arrow" aria-hidden="true">→</span>
       </button>
 
-      <div class="streak-block" id="streak-block">
-        <div class="leaf" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2C7 7 4 11 4 15a8 8 0 0 0 16 0c0-4-3-8-8-13z"/>
-            <path d="M12 8v8"/>
-          </svg>
+      <div class="home-side">
+        <div class="streak-block" id="streak-block">
+          <div class="leaf" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2C7 7 4 11 4 15a8 8 0 0 0 16 0c0-4-3-8-8-13z"/>
+              <path d="M12 8v8"/>
+            </svg>
+          </div>
+          <div class="text">
+            <div class="lbl">连续打卡</div>
+            <div><span class="v num" id="streak-num">0</span><span class="unit">天</span></div>
+          </div>
         </div>
-        <div class="text">
-          <div class="lbl">连续打卡</div>
-          <div><span class="v num" id="streak-num">0</span><span class="unit">天</span></div>
-        </div>
-      </div>
 
-      <div class="mini">
-        <div class="mini-head">
-          <span class="t">最近 7 天</span>
-          <span class="legend">
-            <i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i>
-          </span>
+        <div class="mini">
+          <div class="mini-head">
+            <span class="t">最近 7 天</span>
+            <span class="legend">
+              <i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i>
+            </span>
+          </div>
+          <div class="mini-dots" id="mini-dots"></div>
         </div>
-        <div class="mini-dots" id="mini-dots"></div>
       </div>
     </section>
 
@@ -1599,21 +1896,25 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
         </div>
       </div>
 
-      <div class="cal-nav">
-        <button id="cal-prev" aria-label="上一月">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        <div class="title num" id="cal-title"></div>
-        <div class="cal-nav-actions">
-          <button id="cal-next" aria-label="下一月">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
+      <div class="cal-wrap">
+        <div>
+          <div class="cal-nav">
+            <button id="cal-prev" aria-label="上一月">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <div class="title num" id="cal-title"></div>
+            <div class="cal-nav-actions">
+              <button id="cal-next" aria-label="下一月">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="cal-dow-row" id="cal-dow-row"></div>
+          <div class="cal-grid" id="cal-grid"></div>
         </div>
-      </div>
-      <div class="cal-dow-row" id="cal-dow-row"></div>
-      <div class="cal-grid" id="cal-grid"></div>
 
-      <div id="day-detail-mount"></div>
+        <div id="day-detail-mount"></div>
+      </div>
     </section>
 
     <!-- ---------- V4 设置 ---------- -->
@@ -1623,6 +1924,7 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
         <h2 class="section-title">调成你的<span class="em">样子</span></h2>
       </div>
 
+      <div class="settings-grid">
       <div class="settings-group">
         <div class="settings-group-title">每日目标</div>
         <div class="settings-card">
@@ -1698,6 +2000,7 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
           </div>
         </div>
       </div>
+      </div><!-- /.settings-grid -->
 
       <div class="about">
         <div class="h">关于</div>
@@ -2039,17 +2342,31 @@ if (window.matchMedia){
   }
 }
 
-/* ---------- 视图切换 ---------- */
+/* ---------- 视图切换（移动 tabbar + 桌面 webnav 双驱动） ---------- */
 var VIEWS = ["home","train","history","settings"];
 function moveTabIndicator(name){
+  // 移动 tabbar 指示条
   var indicator = $("#tab-indicator");
-  if (!indicator) return;
-  var target = document.querySelector('.tab[data-view="'+name+'"]');
-  if (!target) return;
-  var x = target.offsetLeft;
-  var w = target.offsetWidth;
-  indicator.style.width = w + "px";
-  indicator.style.transform = "translateX(" + x + "px)";
+  if (indicator){
+    var target = document.querySelector('.tab[data-view="'+name+'"]');
+    if (target){
+      var x = target.offsetLeft;
+      var w = target.offsetWidth;
+      indicator.style.width = w + "px";
+      indicator.style.transform = "translateX(" + x + "px)";
+    }
+  }
+  // 桌面 webnav 指示条
+  var navIndicator = $("#nav-indicator");
+  if (navIndicator){
+    var navTarget = document.querySelector('.nav-btn[data-view="'+name+'"]');
+    if (navTarget){
+      var nx = navTarget.offsetLeft;
+      var nw = navTarget.offsetWidth;
+      navIndicator.style.width = nw + "px";
+      navIndicator.style.transform = "translateX(" + nx + "px)";
+    }
+  }
 }
 function switchView(name){
   VIEWS.forEach(function(v){
@@ -2058,6 +2375,9 @@ function switchView(name){
     else { el.classList.remove("is-active"); el.setAttribute("inert", ""); }   // inert 屏蔽非 active view Tab 穿透
   });
   $all(".tab").forEach(function(t){
+    t.classList.toggle("is-active", t.getAttribute("data-view") === name);
+  });
+  $all(".nav-btn").forEach(function(t){
     t.classList.toggle("is-active", t.getAttribute("data-view") === name);
   });
   moveTabIndicator(name);
@@ -2071,25 +2391,39 @@ $all(".tab").forEach(function(t){
     switchView(t.getAttribute("data-view"));
   });
 });
+$all(".nav-btn").forEach(function(t){
+  t.addEventListener("click", function(){
+    switchView(t.getAttribute("data-view"));
+  });
+});
 
-/* ---------- 报头 ---------- */
+/* ---------- 报头（移动 masthead + 桌面 webnav 同步） ---------- */
 function renderMasthead(){
   var d = new Date();
   var wd = ["周日","周一","周二","周三","周四","周五","周六"][d.getDay()];
-  $("#masthead-stamp").innerHTML = (d.getMonth()+1) + "." + pad2(d.getDate()) + ' <span class="dow">' + wd + '</span>';
+  var stampHtml = (d.getMonth()+1) + "." + pad2(d.getDate()) + ' <span class="dow">' + wd + '</span>';
+  $("#masthead-stamp").innerHTML = stampHtml;
+  var webnavStamp = $("#webnav-stamp");
+  if (webnavStamp) webnavStamp.innerHTML = stampHtml;
+
   var day = Store.getDay(todayKey());
   var done = day ? day.sessions.length : 0;
   var goal = settings.dailyGoalGroups;
-  var st = $("#masthead-status");
+  var onText, offText, isOn;
   if (done >= goal && done > 0){
-    st.textContent = "今天，提了";
-    st.classList.add("is-on");
+    onText = "今天，提了"; isOn = true;
   } else if (done > 0){
-    st.textContent = done + "/" + goal;
-    st.classList.remove("is-on");
+    offText = done + "/" + goal; isOn = false;
   } else {
-    st.textContent = "待打卡";
-    st.classList.remove("is-on");
+    offText = "待打卡"; isOn = false;
+  }
+  var st = $("#masthead-status");
+  if (isOn){ st.textContent = onText; st.classList.add("is-on"); }
+  else { st.textContent = offText; st.classList.remove("is-on"); }
+  var wst = $("#webnav-status");
+  if (wst){
+    if (isOn){ wst.textContent = onText; wst.classList.add("is-on"); }
+    else { wst.textContent = offText; wst.classList.remove("is-on"); }
   }
 }
 
@@ -2715,16 +3049,25 @@ function init(){
   }
   switchView("home");
 
-  // 首屏 tab 指示条无动画就位
+  // 首屏指示条无动画就位（移动 tabbar + 桌面 webnav）
   var indicator = $("#tab-indicator");
-  if (indicator){
-    moveTabIndicator("home");
+  var navIndicator = $("#nav-indicator");
+  moveTabIndicator("home");
+  requestAnimationFrame(function(){
     requestAnimationFrame(function(){
-      requestAnimationFrame(function(){
-        indicator.classList.remove("no-anim");
-      });
+      if (indicator) indicator.classList.remove("no-anim");
+      if (navIndicator) navIndicator.classList.remove("no-anim");
     });
-  }
+  });
+
+  // 跨断点 / 尺寸变化时重定位双指示条
+  window.addEventListener("resize", function(){
+    var activeTab = document.querySelector(".tab.is-active");
+    if (activeTab) moveTabIndicator(activeTab.getAttribute("data-view"));
+  });
+
+  // PWA：注入 web app manifest（Blob URL，无独立文件）+ apple 元，让手机可"添加到主屏幕"
+  installPWA();
 
   // fresh-load 断言（仅无任何 log 且今日未打卡时）
   var logKeys = Store.allLogKeys();
@@ -2735,6 +3078,69 @@ function init(){
     console.assert(!metroEl.classList.contains("is-open"), "[tgm] metro should not auto-open on fresh load");
     console.assert(getComputedStyle(metroEl).display === "none", "[tgm] metro display should be none on fresh load");
     console.assert(!(todayEntry && todayEntry.sessions && todayEntry.sessions.length), "[tgm] no session on fresh load");
+  }
+}
+
+/* ---------- PWA manifest 注入（运行时 Blob URL，无独立文件，无 SW，不影响离线） ---------- */
+function installPWA(){
+  try {
+    // inline SVG → data URL 作 icon（暖朱有机 blob 种子）
+    var iconSvg =
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">'+
+        '<rect width="512" height="512" fill="#E85A4F"/>'+
+        '<path fill="#F4B4A8" d="M256 80 C 360 80 432 160 432 256 C 432 360 348 432 256 432 C 168 432 80 360 80 256 C 80 168 156 80 256 80 Z"/>'+
+        '<circle cx="256" cy="256" r="78" fill="#fff" opacity="0.92"/>'+
+      '</svg>';
+    var iconUrl = "data:image/svg+xml;utf8," + encodeURIComponent(iconSvg);
+
+    var manifest = {
+      name: "今天提了么",
+      short_name: "提了么",
+      description: "每天问你一句、陪你提一组、替你记一笔的安静小工具。",
+      start_url: ".",
+      scope: ".",
+      display: "standalone",
+      orientation: "portrait",
+      background_color: "#FAF3EC",
+      theme_color: "#FAF3EC",
+      icons: [
+        { src: iconUrl, sizes: "192x192", type: "image/svg+xml", purpose: "any maskable" },
+        { src: iconUrl, sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }
+      ]
+    };
+    var blob = new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("link");
+    link.rel = "manifest";
+    link.href = url;
+    document.head.appendChild(link);
+
+    // apple 主屏图标（inline SVG 数据 URL）
+    var apple = document.createElement("link");
+    apple.rel = "apple-touch-icon";
+    apple.href = iconUrl;
+    document.head.appendChild(apple);
+
+    if (!document.querySelector('meta[name="apple-mobile-web-app-capable"]')){
+      var m = document.createElement("meta");
+      m.name = "apple-mobile-web-app-capable";
+      m.content = "yes";
+      document.head.appendChild(m);
+    }
+    if (!document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')){
+      var s = document.createElement("meta");
+      s.name = "apple-mobile-web-app-status-bar-style";
+      s.content = "default";
+      document.head.appendChild(s);
+    }
+    if (!document.querySelector('meta[name="apple-mobile-web-app-title"]')){
+      var t = document.createElement("meta");
+      t.name = "apple-mobile-web-app-title";
+      t.content = "今天提了么";
+      document.head.appendChild(t);
+    }
+  } catch(e){
+    // manifest 注入失败不应影响主功能
   }
 }
 init();
