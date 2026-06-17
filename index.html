@@ -82,6 +82,7 @@
   --dur-fast: 160ms;
   --dur: 320ms;
   --dur-breath-cycle: 4500ms;  /* 全 app 签名：4.5s 一个呼吸 */
+  --dur-breath: 3000ms;        /* 节拍器每拍过渡时长（JS 按方案秒数覆盖；默认 3s） */
 
   color-scheme: light;
 }
@@ -1638,9 +1639,9 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   fill: var(--accent-soft);
   stroke: var(--accent);
   stroke-width: 2;
-  transition: fill var(--dur-breath-cycle) var(--ease-breath),
-              stroke var(--dur-breath-cycle) var(--ease-breath),
-              transform var(--dur-breath-cycle) var(--ease-breath);
+  transition: fill var(--dur-breath) var(--ease-breath),
+              stroke var(--dur-breath) var(--ease-breath),
+              transform var(--dur-breath) var(--ease-breath);
   transform-origin: 50% 50%;
   transform-box: fill-box;
 }
@@ -1648,8 +1649,8 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
 .breath-inner {
   fill: var(--accent);
   opacity: 0.25;
-  transition: transform var(--dur-breath-cycle) var(--ease-breath),
-              opacity var(--dur-breath-cycle) var(--ease-breath);
+  transition: transform var(--dur-breath) var(--ease-breath),
+              opacity var(--dur-breath) var(--ease-breath);
   transform-origin: 50% 50%;
   transform-box: fill-box;
 }
@@ -5164,6 +5165,10 @@ var Metro = (function(){
     el.prep.style.display = "none";
     el.breath.style.display = "";
     el.done.style.display = "none";
+    // display:none→block 不触发 transition：先确保"无 phase"基础态、强制 reflow
+    // 让基础态先绘制，再加 is-contract，首个收紧才会从基础态过渡（动起来、与倒数同步）
+    el.root.classList.remove("is-contract", "is-relax");
+    void el.breath.offsetWidth;
     setIdx = 0; repIdx = 0; phase = "contract";
     startedReps = 0;
     setPhase("contract");
