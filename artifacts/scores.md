@@ -12,6 +12,7 @@
 | 6 | 9 | 9 | 8 | 8 | 8.55 | minor | REFINE | --text-3 对比度 3.76:1 未达 AA；tab 指示条 3px 应 4px；PWA manifest file:// warning |
 | 7 | 9 | 9 | 9 | 8 | 8.85 | **pass** | —（达标终止） | 定向修复 v6 三条；剩余：桌面 nav-indicator 4-5px 微偏（minor/nit，不阻塞） |
 | 8 | — | — | — | — | （mmx 复核，未正式重评） | — | REFINE | 去 --success 墨绿→统一暖朱；进度弦矢高 6%→11-16%；hero"今日"→"日课"；深色 CTA 对比 2.79→6.27 达 AA。mmx 确认绿色彻底消失、深色 CTA 清晰。mmx 仍误读弦方向（实际 2/3 向上拱/3/3 向下垂，方向相反，可读）。遗留 3 个 plausible minor：① 今日完成点应填实 ② 完成 CTA 形态应与进行中一致 ③ 桌面副字层级 |
+| 9 | — | — | — | — | （DOM 几何验证） | — | REFINE | 修用户发现的 blob 圆角遮内容：内容容器(stat-cell/plan-card/streak/day-detail/settings/about/cal)激进百分比圆角→克制 px(≤24)+padding≥半径，DOM 复测距边≥半径不遮；装饰元素(呼吸体/mini-dot/ambient)保留有机。+ 3 nit：今日完成点填实、完成 CTA 保持实心、桌面副字提级。角弧不再遮文字 ✓ |
 
 ## 备注
 - v1–v3：暖陶土"呼吸圆环"，被批太保守。

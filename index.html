@@ -475,13 +475,14 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
     gap: var(--s-4);
   }
 
-  /* —— 记录：三栏数据 + 月历/详情并列 —— */
+  /* —— 记录：三栏数据 + 月历/详情并列（满屏宽，与 home/train 同左边缘/同宽） —— */
   #view-history {
-    display: block;
-    max-width: 1280px;
-    margin: 0 auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     width: 100%;
+    margin: 0;
   }
+  #view-history .section-head { max-width: none; }
   #view-history .stat-row {
     grid-template-columns: repeat(3, minmax(0,1fr));
     max-width: none;
@@ -490,22 +491,24 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   #view-history .stat-cell { min-height: 150px; }
   #view-history .cal-wrap {
     display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
-    column-gap: clamp(32px, 4vw, 64px);
+    /* 满宽下：月历更舒展，日详情更宽，内部仍多区 */
+    grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+    column-gap: clamp(40px, 5vw, 88px);
     align-items: start;
   }
 
-  /* —— 设置：窄阅读列居中网格 + 卡片分栏 —— */
+  /* —— 设置：满屏宽双列网格 + 卡片分栏（与 home/train 同左边缘/同宽） —— */
   #view-settings {
-    display: block;
-    max-width: 1280px;
-    margin: 0 auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     width: 100%;
+    margin: 0;
   }
+  #view-settings .section-head { max-width: none; }
   #view-settings .settings-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0,1fr));
-    gap: var(--s-4) clamp(24px, 3vw, 48px);
+    gap: var(--s-4) clamp(40px, 5vw, 88px);
     align-items: start;
   }
   #view-settings .settings-grid .settings-group { margin-bottom: 0; }
@@ -1151,16 +1154,42 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   opacity: 0.75;
   margin-top: 2px;
 }
-.cal-cell.is-today {
-  outline: 2px solid var(--accent);
+/* 今日 = 全月最吸睛的一格：复合表达——
+   1) 强制用最深饱和暖朱档填充（无论当日是否达标）；
+   2) 朱红描边环再强调"焦点"；
+   3) 数字描细以保白底可读。
+   保证"今日 = 视觉最强档"，与达标档明度体系不冲突（达标档无描边、较浅）。 */
+.cal-cell.is-today,
+.cal-cell[data-level].is-today {
+  background: var(--accent);
+  color: #fff;
+  outline: 2px solid var(--accent-hot);
   outline-offset: 2px;
-  z-index: 1;
+  box-shadow: 0 0 0 4px rgba(232,90,79,0.14);
+  z-index: 3;
 }
+[data-theme="dark"] .cal-cell.is-today,
+[data-theme="dark"] .cal-cell[data-level].is-today {
+  background: var(--accent);
+  color: var(--paper);
+  outline-color: var(--accent-hot);
+  box-shadow: 0 0 0 4px rgba(255,107,94,0.18);
+}
+.cal-cell.is-today .n,
+.cal-cell.is-today .cnt { font-weight: 800; }
+.cal-cell.is-today .n,
+.cal-cell.is-today[data-level] .n { color: #fff; }
+[data-theme="dark"] .cal-cell.is-today .n,
+[data-theme="dark"] .cal-cell.is-today[data-level] .n { color: var(--paper); }
+.cal-cell.is-today .cnt { color: rgba(255,255,255,0.9); opacity: 1; }
+[data-theme="dark"] .cal-cell.is-today .cnt { color: rgba(31,24,20,0.85); }
 .cal-cell.is-selected {
   outline: 2px solid var(--text);
   outline-offset: 2px;
   z-index: 2;
 }
+/* 选中 = 今日：选中环优先（更外、更高），保留今日填充 */
+.cal-cell.is-today.is-selected { z-index: 4; }
 
 /* 日详情 */
 .day-detail {
@@ -1361,22 +1390,36 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   color: #fff;
 }
 
-/* —— 导出按钮 —— */
+/* —— 按钮体系 ——
+   primary（主行动）：暖朱 --accent 实心 + 白/暖纸字
+     = 首页 CTA、节拍器暂停、默认方案卡、分段选中态（已由 .cta/.mbtn-primary/.plan-card.is-default 承载，同源）
+   secondary（次要/工具行动）：透明底 + 暖朱描边 + 暖朱字（与 primary 同源同色，仅档位不同）
+     = 导出、节拍器"结束"（.mbtn-ghost 仍走 paper-soft，属同体系内的次弱档，保留）
+   目标：消灭"红 vs 黑"两种无关实心，统一为"实心主 / 描边次"。 */
 .export-btn {
   display: inline-flex;
   align-items: center;
   gap: var(--s-2);
   padding: var(--s-3) var(--s-5);
-  background: var(--text);
-  color: var(--paper);
+  background: transparent;
+  color: var(--accent);
+  border: 1.5px solid var(--accent);
   font-size: var(--t-sm);
   font-weight: 700;
   border-radius: var(--blob-pill);
-  transition: background-color var(--dur-fast) var(--ease);
+  transition: background-color var(--dur-fast) var(--ease),
+              color var(--dur-fast) var(--ease),
+              border-color var(--dur-fast) var(--ease);
 }
-.export-btn:hover { background: var(--accent); }
+.export-btn:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
 .export-btn:active { transform: scale(0.96); }
 .export-btn svg { width: 14px; height: 14px; }
+/* 深色 secondary 对比度：暖朱 #FF6B5E 描边/字 on paper #1F1814 = 5.4:1 AA ✓ */
+[data-theme="dark"] .export-btn:hover { color: var(--paper); }
 
 /* —— 关于块 —— */
 .about {
@@ -1479,10 +1522,43 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--dur) var(--ease);
+  /* 与壳同温：暖纸 paper-soft tonal 分层（= body 背景） */
   background-image:
     radial-gradient(120% 80% at 100% 0%, var(--paper-soft) 0%, transparent 55%),
     radial-gradient(100% 60% at 0% 100%, var(--paper-soft) 0%, transparent 60%);
+  overflow: hidden;
 }
+/* 节拍器 z-index:100 盖住了全 app 的 .ambient 暖朱光晕，
+   在沉浸态内部补一个同源、极克制的暖朱 ambient，让它"回到主 app 语境"。
+   仅修温度，不加 nav/eyebrow，保留去 chrome 的专注感。 */
+.metronome::before {
+  content: "";
+  position: absolute;
+  top: -10vh; right: -8vw;
+  width: 38vw; height: 38vw; max-width: 420px; max-height: 420px;
+  background: var(--accent-soft);
+  border-radius: var(--blob-1);
+  filter: blur(48px);
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: 0;
+  animation: ambient-breath var(--dur-breath-cycle) var(--ease-breath) infinite;
+}
+.metronome::after {
+  content: "";
+  position: absolute;
+  bottom: -8vh; left: -10vw;
+  width: 32vw; height: 32vw; max-width: 360px; max-height: 360px;
+  background: var(--paper-deep);
+  border-radius: var(--blob-2);
+  filter: blur(52px);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 0;
+  animation: ambient-breath var(--dur-breath-cycle) var(--ease-breath) infinite reverse;
+  animation-delay: -2200ms;
+}
+.metronome-top, .metronome-stage, .metronome-bottom { position: relative; z-index: 1; }
 .metronome.is-open {
   display: flex;
   opacity: 1;
