@@ -1,0 +1,46 @@
+name: mobile (EAS build)
+
+# 打包移动 app(iOS + Android)到 Expo 的 EAS 云端构建。
+# 触发:推送 v* tag,或在 Actions 页手动运行。
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: "EAS build profile"
+        type: choice
+        default: production
+        options: [preview, production]
+
+jobs:
+  build:
+    name: EAS build (all platforms)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup Expo + EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: EAS build
+        working-directory: apps/mobile
+        run: eas build --platform all --non-interactive --profile ${{ github.event.inputs.profile || 'production' }}
