@@ -1,0 +1,63 @@
+{
+  "round": 2,
+  "verdict": "minor",
+  "scores": {
+    "design_quality": 8,
+    "originality": 8,
+    "usability": 8,
+    "interaction_fluency": 8
+  },
+  "weighted_total": 8.00,
+  "v1_major_fixes": {
+    "M1_autostart_metro": {
+      "fixed": true,
+      "evidence": "三次清空 localStorage + reload 干净用户路径下：metroDisplay==='none' && metro.classList.contains('is-open')===false && document.activeElement===<body> && 今日无 tgm:log:* 键 && activeView==='view-home'。CTA onclick 只绑 startMetronome，无 autofocus/focus()/click() 调用，init() 末尾有 cta.blur() 兜底。代码无 M1 复现路径。"
+    },
+    "M2_muted_contrast": {
+      "fixed": true,
+      "evidence": "实测对比度（WCAG 相对亮度公式）：浅色 --text-muted #756B5F on --bg #FBF7F1 = 4.89:1（≥4.5 AA），深色 --text-muted #9C9085 on --bg #1E1A17 = 5.55:1（≥4.5 AA）；secondary 高于 muted 浅色差 0.70:1 / 深色差 2.36:1，均 ≥ 0.5:1，正文秩序未破坏。"
+    }
+  },
+  "v1_minor_nit_fixes": {
+    "m1_tab_indicator": "fixed —— #tab-indicator 唯一绝对定位 + transform transition 220ms --ease-soft，旧 .tab .ind 全部删除（0 个残留）。实际切换 transform 从 translateX(54px)→170px 连贯滑动。小偏差：高度 3px vs 契约 §5.2.1 写的 4px（nit 级）。",
+    "m2_phase_sync": "fixed —— setPhase() 在同一同步执行块内一次性更新 ring-core 背景、phase 文本、aria-live、计时方向、触感/提示音。10ms 间隔密集采样在收紧↔放松边界（t=4352 / t=1357 / t=7358 / t=10358）抓到的边界帧：phase 文本与 ring-core 计算背景色**同一帧切换**，零错位。",
+    "m3_close_landing": "fixed —— close(isCompletion) 内顺序硬约束：先 switchView('home') + tabbar.classList.remove('is-hidden')，后触发庆祝。实测：0 reps 提前结束 → activeView='view-home' && tabbar is-hidden=false && 不写 session（doneReps>0 才写）&& 进度不变；4 reps 提前结束 → activeView='view-home' && 进度正确 +1。",
+    "m4_seven_day_bar": "fixed —— 每格有星期缩写 + dd 日期数字（四11 / 三17）；今日格 is-today class + outline 2px solid #C75D3C（brand）；4 档色映射与月历共用同一函数：实测 13 日 5 sessions→success(墨绿), 14 日 3 sessions→brand(陶土橘), 16 日 1 session→brand-soft(浅陶土), 其余→surface-soft；月历今日格同种 2px brand outline。",
+    "n1_focus_visible": "fixed —— 全站 :focus-visible 统一 outline:3px solid --brand-soft(#E8B8A6) + outline-offset:2px。Tab 键采样的 plan-card / cal-cell / switch 等元素 matches(':focus-visible')===true 且 outline 全部生效。但发现副作用（见 issues B）。",
+    "n2_hero_rhythm": "fixed —— h1='今天，提了么？' fontSize=36px(--text-2xl), 进度数字=56px(--text-display) 落差两档；每日一句 fontSize=12px(--text-xs) muted 色 rgb(117,107,95)，与日期同 parent（同组元信息）；h1 marginTop=0。"
+  },
+  "issues": [
+    {
+      "severity": "major",
+      "area": "usability",
+      "title": "session.durationSec 永远写入 0，记录页 session 详情永远显示「0 分钟」",
+      "detail": "index.html 行 1906 声明 var totalElapsed = 0，行 1935 在 Metro.reset() 中重置为 0，但**没有任何位置累加 totalElapsed**。setPhase() 行 2043 只记录 phaseStartTs=Date.now()，从未在 onPhaseEnd/startTick 中累加 totalElapsed += phaseMs。因此 recordSession(plan, reps, dur, finished) 的 dur 参数永远是 totalElapsedSec()===0。实际跑出来的 session 在记录页 day-detail 显示「入门 · X 次 / 0 分钟」，与 v1 highlights「session 元信息可读」矛盾。\n\n修复：在 onPhaseEnd() 开头加 totalElapsed += (Date.now() - phaseStartTs)；或在 startTick 的 setInterval 回调累加 totalElapsed += 1000。后者更简单且与 displayed countdown 同源。"
+    },
+    {
+      "severity": "minor",
+      "area": "usability",
+      "title": "键盘 Tab 穿越非 active 视图：focus-visible 外环在不可见元素上闪烁",
+      "detail": "4 个 .view 元素 display 都是 'block'、visibility 都是 'visible'，仅靠 .is-active class 控制 z-index/opacity 切换。键盘用户在 home 视图按 Tab 会按 DOM 顺序依次穿过 view-train 的 plan-card×4、view-history 的 30+ 个 cal-cell、view-settings 的 switches，最后才到达 tabbar。n1 修复后这些不可见元素都有清晰可见的 3px brand-soft outline 外环，用户会看到一个外环在屏幕外/不可见区域闪烁、且要按几十下 Tab 才能到主导航。\n\n修复：在 switchView(name) 内对非 active view 加 inert 属性（现代浏览器支持，IE 退化无影响）：document.querySelectorAll('.view').forEach(v=>{ if (v.id === 'view-'+name) v.removeAttribute('inert'); else v.setAttribute('inert',''); }); 同时配合 CSS .view:not(.is-active){ display: none; }（或 visibility:hidden + pointer-events:none）。display:none 会触发 transform 重算，建议用 inert 更稳。"
+    },
+    {
+      "severity": "nit",
+      "area": "interaction_fluency",
+      "title": "tab 指示条高度 3px，契约 §5.2.1 明确要求 4px",
+      "detail": "getComputedStyle(#tab-indicator).height === '3px'，契约 §5.2.1 写明 height:4px。视觉上无辨识度差异，但属契约字面偏差。修复：CSS .tab-indicator { height: 4px; }。"
+    },
+    {
+      "severity": "nit",
+      "area": "usability",
+      "title": "init() 末尾的 cta.blur() 兜底暗示存在某条让 CTA 自动获焦的路径未被根治",
+      "detail": "我在 devtools 测试工具交互下曾复现一次 CTA 被聚焦 + metro 自动打开 + 写入一条 finished:false session 的情况，但在纯用户 reload 路径下 3 次连续测试均无法复现。这表明 M1 修复在主流路径下有效，但 cta.blur() 兜底是事后补救而非根因清除。建议：grep 整个脚本确认没有任何对 .cta 的 focus()/click() 调用（含 setTimeout/rAF 回调），如果代码确实干净可移除 init 末尾的 blur 兜底（兜底本身会让真正需要 focus 的辅助技术场景也被取消）。"
+    }
+  ],
+  "highlights": [
+    "M2 对比度校准精准：浅色 muted 4.89:1 / 深色 muted 5.55:1，与 secondary 的层级差保持（浅 0.70:1 / 深 2.36:1），既达 AA 又不破坏 primary>secondary>muted 正文秩序——是一次教科书级的 token 微调。",
+    "m2 节拍器阶段同步是本轮最干净的修复：setPhase() 单一同步函数 + 10ms 高频密集采样在 4 个边界帧验证 phase 文本与 ring-core 背景色**同一帧切换**，零错位。",
+    "m1 tab 指示条从 v1 的「四条淡入淡出」升级为「单条 transform 滑动」，配合 no-anim 类避免首屏从 0 滑过来，细节处理到位。",
+    "m4 首页 7 天条 + 月历今日锚点共用 heatLevel 函数与 4 档色映射，两处「今日」outline 视觉同源（2px solid #C75D3C），信息密度与语义一致性都明显提升。",
+    "陶土橘 + 晨雾米白 + 暖夜炭主色方案、三层呼吸圆环、大圆角编辑式排版气质全部保持，无 regression。零网络请求、零 CDN、零外部资源，离线硬约束继续满足。",
+    "桌面端 1440px / 平板 768px / 移动 390px 三档视口均保持 max-width:480px 居中窄容器，无断版、无强行多列。"
+  ]
+}

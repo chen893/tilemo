@@ -767,7 +767,7 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   top: 0;
   left: 0;
   width: 24px;
-  height: 3px;
+  height: 4px;
   border-radius: var(--radius-pill);
   background: var(--brand);
   transform: translateX(0);
@@ -1006,6 +1006,8 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   .ring-outer, .ring-mid, .ring-core { transform: none !important; }
   .cta.is-celebrating { animation: none; }
   .view { transition: opacity 1ms; transform: none; }
+  /* E1: reduced-motion 下倒计时数字呼吸降级（字号恒为满值，过渡关闭） */
+  .metro .ring-count { transition: none !important; }
 }
 </style>
 </head>
@@ -1536,8 +1538,8 @@ function moveTabIndicator(name){
 function switchView(name){
   VIEWS.forEach(function(v){
     var el = document.getElementById("view-"+v);
-    if (v === name) el.classList.add("is-active");
-    else el.classList.remove("is-active");
+    if (v === name){ el.classList.add("is-active"); el.removeAttribute("inert"); }
+    else { el.classList.remove("is-active"); el.setAttribute("inert", ""); }   // m1: inert 屏蔽非 active view 的键盘 Tab 与辅助技术，避免 transform 重算
   });
   $all(".tab").forEach(function(t){
     t.classList.toggle("is-active", t.getAttribute("data-view") === name);
@@ -1990,6 +1992,8 @@ var Metro = (function(){
     [el.outer, el.mid, el.core].forEach(function(node){
       node.style.transitionDuration = dur;
     });
+    // E1: 同步暴露为 CSS 变量，供 ring-count 的 font-size transition 引用（--dur-breath）
+    document.documentElement.style.setProperty("--dur-breath", dur);
   }
 
   /* setPhase —— 单一同步函数（契约 §5.3）
@@ -2040,6 +2044,14 @@ var Metro = (function(){
     // 6) 触感与提示音（依 settings）
     feedback(p);
 
+    // E1: 倒计时数字随 phase 呼吸（收紧外张满值、放松内收 8%），与圆环 scale 同频但不耦合；
+    // 单拍内不再二次插值，phase 边界瞬间切换；只读 --text-mega / --ease-breath，只改 ring-count。
+    // reduced-motion 双层退化：CSS transition:none + JS 两 phase 都赋满值。
+    var mega = parseFloat(getCSSVar("--text-mega"));   // 88
+    var breathScale = prefersReducedMotion ? 1 : (p === "contract" ? 1 : 0.92);
+    el.count.style.transition = "font-size var(--dur-breath) var(--ease-breath)";
+    el.count.style.fontSize = (mega * breathScale) + "px";
+
     phaseStartTs = Date.now();
     startTick();
   }
@@ -2054,6 +2066,7 @@ var Metro = (function(){
     tickHandle = setInterval(function(){
       if (state !== "running") return;
       remaining -= 1;
+      totalElapsed += 1000;   // M1: 与 displayed countdown 同源同频累加，修复 durationSec 恒为 0
       if (remaining <= 0){
         // 阶段结束
         stopTick();
@@ -2234,12 +2247,8 @@ function init(){
     console.assert(!(todayEntry && todayEntry.sessions && todayEntry.sessions.length), "[tgm] no session on fresh load");
   }
 
-  // CTA autofocus / focus() / click() 全部禁止（契约 §5.1.1–5.1.2）——
-  // init 内只做非交互渲染，用户必须主动点击 CTA 才进入训练。
-  var cta = $("#home-cta");
-  if (cta && document.activeElement === cta){
-    cta.blur();
-  }
+  // n2: grep 已确认脚本内无任何对 .cta 的 focus()/click() 调用（含 setTimeout/rAF 回调），
+  // 自动聚焦路径根因已清除，移除 cta.blur() 兜底。
 }
 init();
 
