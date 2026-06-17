@@ -9,6 +9,13 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@tilemo/data": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.8"
   }
 }

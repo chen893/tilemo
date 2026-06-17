@@ -1,37 +1,28 @@
-import { TILEMO_CORE_VERSION } from "@tilemo/core";
-import { TILEMO_DATA_VERSION } from "@tilemo/data";
-import { useBootStore } from "@tilemo/store";
+import { useDataStore } from "@tilemo/store";
 
-/** P0 shell — proves the monorepo wiring (4 packages resolve + build + render). */
+/** P1 Home — the spine: "今天提了么?" + today's progress + streak, read from the
+ *  Store (existing tgm: localStorage data is shown as-is). */
 export function App() {
-  const bootCount = useBootStore((s) => s.bootCount);
-  const bump = useBootStore((s) => s.bump);
+  const settings = useDataStore((s) => s.settings);
+  const today = useDataStore((s) => s.today);
+  const streak = useDataStore((s) => s.streak);
+  if (!settings) return null;
+
+  const done = today?.sessions?.length ?? 0;
+  const goal = settings.dailyGoalGroups;
+  const now = new Date();
+  const dateStr = `${now.getMonth() + 1} 月 ${now.getDate()} 日`;
 
   return (
-    <div
-      style={{
-        background: "var(--paper)",
-        color: "var(--ink)",
-        minHeight: "100vh",
-        fontFamily: "system-ui, -apple-system, 'PingFang SC', sans-serif",
-        padding: "2rem",
-      }}
-    >
-      <h1 style={{ margin: 0, color: "var(--accent)" }}>今天提了么</h1>
-      <p>monorepo P0 · core {TILEMO_CORE_VERSION} · data {TILEMO_DATA_VERSION}</p>
-      <button onClick={bump} style={btn}>
-        zustand works · clicked {bootCount}
-      </button>
+    <div className="page">
+      <div className="masthead">{dateStr}</div>
+      <h1 className="question">今天，提了么？</h1>
+      <p className="progress">
+        已完成 <b>{done}</b> / {goal} 组
+      </p>
+      <p className="streak">
+        连续 <b>{streak?.current ?? 0}</b> 天 · 最长 {streak?.longest ?? 0} 天
+      </p>
     </div>
   );
 }
-
-const btn: React.CSSProperties = {
-  background: "var(--accent)",
-  color: "var(--paper)",
-  border: "none",
-  borderRadius: 999,
-  padding: "0.6rem 1.2rem",
-  fontSize: 16,
-  cursor: "pointer",
-};

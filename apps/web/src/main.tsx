@@ -1,9 +1,17 @@
 import { createRoot } from "react-dom/client";
-import { tokensToCssVars } from "@tilemo/design-tokens";
+import { tokensToStylesheet } from "@tilemo/design-tokens";
+import { LocalStorageAdapter, Store } from "@tilemo/data";
+import { useDataStore } from "@tilemo/store";
 import { App } from "./App";
+import "./styles.css";
 
-// Inject design tokens as CSS custom properties on :root — regenerates the exact
-// variable names the original single-file index.html used, so ported CSS works as-is.
-document.documentElement.style.cssText += ";" + tokensToCssVars("light");
+// Inject the full design-token stylesheet once (light :root + dark override).
+// Identical CSS custom properties to the original index.html → ported CSS works.
+const styleEl = document.createElement("style");
+styleEl.textContent = tokensToStylesheet();
+document.head.appendChild(styleEl);
+
+// Bootstrap from localStorage — reads existing `tgm:*` data (backward-compat).
+useDataStore.getState().init(new Store(new LocalStorageAdapter()));
 
 createRoot(document.getElementById("root")!).render(<App />);
