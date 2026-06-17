@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "今天提了么",
+    "slug": "tilemo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "tilemo",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tilemo.app"
+    },
+    "android": {
+      "package": "com.tilemo.app"
+    },
+    "plugins": []
+  }
+}

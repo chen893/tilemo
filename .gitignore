@@ -1,3 +1,19 @@
 artifacts/
 .claude/
+
+# deps / build
+node_modules/
+dist/
+build/
+.turbo/
+*.tsbuildinfo
+
+# expo / rn
+.expo/
+ios/
+android/
+
+# env / os
+.env
+.env.*
 .DS_Store
