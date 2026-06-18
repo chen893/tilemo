@@ -7,6 +7,7 @@ import { Metro, type MetroSnapshot, recordSession } from "@tilemo/core";
 import { detectStreakMilestone, type MilestoneCopy } from "@tilemo/share-card";
 import type { Plan } from "@tilemo/data";
 import { useDataStore } from "./data";
+import { useOpenShare } from "./share/ShareContext";
 
 export function Metronome({ plan, onClose }: { plan: Plan; onClose: () => void }) {
   const store = useDataStore((s) => s.store);
@@ -20,6 +21,7 @@ export function Metronome({ plan, onClose }: { plan: Plan; onClose: () => void }
   const lastPhaseRef = useRef("");
   const audioRef = useRef<AudioContext | null>(null);
   const milestoneRef = useRef<MilestoneCopy | null>(null);
+  const openShare = useOpenShare();
 
   const handleClose = () => {
     if (closedRef.current) return;
@@ -41,11 +43,18 @@ export function Metronome({ plan, onClose }: { plan: Plan; onClose: () => void }
             }
           }
         },
-        // 阶段 4 将在此弹里程碑分享卡（milestoneRef）+ CTA 庆祝
-        onAfterClose: () => handleClose(),
+        // 完成且跨 streak 里程碑 → 延迟弹成就卡（晚于 CTA 庆祝）
+        onAfterClose: (completion) => {
+          handleClose();
+          if (completion && milestoneRef.current) {
+            const m = milestoneRef.current;
+            milestoneRef.current = null;
+            setTimeout(() => openShare({ type: "milestone", milestone: m }), 900);
+          }
+        },
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [store, refresh],
+    [store, refresh, openShare],
   );
 
   useEffect(() => {
@@ -164,9 +173,14 @@ export function Metronome({ plan, onClose }: { plan: Plan; onClose: () => void }
           </>
         )}
         {stage === "done" && (
-          <button className="mbtn mbtn-primary" id="metro-close" onClick={handleClose}>
-            好的
-          </button>
+          <>
+            <button className="mbtn mbtn-ghost" onClick={() => openShare({ type: "daily" })}>
+              分享这次
+            </button>
+            <button className="mbtn mbtn-primary" id="metro-close" onClick={handleClose}>
+              好的
+            </button>
+          </>
         )}
       </div>
     </div>

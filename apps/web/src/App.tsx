@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useDataStore } from "./data";
 import { Shell } from "./Shell";
+import { ShareProvider } from "./share/ShareContext";
 
 export function App() {
   const settings = useDataStore((s) => s.settings);
@@ -15,6 +16,10 @@ export function App() {
     document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
   }, [settings?.theme]);
 
-  return <Shell />;
+  return (
+    <ShareProvider>
+      <Shell />
+    </ShareProvider>
+  );
 }
 

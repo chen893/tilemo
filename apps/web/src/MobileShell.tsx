@@ -5,6 +5,7 @@ import { HomeView } from "./screens/HomeView";
 import { TrainView } from "./screens/TrainView";
 import { HistoryView } from "./screens/HistoryView";
 import { SettingsView } from "./screens/SettingsView";
+import { useOpenShare } from "./share/ShareContext";
 
 export type Tab = "home" | "train" | "history" | "settings";
 
@@ -24,8 +25,16 @@ export function MobileShell({
   setTab: (t: Tab) => void;
   onStart: (p: Plan) => void;
 }) {
+  const openShare = useOpenShare();
   return (
     <div className="app" id="app">
+      <button
+        className="share-fab"
+        aria-label="分享我的坚持"
+        onClick={() => openShare({ type: "review" })}
+      >
+        ↗
+      </button>
       <section className="view is-active" aria-label={tab} id={"view-" + tab}>
         {tab === "home" && <HomeView onStart={onStart} />}
         {tab === "train" && <TrainView onStart={onStart} />}
