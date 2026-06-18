@@ -6,7 +6,7 @@
 
 import { type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View, type ViewStyle, type TextStyle, type PressableProps } from "react-native";
-import { spacing as _spacing, type as _type, motion, type ColorSet } from "@tilemo/design-tokens";
+import { spacing as _spacing, type as _type, radius as _radius, motion, type ColorSet } from "@tilemo/design-tokens";
 
 type PxStr = `${number}px`;
 
@@ -40,6 +40,13 @@ export const fs = {
 } as const;
 
 export { motion };
+
+/** Radius scale — the only three values allowed app-wide. md mirrors design-tokens. */
+export const rd = {
+  sm: 8, // chips / tags / calendar cells / week dots
+  md: num(_radius.md as PxStr), // 18 — cards / sections / panels / detail
+  pill: 999, // buttons / switches / pills
+} as const;
 
 export function Card({
   children,
@@ -88,11 +95,12 @@ export function Txt({
 type ButtonProps = PressableProps & {
   colors: ColorSet;
   variant?: "solid" | "ghost" | "soft";
+  full?: boolean;
   children: ReactNode;
   style?: ViewStyle;
 };
 
-export function Button({ colors, variant = "solid", children, style, ...rest }: ButtonProps) {
+export function Button({ colors, variant = "solid", full, children, style, ...rest }: ButtonProps) {
   const bg =
     variant === "solid" ? colors.accent : variant === "soft" ? colors.paperSoft : "transparent";
   const fg = variant === "solid" ? "#FFFFFF" : colors.text;
@@ -103,6 +111,7 @@ export function Button({ colors, variant = "solid", children, style, ...rest }: 
       style={({ pressed }) => [
         styles.btn,
         { backgroundColor: bg, opacity: pressed ? 0.85 : 1 },
+        full && { width: "100%" },
         border,
         style,
       ]}
@@ -110,6 +119,34 @@ export function Button({ colors, variant = "solid", children, style, ...rest }: 
       <Text style={{ color: fg, fontSize: fs.base, fontWeight: "600", textAlign: "center" }}>
         {children}
       </Text>
+    </Pressable>
+  );
+}
+
+export function IconButton({
+  colors,
+  onPress,
+  hitSlop = 8,
+  children,
+  style,
+  ...rest
+}: PressableProps & {
+  colors: ColorSet;
+  children: ReactNode;
+  style?: ViewStyle;
+}) {
+  return (
+    <Pressable
+      {...rest}
+      onPress={onPress}
+      hitSlop={hitSlop}
+      style={({ pressed }) => [
+        styles.iconBtn,
+        { borderColor: colors.ruleStrong, opacity: pressed ? 0.6 : 1 },
+        style,
+      ]}
+    >
+      {children}
     </Pressable>
   );
 }
@@ -162,7 +199,7 @@ export function Stepper({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 22,
+    borderRadius: rd.md,
     borderWidth: 1,
     padding: sp.s5,
   },
@@ -179,5 +216,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 999,
     overflow: "hidden",
+  },
+  iconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: rd.pill,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

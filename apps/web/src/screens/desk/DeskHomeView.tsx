@@ -205,10 +205,10 @@ export function DeskHomeView({ onStart }: { onStart: (p: Plan) => void }) {
                   key={d.key}
                   className={"bar" + (d.isToday ? " is-today" : "")}
                   data-level={lv}
-                  style={{ height: (d.n === 0 ? 8 : Math.max(14, h)) + "%" }}
+                  style={{ height: (d.n === 0 ? 0 : Math.max(14, h)) + "%" }}
                   title={`${d.lbl} · ${d.n} 组`}
                 >
-                  <span className="bv">{d.n > 0 ? d.n : "·"}</span>
+                  <span className="bv">{d.n > 0 ? d.n : ""}</span>
                 </div>
               );
             })}
