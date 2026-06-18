@@ -1,0 +1,14 @@
+{
+  "name": "今天提了么",
+  "short_name": "提了么",
+  "description": "每天问你一句、陪你提一组、替你记一笔的安静小工具。",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAF3EC",
+  "theme_color": "#FAF3EC",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
