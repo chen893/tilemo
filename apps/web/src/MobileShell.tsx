@@ -42,7 +42,8 @@ export function MobileShell({
         {tab === "settings" && <SettingsView />}
       </section>
 
-      <nav className="tabbar" id="tabbar">
+      <nav className="tabbar" id="tabbar" style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50 }}>
+
         {TABS.map((t) => (
           <button
             key={t.id}
