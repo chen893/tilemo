@@ -10,7 +10,7 @@ import { levelOfDay, pad2, todayKey, ymd } from "@tilemo/core";
 import type { DayEntry } from "@tilemo/data";
 import { useDataStore } from "../data";
 import { useTheme } from "../theme";
-import { fs, sp } from "../ui/primitives";
+import { fs, rd, sp } from "../ui/primitives";
 
 const DOW = ["日", "一", "二", "三", "四", "五", "六"];
 
@@ -234,11 +234,11 @@ const styles = StyleSheet.create({
   cellBtn: {
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 8,
+    borderRadius: rd.sm,
   },
   detail: {
     marginTop: sp.s5,
-    borderRadius: 18,
+    borderRadius: rd.md,
     borderWidth: 1,
     padding: sp.s4,
   },

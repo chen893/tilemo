@@ -7,7 +7,7 @@ import { levelOfDay, pad2, todayKey, ymd, QUOTES } from "@tilemo/core";
 import { useDataStore } from "../data";
 import { useOpenShare } from "../share/ShareContext";
 import { useTheme } from "../theme";
-import { Button, Card, fs, sp, Txt } from "../ui/primitives";
+import { Button, Card, fs, rd, sp, Txt } from "../ui/primitives";
 import type { Plan } from "@tilemo/data";
 
 const WD = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     marginTop: sp.s5,
     paddingHorizontal: sp.s5,
     paddingVertical: sp.s4,
-    borderRadius: 18,
+    borderRadius: rd.md,
     alignSelf: "flex-start",
   },
   weekRow: {
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   weekDot: {
     width: 28,
     height: 28,
-    borderRadius: 14,
+    borderRadius: rd.sm,
     borderWidth: 1.5,
   },
 });

@@ -5,7 +5,7 @@ import { pad2 } from "@tilemo/core";
 import type { Plan } from "@tilemo/data";
 import { useDataStore } from "../data";
 import { useTheme } from "../theme";
-import { fs, sp } from "../ui/primitives";
+import { fs, rd, sp } from "../ui/primitives";
 
 export function TrainScreen({ onStart }: { onStart: (plan: Plan) => void }) {
   const { colors } = useTheme();
@@ -98,9 +98,9 @@ function Chip({
 const styles = StyleSheet.create({
   container: { padding: sp.gutter, paddingTop: sp.s6 },
   title: { fontSize: 28, fontWeight: "700" },
-  sub: { fontSize: fs.base, marginTop: sp.s2, marginBottom: sp.s5 },
+  sub: { fontSize: fs.base, marginTop: sp.s2, marginBottom: sp.s4 },
   card: {
-    borderRadius: 22,
+    borderRadius: rd.md,
     borderWidth: 1,
     padding: sp.s5,
     marginBottom: sp.s4,

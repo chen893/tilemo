@@ -94,16 +94,23 @@ export function Txt({
 
 type ButtonProps = PressableProps & {
   colors: ColorSet;
-  variant?: "solid" | "ghost" | "soft";
+  variant?: "solid" | "ghost" | "soft" | "deep";
   full?: boolean;
+  tint?: keyof ColorSet; // override label color (e.g. accent for a link-style button)
   children: ReactNode;
   style?: ViewStyle;
 };
 
-export function Button({ colors, variant = "solid", full, children, style, ...rest }: ButtonProps) {
+export function Button({ colors, variant = "solid", full, tint, children, style, ...rest }: ButtonProps) {
   const bg =
-    variant === "solid" ? colors.accent : variant === "soft" ? colors.paperSoft : "transparent";
-  const fg = variant === "solid" ? "#FFFFFF" : colors.text;
+    variant === "solid"
+      ? colors.accent
+      : variant === "soft"
+        ? colors.paperSoft
+        : variant === "deep"
+          ? colors.paperDeep
+          : "transparent";
+  const fg = tint ? colors[tint] : variant === "solid" ? "#FFFFFF" : colors.text;
   const border = variant === "ghost" ? { borderWidth: 1, borderColor: colors.ruleStrong } : null;
   return (
     <Pressable

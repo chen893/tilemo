@@ -10,7 +10,7 @@ import { clamp, todayKey } from "@tilemo/core";
 import type { Plan, Settings as SettingsT, ThemeSetting } from "@tilemo/data";
 import { useDataStore } from "../data";
 import { useTheme } from "../theme";
-import { fs, sp, Stepper } from "../ui/primitives";
+import { Button, fs, rd, sp, Stepper } from "../ui/primitives";
 import { GITHUB_URL } from "@tilemo/share-card";
 
 export function SettingsScreen() {
@@ -144,18 +144,16 @@ export function SettingsScreen() {
 
       {/* Data */}
       <Section colors={colors} label="数据">
-        <Pressable
-          onPress={exportData}
+        <Button
+          colors={colors}
+          variant="deep"
+          full
           disabled={exporting}
-          style={({ pressed }) => [
-            styles.exportBtn,
-            { backgroundColor: colors.paperDeep, borderColor: colors.rule, opacity: pressed ? 0.85 : 1 },
-          ]}
+          onPress={exportData}
+          style={{ marginVertical: sp.s4 }}
         >
-          <Text style={{ color: colors.text, fontSize: fs.base, fontWeight: "600" }}>
-            {exporting ? "导出中…" : "导出 JSON 数据"}
-          </Text>
-        </Pressable>
+          {exporting ? "导出中…" : "导出 JSON 数据"}
+        </Button>
         <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: sp.s2 }}>
           {Platform.OS === "ios" ? "通过系统分享面板保存。" : "通过系统分享。"}
         </Text>
@@ -163,15 +161,16 @@ export function SettingsScreen() {
 
       {/* 开源 */}
       <Section colors={colors} label="开源">
-        <Pressable
+        <Button
+          colors={colors}
+          variant="deep"
+          tint="accent"
+          full
           onPress={() => Linking.openURL(GITHUB_URL)}
-          style={({ pressed }) => [
-            styles.exportBtn,
-            { backgroundColor: colors.paperDeep, borderColor: colors.rule, opacity: pressed ? 0.85 : 1 },
-          ]}
+          style={{ marginVertical: sp.s4 }}
         >
-          <Text style={{ color: colors.accent, fontSize: fs.base, fontWeight: "600" }}>★ GitHub · 欢迎 Star</Text>
-        </Pressable>
+          ★ GitHub · 欢迎 Star
+        </Button>
         <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: sp.s2 }}>
           {GITHUB_URL.replace("https://", "")}
         </Text>
@@ -294,9 +293,9 @@ function ThemeSeg({
 
 const styles = StyleSheet.create({
   container: { padding: sp.gutter, paddingTop: sp.s6 },
-  title: { fontSize: 28, fontWeight: "700", marginBottom: sp.s2 },
+  title: { fontSize: 28, fontWeight: "700", marginBottom: sp.s4 },
   sectionLabel: { fontSize: fs.xs, fontWeight: "600", letterSpacing: 2, marginBottom: sp.s2, textTransform: "uppercase" },
-  sectionBody: { borderRadius: 18, borderWidth: 1, paddingHorizontal: sp.s4 },
+  sectionBody: { borderRadius: rd.md, borderWidth: 1, paddingHorizontal: sp.s4 },
   rowBetween: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   toggleRow: { paddingVertical: sp.s4 },
   switch: { width: 48, height: 28, borderRadius: 14, borderWidth: 1, justifyContent: "center" },
@@ -305,16 +304,9 @@ const styles = StyleSheet.create({
   planChip: {
     paddingHorizontal: sp.s4,
     paddingVertical: sp.s2,
-    borderRadius: 999,
+    borderRadius: rd.pill,
     borderWidth: 1,
   },
-  seg: { flexDirection: "row", borderWidth: 1, borderRadius: 999, padding: 3, marginVertical: sp.s4 },
-  segItem: { flex: 1, paddingVertical: sp.s2, borderRadius: 999, alignItems: "center" },
-  exportBtn: {
-    marginVertical: sp.s4,
-    paddingVertical: sp.s3,
-    borderRadius: 12,
-    borderWidth: 1,
-    alignItems: "center",
-  },
+  seg: { flexDirection: "row", borderWidth: 1, borderRadius: rd.pill, padding: 3, marginVertical: sp.s4 },
+  segItem: { flex: 1, paddingVertical: sp.s2, borderRadius: rd.pill, alignItems: "center" },
 });
