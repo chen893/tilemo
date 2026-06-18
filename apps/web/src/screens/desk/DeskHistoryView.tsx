@@ -6,7 +6,6 @@ import type { Session } from "@tilemo/data";
 import { aggregateStats, heatLevel, levelOfDay, pad2, ymd } from "@tilemo/core";
 import { useDataStore } from "../../data";
 
-const WD = ["日", "一", "二", "三", "四", "五", "六"];
 const MONTHS = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"];
 
 export function DeskHistoryView() {
@@ -186,12 +185,6 @@ export function DeskHistoryView() {
         </div>
         {selectedKey && (
           <>
-            <div className="desk-day-meta">
-              {(() => {
-                const d = new Date(selectedKey);
-                return `周${WD[d.getDay()]}`;
-              })()}
-            </div>
             {selectedSessions.length === 0 ? (
               <div className="desk-day-empty">这一天没有训练记录</div>
             ) : (

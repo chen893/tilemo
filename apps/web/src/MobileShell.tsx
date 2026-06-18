@@ -9,11 +9,11 @@ import { useOpenShare } from "./share/ShareContext";
 
 export type Tab = "home" | "train" | "history" | "settings";
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: "home", label: "今日" },
-  { id: "train", label: "训练" },
-  { id: "history", label: "记录" },
-  { id: "settings", label: "设置" },
+const TABS: { id: Tab; label: string; icon: JSX.Element }[] = [
+  { id: "home", label: "今日", icon: <IconHome /> },
+  { id: "train", label: "训练", icon: <IconDumbbell /> },
+  { id: "history", label: "记录", icon: <IconCalendar /> },
+  { id: "settings", label: "设置", icon: <IconCog /> },
 ];
 
 export function MobileShell({
@@ -50,10 +50,51 @@ export function MobileShell({
             data-view={t.id}
             onClick={() => setTab(t.id)}
           >
-            <span className="tab-label">{t.label}</span>
+            {t.icon}
+            <span>{t.label}</span>
           </button>
         ))}
       </nav>
     </div>
+  );
+}
+
+/* —— inline tab icons (stroke=currentColor, matches .tab svg) —— */
+function IconHome() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="M3 11l9-8 9 8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5 10v10h14V10" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function IconDumbbell() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path
+        d="M6 7l-3 3M18 17l3-3M9 9l6 6M3 13l2 2 2-2M21 11l-2-2-2 2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+function IconCalendar() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M3 9h18M8 3v4M16 3v4" strokeLinecap="round" />
+    </svg>
+  );
+}
+function IconCog() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <circle cx="12" cy="12" r="3.5" />
+      <path
+        d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"
+        strokeLinecap="round"
+      />
+    </svg>
   );
 }

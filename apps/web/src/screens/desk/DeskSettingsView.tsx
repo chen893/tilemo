@@ -9,13 +9,13 @@ import { useDataStore } from "../../data";
 
 type Cat = "goal" | "plan" | "feedback" | "appearance" | "data" | "about";
 
-const CATS: { id: Cat; nm: string; dc: string }[] = [
-  { id: "goal", nm: "每日目标", dc: "几组，调到舒服" },
-  { id: "plan", nm: "默认方案", dc: "挑一组作为起手" },
-  { id: "feedback", nm: "反馈", dc: "声音 · 触感" },
-  { id: "appearance", nm: "外观", dc: "主题 · 每日一句" },
-  { id: "data", nm: "数据", dc: "导出 · 统计" },
-  { id: "about", nm: "关于", dc: "隐私 · 开源" },
+const CATS: { id: Cat; nm: string; dc: string; icon: JSX.Element }[] = [
+  { id: "goal", nm: "每日目标", dc: "几组，调到舒服", icon: <IconTarget /> },
+  { id: "plan", nm: "默认方案", dc: "挑一组作为起手", icon: <IconLayers /> },
+  { id: "feedback", nm: "反馈", dc: "声音 · 触感", icon: <IconWave /> },
+  { id: "appearance", nm: "外观", dc: "主题 · 每日一句", icon: <IconPalette /> },
+  { id: "data", nm: "数据", dc: "导出 · 统计", icon: <IconArchive /> },
+  { id: "about", nm: "关于", dc: "隐私 · 开源", icon: <IconInfo /> },
 ];
 
 export function DeskSettingsView() {
@@ -64,7 +64,9 @@ export function DeskSettingsView() {
             className={"desk-set-cat" + (c.id === cat ? " is-active" : "")}
             onClick={() => setCat(c.id)}
           >
-            <span className="ic" aria-hidden="true" />
+            <span className="ic" aria-hidden="true">
+              {c.icon}
+            </span>
             <span className="nm">{c.nm}</span>
             <span className="dc">{c.dc}</span>
           </button>
@@ -182,24 +184,26 @@ export function DeskSettingsView() {
                 <div className="lbl">声音提示</div>
                 <div className="desc">收 / 放 切换时播放轻提示音</div>
               </div>
-              <button
-                className={"switch" + (settings.sound ? " on" : "")}
+              <span
+                className="toggle"
+                role="switch"
+                aria-checked={settings.sound}
+                aria-label="声音提示"
                 onClick={() => update({ sound: !settings.sound })}
-              >
-                {settings.sound ? "开" : "关"}
-              </button>
+              />
             </div>
             <div className="setting-row">
               <div>
                 <div className="lbl">触感反馈</div>
                 <div className="desc">收 / 放 切换时轻振动（支持的设备）</div>
               </div>
-              <button
-                className={"switch" + (settings.haptics ? " on" : "")}
+              <span
+                className="toggle"
+                role="switch"
+                aria-checked={settings.haptics}
+                aria-label="触感反馈"
                 onClick={() => update({ haptics: !settings.haptics })}
-              >
-                {settings.haptics ? "开" : "关"}
-              </button>
+              />
             </div>
           </div>
         </div>
@@ -232,12 +236,13 @@ export function DeskSettingsView() {
                 <div className="lbl">每日一句</div>
                 <div className="desc">首页显示一句随机箴言</div>
               </div>
-              <button
-                className={"switch" + (settings.dailyQuote ? " on" : "")}
+              <span
+                className="toggle"
+                role="switch"
+                aria-checked={settings.dailyQuote}
+                aria-label="每日一句"
                 onClick={() => update({ dailyQuote: !settings.dailyQuote })}
-              >
-                {settings.dailyQuote ? "开" : "关"}
-              </button>
+              />
             </div>
           </div>
         </div>
@@ -350,4 +355,63 @@ function goalAdvice(avg: number, goal: number): string {
 
 function pad2m(n: number): string {
   return (n < 10 ? "0" : "") + n;
+}
+
+/* —— inline category icons (stroke=currentColor, matches .desk-set-cat .ic svg) —— */
+function IconTarget() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <circle cx="12" cy="12" r="8" />
+      <circle cx="12" cy="12" r="3.5" />
+      <path d="M12 1v3M12 20v3M1 12h3M20 12h3" strokeLinecap="round" />
+    </svg>
+  );
+}
+function IconLayers() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path d="M12 3l9 5-9 5-9-5 9-5z" strokeLinejoin="round" />
+      <path d="M3 13l9 5 9-5" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function IconWave() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path
+        d="M3 12c2-4 4-4 6 0s4 4 6 0 4-4 6 0"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+function IconPalette() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path
+        d="M12 3a9 9 0 100 18c1.5 0 2-1 2-2 0-1.5 1-2 2.5-2H18a3 3 0 003-3c0-5-4-9-9-9z"
+        strokeLinejoin="round"
+      />
+      <circle cx="7.5" cy="11" r="1" fill="currentColor" />
+      <circle cx="11" cy="7.5" r="1" fill="currentColor" />
+      <circle cx="15" cy="9" r="1" fill="currentColor" />
+    </svg>
+  );
+}
+function IconArchive() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <rect x="3" y="4" width="18" height="4" rx="1" />
+      <path d="M4 8v11a1 1 0 001 1h14a1 1 0 001-1V8M10 12h4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function IconInfo() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v5M12 7.5v.5" strokeLinecap="round" />
+    </svg>
+  );
 }

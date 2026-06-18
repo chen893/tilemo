@@ -124,34 +124,56 @@ export function Metronome({ plan, onClose }: { plan: Plan; onClose: () => void }
 
   return (
     <div className={rootClass} id="metronome" role="dialog" aria-modal="true">
-      <div className="metro-stage" id="metro-stage">
+      <div className="metronome-top">
+        <div className="progress-text">
+          <span className="num">{stage === "breath" ? snap.setIdx + 1 : stage === "done" ? snap.sets : 0}</span>
+          <span className="sep">/</span>
+          <span className="num">{snap.sets}</span>
+          组
+        </div>
+        <button className="metronome-close" aria-label="关闭" onClick={handleClose}>
+          ✕
+        </button>
+      </div>
+
+      <div className="metronome-stage">
         {stage === "prep" && (
-          <div className="metro-prep" id="metro-prep">
-            <div className="prep-num" id="prep-num">{snap.prepN}</div>
-            <div className="prep-hint">准备</div>
+          <div className="prep">
+            <div className="ready">准备</div>
+            <div className="num-321">{snap.prepN}</div>
           </div>
         )}
         {stage === "breath" && (
-          <div className="metro-breath" id="metro-breath">
-            <div className="breath-shape" id="breath-shape">
-              <div className="breath-inner" />
-            </div>
-            <div className="breath-count" id="breath-count">{snap.remaining}</div>
-            <div className="breath-phase" id="breath-phase">
-              {snap.phase === "contract" ? "收 · 紧" : "放 · 松"}
-            </div>
-            <div className="metro-progress" id="metro-progress">
-              {snap.setIdx + 1}/{snap.sets} 组 · {snap.startedReps}/{snap.totalReps} 次
+          <div className="breath-organism">
+            <svg className="breath-svg" viewBox="0 0 200 200" aria-hidden="true">
+              <path
+                className="breath-shape"
+                d="M100 18 C150 18 182 50 182 100 C182 150 150 182 100 182 C50 182 18 150 18 100 C18 50 50 18 100 18 Z"
+              />
+              <path
+                className="breath-inner"
+                d="M100 50 C130 50 150 70 150 100 C150 130 130 150 100 150 C70 150 50 130 50 100 C50 70 70 50 100 50 Z"
+              />
+            </svg>
+            <div className="breath-core">
+              <div className="breath-count">{snap.remaining}</div>
+              <div className="breath-phase">
+                {snap.phase === "contract" ? "收 · 紧" : "放 · 松"}
+              </div>
             </div>
           </div>
         )}
         {stage === "done" && (
-          <div className="metro-done" id="metro-done">
-            <div className="done-blob" aria-hidden="true">✓</div>
-            <div className="done-title">
-              今天，<span className="em">提了</span>。
+          <div className="done">
+            <div className="done-blob" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M5 12l5 5 9-11" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" />
+              </svg>
             </div>
-            <div className="done-sub" id="done-sub">{snap.doneSub}</div>
+            <h2 className="title">
+              今天，<span className="em">提了</span>。
+            </h2>
+            <p className="sub">{snap.doneSub}</p>
           </div>
         )}
       </div>

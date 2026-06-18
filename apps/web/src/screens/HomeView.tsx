@@ -54,16 +54,15 @@ export function HomeView({ onStart }: { onStart: (p: Plan) => void }) {
       {settings?.dailyQuote && <p className="home-quote">{quote}</p>}
 
       <h2 className={"home-question" + (isDone ? " is-settled" : " is-tense")}>
-        今天，<span className="em">提了</span>么？
+        今天，<span className="accent">提了</span>么？
       </h2>
 
-      <div className="home-progress">
-        <span className="big" style={{ color: isDone ? "var(--success)" : "var(--accent)" }}>
-          {done}
+      <div className={"home-progress" + (isDone ? " is-done" : "")}>
+        <span className="big">{done}</span>
+        <span className="goal">
+          / {goal}
+          <span className="unit">组目标</span>
         </span>
-        <span className="slash">/</span>
-        <span className="big num">{goal}</span>
-        <span className="unit">组目标</span>
       </div>
 
       <button
@@ -77,22 +76,54 @@ export function HomeView({ onStart }: { onStart: (p: Plan) => void }) {
 
       {(streak?.current ?? 0) > 0 && (
         <div className="streak-block is-show">
-          <span className="num">{streak?.current}</span> 天连续
-          {(streak?.longest ?? 0) > 0 && <span className="sub">最长 {streak?.longest} 天</span>}
+          <span className="leaf" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path
+                d="M20 4C9 4 4 9 4 18c0 0 0 2 2 2 9 0 14-5 14-16z"
+                strokeLinejoin="round"
+              />
+              <path d="M4 20C8 14 12 10 18 7" strokeLinecap="round" />
+            </svg>
+          </span>
+          <div className="text">
+            <div className="lbl">连续</div>
+            <div className="v">
+              {streak?.current}
+              <span className="unit">天</span>
+            </div>
+            {(streak?.longest ?? 0) > 0 && (
+              <div className="lbl" style={{ marginTop: "4px" }}>
+                最长 {streak?.longest} 天
+              </div>
+            )}
+          </div>
         </div>
       )}
 
-      <div className="mini-dots" id="mini-dots">
-        {week.map((d) => (
-          <div
-            key={d.key}
-            className={"mini-dot level-" + d.level + (d.isToday ? " is-today" : "")}
-            title={d.lbl}
-          >
-            <span className="lbl">{d.lbl}</span>
-            <span className="dd">{d.dd}</span>
-          </div>
-        ))}
+      <div className="mini">
+        <div className="mini-head">
+          <span className="t">最近 7 天</span>
+          <span className="legend">
+            <i className="l0" />
+            <i className="l1" />
+            <i className="l2" />
+            <i className="l3" />
+          </span>
+        </div>
+        <div className="mini-dots" id="mini-dots">
+          {week.map((d) => (
+            <div
+              key={d.key}
+              className={"mini-dot" + (d.isToday ? " is-today" : "")}
+              data-level={d.level}
+              title={`${d.lbl} ${d.dd}`}
+            >
+              <span className="blob" />
+              <span className="lbl">{d.lbl}</span>
+              <span className="dd">{d.dd}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
