@@ -3,6 +3,7 @@ import { Store as StoreClass, LocalStorageAdapter, DEFAULT_PLANS, DEFAULT_SETTIN
 import {
   recordSession as _recordSession,
   recomputeStreak as _recomputeStreak,
+  aggregateStats,
   dayMeetsGoal,
   heatLevel,
   levelOfDay,
@@ -72,10 +73,32 @@ function mountShareTriggers() {
 }
 
 /* ---------- 共享 helper ---------- */
+var WD_SHORT = ["日", "一", "二", "三", "四", "五", "六"];
+var WD_LONG = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+
 function findPlan(id: string) {
   return plans.find(function (p) {
     return p.id === id;
   });
+}
+function sessionRowHtml(
+  ses: { planId: string; completedReps: number; durationSec: number; finished: boolean },
+  rowClass: string,
+  doneText: string,
+  partialText: string,
+): string {
+  var plan = findPlan(ses.planId);
+  var name = plan ? plan.name : "自定义";
+  var mins = Math.round((ses.durationSec / 60) * 10) / 10;
+  return (
+    '<div class="' + rowClass + '">' +
+      "<div>" +
+        '<div class="plan">' + name + " · " + ses.completedReps + " 次</div>" +
+        '<div class="meta">' + mins + " 分钟</div>" +
+      "</div>" +
+      '<span class="tag' + (ses.finished ? "" : " is-partial") + '">' + (ses.finished ? doneText : partialText) + "</span>" +
+    "</div>"
+  );
 }
 function exportJson() {
   var data = Store.exportAll();
@@ -230,7 +253,7 @@ $all(".desk-nav-item").forEach(function(t){
 /* ---------- 报头（移动 masthead） ---------- */
 function renderMasthead(){
   var d = new Date();
-  var wd = ["周日","周一","周二","周三","周四","周五","周六"][d.getDay()];
+  var wd = WD_LONG[d.getDay()];
   var stampHtml = (d.getMonth()+1) + "." + pad2(d.getDate()) + ' <span class="dow">' + wd + '</span>';
   $("#masthead-stamp").innerHTML = stampHtml;
 
@@ -380,7 +403,7 @@ function renderHome(){
     Metro.open(plan);
   };
 
-  var s = recomputeStreak();
+  var s = Store.getStreak();
   var streakBlock = $("#streak-block");
   if (s.current > 0){
     streakBlock.classList.add("is-show");
@@ -409,10 +432,10 @@ function animateCount(el, target){
   requestAnimationFrame(step);
 }
 
-function renderMiniHeatmap(){
-  var dots = $("#mini-dots");
-  dots.innerHTML = "";
-  var wd = ["日","一","二","三","四","五","六"];
+function renderWeekDots(mountSelector, cellClass){
+  var wrap = $(mountSelector);
+  if (!wrap) return;
+  wrap.innerHTML = "";
   var today = new Date();
   var todayStr = todayKey();
   for (var i=6;i>=0;i--){
@@ -420,7 +443,7 @@ function renderMiniHeatmap(){
     var entry = Store.getDay(ymd(d));
     var lvl = levelOfDay(entry);
     var cell = document.createElement("div");
-    cell.className = "mini-dot";
+    cell.className = cellClass;
     cell.setAttribute("data-level", "" + lvl);
     if (ymd(d) === todayStr) cell.classList.add("is-today");
     cell.title = (d.getMonth()+1)+"/"+d.getDate()+" · "+((entry && entry.sessions.length)||0)+" 组";
@@ -428,22 +451,23 @@ function renderMiniHeatmap(){
     blob.className = "blob";
     var lbl = document.createElement("span");
     lbl.className = "lbl";
-    lbl.textContent = wd[d.getDay()];
+    lbl.textContent = WD_SHORT[d.getDay()];
     var dd = document.createElement("span");
     dd.className = "dd";
     dd.textContent = pad2(d.getDate());
     cell.appendChild(blob);
     cell.appendChild(lbl);
     cell.appendChild(dd);
-    dots.appendChild(cell);
+    wrap.appendChild(cell);
   }
 }
+function renderMiniHeatmap(){ renderWeekDots("#mini-dots", "mini-dot"); }
 
 /* ============================================================
    桌面壳 render（V11）—— 与移动壳读同一 Store，桌面布局/组件重表达
    ============================================================ */
 function renderDeskNavFoot(){
-  var s = recomputeStreak();
+  var s = Store.getStreak();
   animateCount($("#desk-streak-num"), s.current);
   animateCount($("#desk-streak-big"), s.current);
   var longestEl = $("#desk-streak-longest");
@@ -517,16 +541,7 @@ function renderDeskHome(){
   } else {
     var html = "";
     day.sessions.forEach(function(ses){
-      var plan = findPlan(ses.planId);
-      var name = plan ? plan.name : "自定义";
-      var mins = Math.round(ses.durationSec/60*10)/10;
-      html += '<div class="desk-session-row">'+
-        '<div>'+
-          '<div class="plan">'+name+' · '+ses.completedReps+' 次</div>'+
-          '<div class="meta">'+mins+' 分钟</div>'+
-        '</div>'+
-        '<span class="tag'+(ses.finished?'':' is-partial')+'">'+(ses.finished?'已完成':'未完成')+'</span>'+
-      '</div>';
+      html += sessionRowHtml(ses, "desk-session-row", "已完成", "未完成");
     });
     mount.innerHTML = html;
   }
@@ -594,36 +609,7 @@ function renderDeskCadence(){
   root.innerHTML = statsHtml + barsHtml;
 }
 
-function renderDeskWeek(){
-  var wrap = $("#desk-week");
-  if (!wrap) return;
-  wrap.innerHTML = "";
-  var wd = ["日","一","二","三","四","五","六"];
-  var today = new Date();
-  var todayStr = todayKey();
-  for (var i=6;i>=0;i--){
-    var d = new Date(today.getFullYear(), today.getMonth(), today.getDate()-i);
-    var entry = Store.getDay(ymd(d));
-    var lvl = levelOfDay(entry);
-    var cell = document.createElement("div");
-    cell.className = "desk-week-dot";
-    cell.setAttribute("data-level", "" + lvl);
-    if (ymd(d) === todayStr) cell.classList.add("is-today");
-    cell.title = (d.getMonth()+1)+"/"+d.getDate()+" · "+((entry && entry.sessions.length)||0)+" 组";
-    var blob = document.createElement("div");
-    blob.className = "blob";
-    var lbl = document.createElement("span");
-    lbl.className = "lbl";
-    lbl.textContent = wd[d.getDay()];
-    var dd = document.createElement("span");
-    dd.className = "dd";
-    dd.textContent = pad2(d.getDate());
-    cell.appendChild(blob);
-    cell.appendChild(lbl);
-    cell.appendChild(dd);
-    wrap.appendChild(cell);
-  }
-}
+function renderDeskWeek(){ renderWeekDots("#desk-week", "desk-week-dot"); }
 
 /* —— 桌面 训练（方案列表 + 详情面板） —— */
 var deskSelectedPlanId = null;
@@ -692,22 +678,12 @@ var deskSelectedDayKey = null;
 
 function renderDeskHistory(){
   setDeskHeader("history");
-  var s = recomputeStreak();
+  var s = Store.getStreak();
   animateCount($("#desk-stat-streak"), s.current);
-  var keys = Store.allLogKeys();
-  var totalDays = 0, totalSessions = 0, metDays = 0;
-  keys.forEach(function(k){
-    var day = Store.getDay(k.substring("tgm:log:".length));
-    if (day && day.sessions && day.sessions.length){
-      totalDays++;
-      totalSessions += day.sessions.length;
-      // 达标天数：sessions 数 ≥ 当日目标
-      if (dayMeetsGoal(day)) metDays++;
-    }
-  });
-  animateCount($("#desk-stat-days"), totalDays);
-  animateCount($("#desk-stat-sessions"), totalSessions);
-  animateCount($("#desk-stat-met"), metDays);
+  var stats = aggregateStats(Store);
+  animateCount($("#desk-stat-days"), stats.totalDays);
+  animateCount($("#desk-stat-sessions"), stats.totalSessions);
+  animateCount($("#desk-stat-met"), stats.metDays);
   renderDeskHeatmap();
 }
 
@@ -806,16 +782,7 @@ function renderDeskDayDetail(key, entry, dateObj){
       '<span class="s">'+entry.sessions.length+' / '+entry.goalGroups+' 组</span>'+
     '</div>';
   entry.sessions.forEach(function(ses){
-    var plan = findPlan(ses.planId);
-    var name = plan ? plan.name : "自定义";
-    var mins = Math.round(ses.durationSec/60*10)/10;
-    html += '<div class="desk-session-row">'+
-      '<div>'+
-        '<div class="plan">'+name+' · '+ses.completedReps+' 次</div>'+
-        '<div class="meta">'+mins+' 分钟</div>'+
-      '</div>'+
-      '<span class="tag'+(ses.finished?'':' is-partial')+'">'+(ses.finished?'已完成':'未完成')+'</span>'+
-    '</div>';
+    html += sessionRowHtml(ses, "desk-session-row", "已完成", "未完成");
   });
   html += '</div>';
   mount.innerHTML = html;
@@ -905,21 +872,11 @@ function renderDeskSetPlanOverview(){
 function renderDeskSetDataOverview(){
   var root = $("#desk-data-overview");
   if (!root) return;
-  var keys = Store.allLogKeys();
-  var totalDays = 0, totalSessions = 0;
-  var lastTs = 0;
-  keys.forEach(function(k){
-    var day = Store.getDay(k.substring("tgm:log:".length));
-    if (day && day.sessions && day.sessions.length){
-      totalDays++;
-      totalSessions += day.sessions.length;
-      day.sessions.forEach(function(ses){ if (ses.ts > lastTs) lastTs = ses.ts; });
-    }
-  });
-  var lastStr = lastTs ? new Date(lastTs).toLocaleString("zh-CN", { month:"numeric", day:"numeric", hour:"2-digit", minute:"2-digit" }) : "—";
+  var stats = aggregateStats(Store);
+  var lastStr = stats.lastTs ? new Date(stats.lastTs).toLocaleString("zh-CN", { month:"numeric", day:"numeric", hour:"2-digit", minute:"2-digit" }) : "—";
   root.innerHTML =
-    '<div class="row"><span class="k">已记录天数</span><span class="vv">'+totalDays+' 天</span></div>'+
-    '<div class="row"><span class="k">已记录组数</span><span class="vv">'+totalSessions+' 组</span></div>'+
+    '<div class="row"><span class="k">已记录天数</span><span class="vv">'+stats.totalDays+' 天</span></div>'+
+    '<div class="row"><span class="k">已记录组数</span><span class="vv">'+stats.totalSessions+' 组</span></div>'+
     '<div class="row"><span class="k">最近一次</span><span class="vv">'+lastStr+'</span></div>';
 }
 
@@ -927,13 +884,8 @@ function renderDeskSetDataOverview(){
 function renderDeskSetAboutCounts(){
   var el = $("#desk-about-counts");
   if (!el) return;
-  var keys = Store.allLogKeys();
-  var totalSessions = 0;
-  keys.forEach(function(k){
-    var day = Store.getDay(k.substring("tgm:log:".length));
-    if (day && day.sessions) totalSessions += day.sessions.length;
-  });
-  el.textContent = totalSessions + " 条训练 / " + keys.length + " 个日子";
+  var stats = aggregateStats(Store);
+  el.textContent = stats.totalSessions + " 条训练 / " + stats.keysCount + " 个日子";
 }
 
 /* —— 桌面壳独有事件绑定（仅绑一次） —— */
@@ -1065,23 +1017,15 @@ var calCursor = (function(){
   return { y: d.getFullYear(), m: d.getMonth() };
 })();
 function renderHistory(){
-  var s = recomputeStreak();
+  var s = Store.getStreak();
   animateCount($("#stat-streak"), s.current);
-  var keys = Store.allLogKeys();
-  var totalDays = 0, totalSessions = 0;
-  keys.forEach(function(k){
-    var day = Store.getDay(k.substring("tgm:log:".length));
-    if (day && day.sessions && day.sessions.length){
-      totalDays++;
-      totalSessions += day.sessions.length;
-    }
-  });
-  animateCount($("#stat-total-days"), totalDays);
-  animateCount($("#stat-total-sessions"), totalSessions);
+  var stats = aggregateStats(Store);
+  animateCount($("#stat-total-days"), stats.totalDays);
+  animateCount($("#stat-total-sessions"), stats.totalSessions);
 
   var dowRow = $("#cal-dow-row");
   dowRow.innerHTML = "";
-  ["日","一","二","三","四","五","六"].forEach(function(w){
+  WD_SHORT.forEach(function(w){
     var el = document.createElement("div");
     el.className = "cal-dow";
     el.textContent = w;
@@ -1152,16 +1096,7 @@ function openDayDetail(key, entry, dateObj){
       '<span class="s">'+entry.sessions.length+' / '+entry.goalGroups+' 组</span>'+
     '</div>';
   entry.sessions.forEach(function(ses){
-    var plan = findPlan(ses.planId);
-    var name = plan ? plan.name : "自定义";
-    var mins = Math.round(ses.durationSec/60*10)/10;
-    html += '<div class="session-item">'+
-      '<div>'+
-        '<div class="plan">'+name+' · '+ses.completedReps+' 次</div>'+
-        '<div class="meta">'+mins+' 分钟</div>'+
-      '</div>'+
-      '<span class="tag'+(ses.finished?'':' is-partial')+'">'+(ses.finished?'完成':'部分')+'</span>'+
-    '</div>';
+    html += sessionRowHtml(ses, "session-item", "完成", "部分");
   });
   html += '</div>';
   mount.innerHTML = html;

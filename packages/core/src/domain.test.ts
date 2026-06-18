@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Store, MemoryAdapter, DEFAULT_PLANS } from "@tilemo/data";
-import { dayMeetsGoal, heatLevel, recordSession, recomputeStreak, todayKey } from "./index";
+import { aggregateStats, dayMeetsGoal, heatLevel, recordSession, recomputeStreak, todayKey } from "./index";
 
 const newStore = () => new Store(new MemoryAdapter());
 const day = (sessionsLen: number, goal: number) => ({
@@ -68,5 +68,30 @@ describe("recordSession + recomputeStreak", () => {
     store.setStreak({ current: 0, longest: 9, lastCheckedDate: null });
     recomputeStreak(store); // no logs → current 0
     expect(store.getStreak().longest).toBe(9); // preserved
+  });
+});
+
+describe("aggregateStats", () => {
+  it("aggregates totalDays / totalSessions / metDays / keysCount", () => {
+    const store = newStore();
+    const plan = DEFAULT_PLANS[0];
+    recordSession(store, plan, 10, 60, true);
+    recordSession(store, plan, 10, 60, true);
+    recordSession(store, plan, 10, 60, true); // today: 3/3 met
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    const yk = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    store.setDay(yk, {
+      date: yk,
+      goalGroups: 3,
+      sessions: [{ ts: 1, planId: "p", completedReps: 1, durationSec: 1, finished: true }],
+      manualOverride: false,
+    }); // yesterday: 1/3 not met
+    const st = aggregateStats(store);
+    expect(st.totalSessions).toBe(4);
+    expect(st.totalDays).toBe(2);
+    expect(st.metDays).toBe(1);
+    expect(st.keysCount).toBe(2);
+    expect(st.lastTs).toBeGreaterThan(1);
   });
 });

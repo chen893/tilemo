@@ -83,3 +83,36 @@ export function recordSession(
   store.setDay(k, day);
   recomputeStreak(store);
 }
+
+export interface AggregateStats {
+  /** 有 ≥1 session 的天数。 */
+  totalDays: number;
+  /** session 总条数。 */
+  totalSessions: number;
+  /** dayMeetsGoal 的天数。 */
+  metDays: number;
+  /** 最近一次 session 的 ts（0 表示无）。 */
+  lastTs: number;
+  /** allLogKeys 数量（含空 day）。 */
+  keysCount: number;
+}
+
+/** 全部记录的聚合统计（单次遍历，复用 Store.getDay 缓存）。 */
+export function aggregateStats(store: Store): AggregateStats {
+  let totalDays = 0;
+  let totalSessions = 0;
+  let metDays = 0;
+  let lastTs = 0;
+  let keysCount = 0;
+  for (const { entry } of store.allDayEntries()) {
+    keysCount++;
+    const n = entry && entry.sessions ? entry.sessions.length : 0;
+    if (n > 0) totalDays++;
+    totalSessions += n;
+    if (dayMeetsGoal(entry)) metDays++;
+    if (entry) {
+      for (const s of entry.sessions) if (s.ts > lastTs) lastTs = s.ts;
+    }
+  }
+  return { totalDays, totalSessions, metDays, lastTs, keysCount };
+}

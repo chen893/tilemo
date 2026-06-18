@@ -26,6 +26,10 @@ export interface ExportBundle {
 }
 
 export class Store {
+  /** day 条目内存缓存：getDay 命中即返回（含 null），setDay 覆盖该 key。
+   *  避免渲染层对同一 day key 反复 getItem + JSON.parse。mobile 端 MemoryAdapter 本就是内存，多一层 Map 查 Map，透明。 */
+  private readonly dayCache = new Map<string, DayEntry | null>();
+
   constructor(private readonly adapter: SyncStorageAdapter) {}
 
   isMemOnly(): boolean {
@@ -64,17 +68,23 @@ export class Store {
   }
 
   getDay(key: string): DayEntry | null {
+    if (this.dayCache.has(key)) return this.dayCache.get(key) ?? null;
     const raw = this.adapter.getItem(K_LOG_PREFIX + key);
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw) as DayEntry;
-    } catch {
-      return null;
+    let v: DayEntry | null = null;
+    if (raw) {
+      try {
+        v = JSON.parse(raw) as DayEntry;
+      } catch {
+        v = null;
+      }
     }
+    this.dayCache.set(key, v);
+    return v;
   }
 
   setDay(key: string, data: DayEntry): void {
     this.adapter.setItem(K_LOG_PREFIX + key, JSON.stringify(data));
+    this.dayCache.set(key, data);
   }
 
   getStreak(): Streak {
@@ -93,6 +103,14 @@ export class Store {
 
   allLogKeys(): string[] {
     return this.adapter.getAllKeys().filter((k) => k.startsWith(K_LOG_PREFIX));
+  }
+
+  /** 全部 day 条目（day key 无前缀 + entry），复用 getDay 缓存。 */
+  allDayEntries(): { key: string; entry: DayEntry | null }[] {
+    return this.allLogKeys().map((k) => {
+      const key = k.substring(K_LOG_PREFIX.length);
+      return { key, entry: this.getDay(key) };
+    });
   }
 
   exportAll(): ExportBundle {
