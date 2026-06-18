@@ -1,8 +1,7 @@
 // @tilemo/share-card — shared constants.
 
-/** 落地页 URL。二维码内容指向这里。
- *  TODO(deploy): Vercel 部署 @tilemo/web 后，替换为真实域名（见 DEPLOY.md）。 */
-export const LANDING_URL = "https://tilemo.app";
+/** 落地页 URL。二维码内容指向这里（Vercel 部署的 web 端）。 */
+export const LANDING_URL = "https://tilemo-web.vercel.app/";
 
 /** 开源仓库地址。卡片二维码指向这里（扫码直达源码），并作落款小字。 */
 export const GITHUB_URL = "https://github.com/chen893/tilemo";
