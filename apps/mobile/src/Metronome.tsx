@@ -10,7 +10,7 @@
 // spec). See report.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View, Vibration } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -21,7 +21,9 @@ import Animated, {
 import * as Haptics from "expo-haptics";
 import { type Plan } from "@tilemo/data";
 import { Metro, type MetroSnapshot, recordSession } from "@tilemo/core";
+import { detectStreakMilestone, type MilestoneCopy } from "@tilemo/share-card";
 import { useDataStore } from "./data";
+import { useOpenShare } from "./share/ShareContext";
 import { useTheme } from "./theme";
 import { fs, sp } from "./ui/primitives";
 
@@ -39,6 +41,8 @@ export function Metronome({
   const store = useDataStore((s) => s.store);
   const refresh = useDataStore((s) => s.refresh);
   const hapticsOn = useDataStore((s) => s.settings?.haptics) ?? true;
+  const openShare = useOpenShare();
+  const streakMilestoneRef = useRef<MilestoneCopy | null>(null);
 
   const [snap, setSnap] = useState<MetroSnapshot | null>(null);
   const scale = useSharedValue(1);
@@ -60,18 +64,28 @@ export function Metronome({
     return new Metro({
       onRecord: (p, reps, dur, finished) => {
         if (store) {
+          const prev = store.getStreak().current;
           recordSession(store, p, reps, dur, finished);
           refresh();
+          if (finished) {
+            const m = detectStreakMilestone(prev, store.getStreak().current);
+            if (m) streakMilestoneRef.current = m;
+          }
         }
       },
       // Engine auto-closes ~1.8s after the done stage; unmount the overlay then.
       // Also fires on endEarly→close. (User taps still go through handleClose.)
-      onAfterClose: () => {
+      onAfterClose: (completion) => {
         handleClose();
+        if (completion && streakMilestoneRef.current) {
+          const m = streakMilestoneRef.current;
+          streakMilestoneRef.current = null;
+          setTimeout(() => openShare({ type: "milestone", milestone: m }), 280);
+        }
       },
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store, refresh, handleClose]);
+  }, [store, refresh, handleClose, openShare]);
 
   // Subscribe + open on mount; dispose on unmount.
   useEffect(() => {
@@ -241,9 +255,17 @@ export function Metronome({
           </Pressable>
         )}
         {stage === "done" && (
-          <Pressable style={[styles.ctrlBtn, { backgroundColor: colors.accent }]} onPress={handleClose}>
-            <Text style={{ color: "#FFFFFF", fontSize: fs.base, fontWeight: "600" }}>好的</Text>
-          </Pressable>
+          <>
+            <Pressable
+              style={[styles.ctrlBtn, { borderColor: colors.ruleStrong }]}
+              onPress={() => openShare({ type: "daily" })}
+            >
+              <Text style={{ color: colors.text, fontSize: fs.base, fontWeight: "600" }}>分享这次</Text>
+            </Pressable>
+            <Pressable style={[styles.ctrlBtn, { backgroundColor: colors.accent }]} onPress={handleClose}>
+              <Text style={{ color: "#FFFFFF", fontSize: fs.base, fontWeight: "600" }}>好的</Text>
+            </Pressable>
+          </>
         )}
       </View>
     </View>
@@ -303,7 +325,3 @@ const styles = StyleSheet.create({
     minWidth: 120,
   },
 });
-
-// Vibration kept imported for parity/possible fallback if Haptics unavailable;
-// expo-haptics is the primary path on device. (Tree-shaken if unused.)
-void Vibration;

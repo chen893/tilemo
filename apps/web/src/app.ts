@@ -12,6 +12,14 @@ import {
   clamp,
   QUOTES,
 } from "@tilemo/core";
+import { openShareCard } from "./share";
+import {
+  detectStreakMilestone,
+  gatherCardData,
+  type CardData,
+  type MilestoneCopy,
+  type CardType,
+} from "@tilemo/share-card";
 
 const Store = new StoreClass(new LocalStorageAdapter());
 // Originals called recordSession(plan,...)/recomputeStreak() with a global Store;
@@ -23,7 +31,75 @@ function recomputeStreak() {
   return _recomputeStreak(Store);
 }
 
-"use strict";
+/* ---------- 成就卡片分享：数据采集 ---------- */
+function currentTheme(): "light" | "dark" {
+  return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+}
+
+function gatherShareData(type: CardType, milestone?: MilestoneCopy): CardData {
+  return gatherCardData(Store, settings, { theme: currentTheme(), type: type, milestone: milestone });
+}
+
+/** 注入分享触发按钮：完成态「分享这次」+ home「分享我的坚持」。 */
+function mountShareTriggers() {
+  if (!document.getElementById("share-done-btn")) {
+    var b1 = document.createElement("button");
+    b1.id = "share-done-btn";
+    b1.className = "share-done-btn";
+    b1.textContent = "分享这次";
+    b1.addEventListener("click", function () {
+      openShareCard(function () {
+        return gatherShareData("daily");
+      });
+    });
+    var metroDone = document.getElementById("metro-done");
+    if (metroDone) metroDone.appendChild(b1);
+  }
+  // 首页右上角分享图标（主动入口 → 回顾卡）
+  if (!document.getElementById("share-fab")) {
+    var fab = document.createElement("button");
+    fab.id = "share-fab";
+    fab.className = "share-fab";
+    fab.setAttribute("aria-label", "分享我的坚持");
+    fab.textContent = "↗";
+    fab.addEventListener("click", function () {
+      openShareCard(function () {
+        return gatherShareData("review");
+      });
+    });
+    document.body.appendChild(fab);
+  }
+}
+
+/* ---------- 共享 helper ---------- */
+function findPlan(id: string) {
+  return plans.find(function (p) {
+    return p.id === id;
+  });
+}
+function exportJson() {
+  var data = Store.exportAll();
+  var blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = "tgm-data-" + todayKey() + ".json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function () {
+    URL.revokeObjectURL(url);
+  }, 1000);
+  showToast("已导出 JSON 文件到本地");
+}
+// 视图 → (移动渲染器, 桌面渲染器)；switchView/refreshAll 共用，加视图只改这里
+var RENDERERS: Record<string, { m: () => void; d: () => void }> = {
+  home: { m: renderHome, d: renderDeskHome },
+  train: { m: renderTrain, d: renderDeskTrain },
+  history: { m: renderHistory, d: renderDeskHistory },
+  settings: { m: renderSettings, d: renderDeskSettings },
+};
+
 /* ============================================================
    今天提了么 — v5「会呼吸的张弛体」
    功能逻辑 + localStorage 数据模型 1:1 沿自 v4（tgm:* 键名不变）
@@ -94,17 +170,6 @@ function moveTabIndicator(name){
       indicator.style.transform = "translateX(" + x + "px)";
     }
   }
-  // 桌面 webnav 指示条（v6 残留，#app 在桌面被隐藏，但仍同步状态以保持一致）
-  var navIndicator = $("#nav-indicator");
-  if (navIndicator){
-    var navTarget = document.querySelector('.nav-btn[data-view="'+name+'"]') as any;
-    if (navTarget){
-      var nx = navTarget.offsetLeft;
-      var nw = navTarget.offsetWidth;
-      navIndicator.style.width = nw + "px";
-      navIndicator.style.transform = "translateX(" + nx + "px)";
-    }
-  }
 }
 
 function switchView(name){
@@ -120,10 +185,6 @@ function switchView(name){
   $all(".tab").forEach(function(t){
     t.classList.toggle("is-active", t.getAttribute("data-view") === name);
   });
-  $all(".nav-btn").forEach(function(t){
-    t.classList.toggle("is-active", t.getAttribute("data-view") === name);
-  });
-
   // —— 桌面壳 #desk-shell 视图 ——
   VIEWS.forEach(function(v){
     var el = document.getElementById("desk-"+v);
@@ -142,44 +203,20 @@ function switchView(name){
   if (isDesktop()) setDeskHeader(name);
 
   // —— 渲染：只渲染当前活动壳的对应视图 ——
-  if (isDesktop()){
-    if (name === "home") renderDeskHome();
-    if (name === "train") renderDeskTrain();
-    if (name === "history") renderDeskHistory();
-    if (name === "settings") renderDeskSettings();
-  } else {
-    if (name === "home") renderHome();
-    if (name === "train") renderTrain();
-    if (name === "history") renderHistory();
-    if (name === "settings") renderSettings();
-  }
+  var r = RENDERERS[name];
+  if (r) (isDesktop() ? r.d : r.m)();
 }
 
 /* refreshAll —— 数据变化（打卡/训练完成/设置改动）后刷新当前活动壳的当前视图。
    桌面壳切到 home 时也要刷 home（CTA 状态变化）；移动壳同理。
    同源 localStorage，双壳看到的永远是同一份数据。 */
 function refreshAll(){
-  if (isDesktop()){
-    if (currentView === "home") renderDeskHome();
-    else if (currentView === "train") renderDeskTrain();
-    else if (currentView === "history") renderDeskHistory();
-    else if (currentView === "settings") renderDeskSettings();
-    // 侧栏的连续天数永远展示，刷新它
-    renderDeskNavFoot();
-  } else {
-    if (currentView === "home") renderHome();
-    else if (currentView === "train") renderTrain();
-    else if (currentView === "history") renderHistory();
-    else if (currentView === "settings") renderSettings();
-  }
+  var r = RENDERERS[currentView];
+  if (r) (isDesktop() ? r.d : r.m)();
+  if (isDesktop()) renderDeskNavFoot();
 }
 
 $all(".tab").forEach(function(t){
-  t.addEventListener("click", function(){
-    switchView(t.getAttribute("data-view"));
-  });
-});
-$all(".nav-btn").forEach(function(t){
   t.addEventListener("click", function(){
     switchView(t.getAttribute("data-view"));
   });
@@ -190,14 +227,12 @@ $all(".desk-nav-item").forEach(function(t){
   });
 });
 
-/* ---------- 报头（移动 masthead + 桌面 webnav 同步） ---------- */
+/* ---------- 报头（移动 masthead） ---------- */
 function renderMasthead(){
   var d = new Date();
   var wd = ["周日","周一","周二","周三","周四","周五","周六"][d.getDay()];
   var stampHtml = (d.getMonth()+1) + "." + pad2(d.getDate()) + ' <span class="dow">' + wd + '</span>';
   $("#masthead-stamp").innerHTML = stampHtml;
-  var webnavStamp = $("#webnav-stamp");
-  if (webnavStamp) webnavStamp.innerHTML = stampHtml;
 
   var day = Store.getDay(todayKey());
   var done = day ? day.sessions.length : 0;
@@ -213,12 +248,6 @@ function renderMasthead(){
   var st = $("#masthead-status");
   if (isOn){ st.textContent = onText; st.classList.add("is-on"); }
   else { st.textContent = offText; st.classList.remove("is-on"); }
-  var wst = $("#webnav-status");
-  if (wst){
-    if (isOn){ wst.textContent = onText; wst.classList.add("is-on"); }
-    else { wst.textContent = offText; wst.classList.remove("is-on"); }
-  }
-
   // —— 桌面壳 header 同步 ——
   var deskStamp = $("#desk-stamp");
   if (deskStamp) deskStamp.innerHTML = stampHtml;
@@ -347,8 +376,8 @@ function renderHome(){
   }
 
   cta.onclick = function(){
-    var plan = plans.filter(function(p){ return p.id === settings.defaultPlanId; })[0] || plans[0];
-    startMetronome(plan);
+    var plan = findPlan(settings.defaultPlanId) || plans[0];
+    Metro.open(plan);
   };
 
   var s = recomputeStreak();
@@ -488,7 +517,7 @@ function renderDeskHome(){
   } else {
     var html = "";
     day.sessions.forEach(function(ses){
-      var plan = plans.filter(function(p){ return p.id === ses.planId; })[0];
+      var plan = findPlan(ses.planId);
       var name = plan ? plan.name : "自定义";
       var mins = Math.round(ses.durationSec/60*10)/10;
       html += '<div class="desk-session-row">'+
@@ -601,7 +630,7 @@ var deskSelectedPlanId = null;
 function renderDeskTrain(){
   setDeskHeader("train");
   // 默认选中 = 默认方案
-  if (!deskSelectedPlanId || !plans.filter(function(p){return p.id===deskSelectedPlanId;}).length){
+  if (!deskSelectedPlanId || !findPlan(deskSelectedPlanId)){
     deskSelectedPlanId = settings.defaultPlanId;
   }
   var list = $("#desk-plan-list");
@@ -631,7 +660,7 @@ function renderDeskTrain(){
   });
 
   // 详情面板
-  var sel = plans.filter(function(p){ return p.id === deskSelectedPlanId; })[0] || plans[0];
+  var sel = findPlan(deskSelectedPlanId) || plans[0];
   var detail = $("#desk-plan-detail");
   var totalSec = (sel.contract + sel.relax) * sel.reps * sel.sets;
   var totalMin = Math.round(totalSec/60*10)/10;
@@ -653,7 +682,7 @@ function renderDeskTrain(){
       '<span>开始这组训练</span><span class="arrow" aria-hidden="true">→</span>'+
     '</button>';
   $("#desk-plan-start").addEventListener("click", function(){
-    startMetronome(sel);
+    Metro.open(sel);
   });
 }
 
@@ -777,7 +806,7 @@ function renderDeskDayDetail(key, entry, dateObj){
       '<span class="s">'+entry.sessions.length+' / '+entry.goalGroups+' 组</span>'+
     '</div>';
   entry.sessions.forEach(function(ses){
-    var plan = plans.filter(function(p){ return p.id === ses.planId; })[0];
+    var plan = findPlan(ses.planId);
     var name = plan ? plan.name : "自定义";
     var mins = Math.round(ses.durationSec/60*10)/10;
     html += '<div class="desk-session-row">'+
@@ -861,7 +890,7 @@ function renderDeskSetGoalTip(){
 function renderDeskSetPlanOverview(){
   var root = $("#desk-plan-overview");
   if (!root) return;
-  var def = plans.filter(function(p){ return p.id === settings.defaultPlanId; })[0] || plans[0];
+  var def = findPlan(settings.defaultPlanId) || plans[0];
   var totalSec = (def.contract + def.relax) * def.reps * def.sets;
   var totalMin = Math.round(totalSec/60*10)/10;
   root.innerHTML =
@@ -913,8 +942,8 @@ function bindDeskEvents(){
   var deskCta = $("#desk-cta");
   if (deskCta){
     deskCta.addEventListener("click", function(){
-      var plan = plans.filter(function(p){ return p.id === settings.defaultPlanId; })[0] || plans[0];
-      startMetronome(plan);
+      var plan = findPlan(settings.defaultPlanId) || plans[0];
+      Metro.open(plan);
     });
   }
 
@@ -988,19 +1017,7 @@ function bindDeskEvents(){
   });
 
   // 导出
-  $("#desk-btn-export").addEventListener("click", function(){
-    var data = Store.exportAll();
-    var blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement("a");
-    a.href = url;
-    a.download = "tgm-data-" + todayKey() + ".json";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
-    showToast("已导出 JSON 文件到本地");
-  });
+  $("#desk-btn-export").addEventListener("click", exportJson);
 
   // 年度热力导航（明确为"上一年度/下一年度"年份切换；超过当前年份禁用）
   $("#desk-heat-prev").addEventListener("click", function(){
@@ -1037,7 +1054,7 @@ function renderTrain(){
         '<span class="plan-chip">次<span class="v">'+p.reps+'</span></span>'+
         '<span class="plan-chip">组<span class="v">'+p.sets+'</span></span>'+
       '</div>';
-    card.addEventListener("click", function(){ startMetronome(p); });
+    card.addEventListener("click", function(){ Metro.open(p); });
     list.appendChild(card);
   });
 }
@@ -1135,7 +1152,7 @@ function openDayDetail(key, entry, dateObj){
       '<span class="s">'+entry.sessions.length+' / '+entry.goalGroups+' 组</span>'+
     '</div>';
   entry.sessions.forEach(function(ses){
-    var plan = plans.filter(function(p){ return p.id === ses.planId; })[0];
+    var plan = findPlan(ses.planId);
     var name = plan ? plan.name : "自定义";
     var mins = Math.round(ses.durationSec/60*10)/10;
     html += '<div class="session-item">'+
@@ -1221,19 +1238,7 @@ $all("#seg-theme button").forEach(function(b){
   });
 });
 
-$("#btn-export").addEventListener("click", function(){
-  var data = Store.exportAll();
-  var blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement("a");
-  a.href = url;
-  a.download = "tgm-data-" + todayKey() + ".json";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
-  showToast("已导出 JSON 文件到本地");
-});
+$("#btn-export").addEventListener("click", exportJson);
 
 /* ---------- Toast ---------- */
 var toastTimer = null;
@@ -1258,6 +1263,7 @@ var Metro = (function(){
   var phaseStartTs = 0;
   var totalElapsed = 0;
   var startedReps = 0;
+  var streakBeforeSession = 0;
   var audioCtx = null;
 
   var el = {
@@ -1283,6 +1289,7 @@ var Metro = (function(){
     state = "prep";
     setIdx = 0; repIdx = 0; phase = "contract";
     startedReps = 0; totalElapsed = 0;
+    streakBeforeSession = Store.getStreak().current;
     el.prep.style.display = "";
     el.breath.style.display = "none";
     el.done.style.display = "none";
@@ -1510,6 +1517,14 @@ var Metro = (function(){
           setTimeout(function(){ deskCta.classList.remove("is-settling"); }, 1600);
         }
       }
+      // 连续天数里程碑：跨阈值自动弹成就卡片（晚于 CTA 庆祝）
+      var ns = Store.getStreak().current;
+      var ms = detectStreakMilestone(streakBeforeSession, ns);
+      if (ms){
+        setTimeout(function(){
+          openShareCard(function(){ return gatherShareData("milestone", ms); });
+        }, 900);
+      }
     }
     // 数据变化（session 已写入），刷新当前活动壳（switchView 已刷 home，这里再保险一次）
     refreshAll();
@@ -1525,8 +1540,6 @@ var Metro = (function(){
   return { open: open };
 })();
 
-function startMetronome(plan){ Metro.open(plan); }
-
 /* ============================================================
    初始化
    ============================================================ */
@@ -1538,6 +1551,9 @@ function init(){
   // 绑定桌面壳独有事件（节拍器/toggle/步进/分类/导出/年度热力导航等）
   bindDeskEvents();
 
+  // 注入分享触发按钮
+  mountShareTriggers();
+
   // 桌面壳：初始 aria-hidden 与状态同步
   var deskShell = document.getElementById("desk-shell");
   if (deskShell){
@@ -1546,30 +1562,31 @@ function init(){
 
   switchView("home");
 
-  // 首屏指示条无动画就位（移动 tabbar + 桌面 webnav）
+  // 首屏指示条无动画就位（移动 tabbar）
   var indicator = $("#tab-indicator");
-  var navIndicator = $("#nav-indicator");
   moveTabIndicator("home");
   requestAnimationFrame(function(){
     requestAnimationFrame(function(){
       if (indicator) indicator.classList.remove("no-anim");
-      if (navIndicator) navIndicator.classList.remove("no-anim");
     });
   });
 
   // 跨断点 / 尺寸变化：双壳都需要重定位指示条 + 重渲染当前视图
   // （CSS 显隐由 media query 接管，JS 只负责补渲染）
   var prevDesktop = isDesktop();
-  window.addEventListener("resize", function(){
-    var activeTab = document.querySelector(".tab.is-active");
-    if (activeTab) moveTabIndicator(activeTab.getAttribute("data-view"));
-    var nowDesktop = isDesktop();
-    if (nowDesktop !== prevDesktop){
-      prevDesktop = nowDesktop;
-      if (deskShell) deskShell.setAttribute("aria-hidden", nowDesktop ? "false" : "true");
-      // 刚切到的新壳此刻显示的是陈旧 DOM，重新渲染当前视图
-      switchView(currentView);
-    }
+  var resizeTimer: ReturnType<typeof setTimeout> | null = null;
+  window.addEventListener("resize", function () {
+    if (resizeTimer) clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () {
+      var activeTab = document.querySelector(".tab.is-active");
+      if (activeTab) moveTabIndicator(activeTab.getAttribute("data-view"));
+      var nowDesktop = isDesktop();
+      if (nowDesktop !== prevDesktop) {
+        prevDesktop = nowDesktop;
+        if (deskShell) deskShell.setAttribute("aria-hidden", nowDesktop ? "false" : "true");
+        switchView(currentView);
+      }
+    }, 150);
   });
 
   // PWA：注入 web app manifest（Blob URL，无独立文件）+ apple 元，让手机可"添加到主屏幕"

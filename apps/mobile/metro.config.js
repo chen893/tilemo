@@ -21,4 +21,8 @@ config.resolver.nodeModulesPaths = [
 //    fast and unambiguous across the workspace.
 config.resolver.disableHierarchicalLookup = true;
 
+// 4. Dev-server entry root = the app dir. Without this, watchFolders makes
+//    Metro resolve the entry (./index) from the monorepo root and fail.
+config.server = { ...config.server, projectRoot };
+
 module.exports = config;

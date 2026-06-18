@@ -4,13 +4,14 @@
 // theme segmented control, and a 数据 section with JSON export via expo-sharing.
 
 import { useState } from "react";
-import { Alert, Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
+import { Alert, Linking, Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import * as Sharing from "expo-sharing";
 import { clamp, todayKey } from "@tilemo/core";
 import type { Plan, Settings as SettingsT, ThemeSetting } from "@tilemo/data";
 import { useDataStore } from "../data";
 import { useTheme } from "../theme";
 import { fs, sp, Stepper } from "../ui/primitives";
+import { GITHUB_URL } from "@tilemo/share-card";
 
 export function SettingsScreen() {
   const { colors } = useTheme();
@@ -157,6 +158,22 @@ export function SettingsScreen() {
         </Pressable>
         <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: sp.s2 }}>
           {Platform.OS === "ios" ? "通过系统分享面板保存。" : "通过系统分享。"}
+        </Text>
+      </Section>
+
+      {/* 开源 */}
+      <Section colors={colors} label="开源">
+        <Pressable
+          onPress={() => Linking.openURL(GITHUB_URL)}
+          style={({ pressed }) => [
+            styles.exportBtn,
+            { backgroundColor: colors.paperDeep, borderColor: colors.rule, opacity: pressed ? 0.85 : 1 },
+          ]}
+        >
+          <Text style={{ color: colors.accent, fontSize: fs.base, fontWeight: "600" }}>★ GitHub · 欢迎 Star</Text>
+        </Pressable>
+        <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: sp.s2 }}>
+          {GITHUB_URL.replace("https://", "")}
         </Text>
       </Section>
 

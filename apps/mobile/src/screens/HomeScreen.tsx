@@ -1,9 +1,11 @@
 // @tilemo/mobile — 今日 / Home screen.
 
 import { useMemo } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { levelOfDay, pad2, todayKey, ymd, QUOTES } from "@tilemo/core";
 import { useDataStore } from "../data";
+import { useOpenShare } from "../share/ShareContext";
 import { useTheme } from "../theme";
 import { Button, Card, fs, sp, Txt } from "../ui/primitives";
 import type { Plan } from "@tilemo/data";
@@ -12,6 +14,7 @@ const WD = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"
 
 export function HomeScreen({ onStart }: { onStart: (plan: Plan) => void }) {
   const { colors } = useTheme();
+  const openShare = useOpenShare();
   const settings = useDataStore((s) => s.settings);
   const plans = useDataStore((s) => s.plans);
   const today = useDataStore((s) => s.today);
@@ -42,7 +45,12 @@ export function HomeScreen({ onStart }: { onStart: (plan: Plan) => void }) {
       alwaysBounceVertical
     >
       <View style={styles.header}>
-        <Text style={{ color: colors.text3, fontSize: fs.sm }}>{dateLabel}</Text>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+          <Text style={{ color: colors.text3, fontSize: fs.sm }}>{dateLabel}</Text>
+          <Pressable onPress={() => openShare({ type: "review" })} hitSlop={10}>
+            <Ionicons name="share-outline" size={22} color={colors.text2} />
+          </Pressable>
+        </View>
         <Text style={[styles.question, { color: colors.text, opacity: isDone ? 0.5 : 1 }]}>
           今天，提了么？
         </Text>

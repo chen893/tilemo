@@ -19,6 +19,7 @@ import { TrainScreen } from "./src/screens/TrainScreen";
 import { HistoryScreen } from "./src/screens/HistoryScreen";
 import { SettingsScreen } from "./src/screens/SettingsScreen";
 import { Metronome } from "./src/Metronome";
+import { ShareProvider } from "./src/share/ShareContext";
 
 type Tab = "home" | "train" | "history" | "settings";
 
@@ -66,10 +67,12 @@ function Root() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.paper }}>
-      <Shell colors={colors} />
-      <StatusBar style={mode === "dark" ? "light" : "dark"} />
-    </View>
+    <ShareProvider>
+      <View style={{ flex: 1, backgroundColor: colors.paper }}>
+        <Shell colors={colors} />
+        <StatusBar style={mode === "dark" ? "light" : "dark"} />
+      </View>
+    </ShareProvider>
   );
 }
 
