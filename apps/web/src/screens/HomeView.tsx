@@ -118,7 +118,7 @@ export function HomeView({ onStart }: { onStart: (p: Plan) => void }) {
               data-level={d.level}
               title={`${d.lbl} ${d.dd}`}
             >
-              <span className="blob" />
+              {d.level > 0 && <span className="blob" />}
               <span className="lbl">{d.lbl}</span>
               <span className="dd">{d.dd}</span>
             </div>

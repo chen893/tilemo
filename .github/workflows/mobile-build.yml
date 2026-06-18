@@ -70,8 +70,20 @@ jobs:
       - name: Expo prebuild (android)
         run: npx expo prebuild --platform android --no-install
 
+      # release 默认用 debug keystore 签名；若模板未带则现场生成，保证构建不中断
+      - name: Ensure debug keystore exists
+        working-directory: apps/mobile/android
+        run: |
+          if [ ! -f app/debug.keystore ]; then
+            keytool -genkeypair -v \
+              -keystore app/debug.keystore \
+              -storepass android -keypass android \
+              -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
+          fi
+
       - name: Build release APK
-        working-directory: android
+        working-directory: apps/mobile/android
         run: ./gradlew assembleRelease --no-daemon
 
       - name: Collect APK

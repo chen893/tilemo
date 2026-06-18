@@ -161,7 +161,7 @@ export function DeskHomeView({ onStart }: { onStart: (p: Plan) => void }) {
                 data-level={d.level}
                 title={`${d.lbl} ${d.dd} · ${d.n} 组`}
               >
-                <div className="blob" />
+                {d.level > 0 && <div className="blob" />}
                 <div className="lbl">{d.lbl}</div>
                 <div className="dd">{d.dd}</div>
               </div>
@@ -208,7 +208,7 @@ export function DeskHomeView({ onStart }: { onStart: (p: Plan) => void }) {
                   style={{ height: (d.n === 0 ? 8 : Math.max(14, h)) + "%" }}
                   title={`${d.lbl} · ${d.n} 组`}
                 >
-                  <span className="bv">{d.n}</span>
+                  <span className="bv">{d.n > 0 ? d.n : "·"}</span>
                 </div>
               );
             })}
