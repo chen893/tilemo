@@ -1,0 +1,107 @@
+// @tilemo/web — 桌面训练视图（master-detail）。
+// 左：方案卡片列表 click 选中；右：选中方案详情 + 大开始按钮。
+
+import { useState } from "react";
+import type { Plan } from "@tilemo/data";
+import { useDataStore } from "../../data";
+
+export function DeskTrainView({ onStart }: { onStart: (p: Plan) => void }) {
+  const plans = useDataStore((s) => s.plans);
+  const settings = useDataStore((s) => s.settings);
+
+  const [selectedId, setSelectedId] = useState<string>(settings?.defaultPlanId ?? plans[0]?.id ?? "");
+  const selected = plans.find((p) => p.id === selectedId) ?? plans[0] ?? null;
+
+  if (!selected) return null;
+
+  // 预计耗时：(contract + relax) * reps * sets（秒 → 分钟）
+  const estSec = (selected.contract + selected.relax) * selected.reps * selected.sets;
+  const estMin = Math.max(1, Math.round(estSec / 60));
+
+  return (
+    <div className="desk-train">
+      {/* 左：方案列表 */}
+      <ul className="desk-plan-list">
+        {plans.map((p, i) => {
+          const isSelected = p.id === selected.id;
+          const isDefault = p.id === settings?.defaultPlanId;
+          return (
+            <li key={p.id}>
+              <button
+                className={"desk-plan-card" + (isSelected ? " is-selected" : "")}
+                onClick={() => setSelectedId(p.id)}
+              >
+                <div className="desk-plan-card-top">
+                  <h3 className="desk-plan-card-name">{p.name}</h3>
+                  <span className="desk-plan-card-index">№ {pad2idx(i)}</span>
+                </div>
+                {isDefault && <span className="desk-plan-default-tag">默认方案</span>}
+                <p className="desk-plan-card-desc">{p.desc}</p>
+                <div className="desk-plan-card-params">
+                  <span className="desk-plan-chip">
+                    收紧<span className="v">{p.contract}</span>s
+                  </span>
+                  <span className="desk-plan-chip">
+                    放松<span className="v">{p.relax}</span>s
+                  </span>
+                  <span className="desk-plan-chip">
+                    <span className="v">{p.reps}</span>次
+                  </span>
+                  <span className="desk-plan-chip">
+                    <span className="v">{p.sets}</span>组
+                  </span>
+                </div>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+
+      {/* 右：方案详情 */}
+      <div className="desk-plan-detail">
+        <div className="eyebrow">
+          <span className="seed" aria-hidden="true" />
+          选中方案
+        </div>
+        <h3 className="name">{selected.name}</h3>
+        <p className="desc">{selected.desc}</p>
+
+        <div className="desk-plan-detail-grid">
+          <div className="desk-plan-stat">
+            <div className="l">收紧</div>
+            <div className="v">
+              {selected.contract}
+              <span className="u">s</span>
+            </div>
+          </div>
+          <div className="desk-plan-stat">
+            <div className="l">放松</div>
+            <div className="v">
+              {selected.relax}
+              <span className="u">s</span>
+            </div>
+          </div>
+          <div className="desk-plan-stat">
+            <div className="l">每组次数</div>
+            <div className="v">{selected.reps}</div>
+          </div>
+          <div className="desk-plan-stat">
+            <div className="l">组数</div>
+            <div className="v">{selected.sets}</div>
+          </div>
+        </div>
+
+        <div className="desk-set-note">预计耗时 <b>{estMin}</b> 分钟（{(selected.contract + selected.relax) * selected.reps * selected.sets}s）</div>
+
+        <button className="desk-cta" onClick={() => onStart(selected)}>
+          开始这组训练
+          <span className="arrow">→</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function pad2idx(n: number): string {
+  return (n < 9 ? "0" : "") + (n + 1);
+}
