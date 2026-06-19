@@ -65,12 +65,12 @@ export function HomeScreen({ onStart }: { onStart: (plan: Plan) => void }) {
           <Text style={[styles.big, { color: isDone ? colors.success : colors.accent }]}>
             {done}
           </Text>
-          <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: 2 }}>已完成组</Text>
+          <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: sp.s1 }}>已完成组</Text>
         </View>
         <Text style={[styles.slash, { color: colors.text3 }]}>/</Text>
         <View style={styles.numCol}>
           <Text style={[styles.big, { color: colors.text2 }]}>{goal}</Text>
-          <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: 2 }}>目标</Text>
+          <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: sp.s1 }}>目标</Text>
         </View>
       </View>
 
@@ -81,7 +81,7 @@ export function HomeScreen({ onStart }: { onStart: (plan: Plan) => void }) {
             连续 {s?.current} 天
           </Text>
           {(s?.longest ?? 0) > 0 && (
-            <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: 2 }}>
+            <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: sp.s1 }}>
               最长 {s?.longest} 天
             </Text>
           )}
@@ -111,7 +111,7 @@ export function HomeScreen({ onStart }: { onStart: (plan: Plan) => void }) {
                   },
                 ]}
               />
-              <Text style={{ color: colors.text3, fontSize: 10, marginTop: 4 }}>{d.label}</Text>
+              <Text style={{ color: colors.text3, fontSize: 10, marginTop: sp.s1 }}>{d.label}</Text>
             </View>
           );
         })}
@@ -130,7 +130,7 @@ export function HomeScreen({ onStart }: { onStart: (plan: Plan) => void }) {
 
       <Card colors={colors} style={{ marginTop: sp.s5 }}>
         <Txt colors={colors} color="text2" size={fs.sm}>
-          一组只要一分钟。盆底肌像呼吸一样，做了就记得住。
+          一组只要一分钟，做了就记得住。
         </Txt>
       </Card>
 
@@ -159,12 +159,12 @@ const styles = StyleSheet.create({
   quote: { fontSize: fs.base, marginTop: sp.s3, lineHeight: 24 },
   progressRow: {
     flexDirection: "row",
-    alignItems: "flex-end",
+    alignItems: "baseline",
     paddingBottom: sp.s5,
     borderBottomWidth: 1,
   },
   numCol: { flex: 1 },
-  slash: { fontSize: 40, fontWeight: "300", marginHorizontal: sp.s3, marginBottom: 18 },
+  slash: { fontSize: 40, fontWeight: "300", marginHorizontal: sp.s3 },
   big: { fontSize: 72, fontWeight: "700", lineHeight: 80 },
   streak: {
     marginTop: sp.s5,

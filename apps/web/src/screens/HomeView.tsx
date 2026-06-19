@@ -71,7 +71,7 @@ export function HomeView({ onStart }: { onStart: (p: Plan) => void }) {
         disabled={!defaultPlan}
         onClick={() => defaultPlan && onStart(defaultPlan)}
       >
-        {isDone ? (done > goal ? "今天，提了。再来一组" : "今天，提了。继续保持") : "开始一组训练"}
+        {isDone ? "今天，提了。再来一组" : "开始一组训练"}
       </button>
 
       {(streak?.current ?? 0) > 0 && (

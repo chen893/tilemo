@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
   btn: {
     paddingVertical: sp.s3,
     paddingHorizontal: sp.s5,
-    borderRadius: 999,
+    borderRadius: rd.pill,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderRadius: 999,
+    borderRadius: rd.pill,
     overflow: "hidden",
   },
   iconBtn: {

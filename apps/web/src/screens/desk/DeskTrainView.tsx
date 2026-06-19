@@ -33,16 +33,16 @@ export function DeskTrainView({ onStart }: { onStart: (p: Plan) => void }) {
               >
                 <div className="desk-plan-card-top">
                   <h3 className="desk-plan-card-name">{p.name}</h3>
-                  <span className="desk-plan-card-index">№ {pad2idx(i)}</span>
+                  <span className="desk-plan-card-index">{pad2idx(i + 1)} / {pad2idx(plans.length)}</span>
                 </div>
                 {isDefault && <span className="desk-plan-default-tag">默认方案</span>}
                 <p className="desk-plan-card-desc">{p.desc}</p>
                 <div className="desk-plan-card-params">
                   <span className="desk-plan-chip">
-                    收紧<span className="v">{p.contract}</span>s
+                    收紧<span className="v">{p.contract}秒</span>
                   </span>
                   <span className="desk-plan-chip">
-                    放松<span className="v">{p.relax}</span>s
+                    放松<span className="v">{p.relax}秒</span>
                   </span>
                   <span className="desk-plan-chip">
                     <span className="v">{p.reps}</span>次
@@ -71,14 +71,14 @@ export function DeskTrainView({ onStart }: { onStart: (p: Plan) => void }) {
             <div className="l">收紧</div>
             <div className="v">
               {selected.contract}
-              <span className="u">s</span>
+              <span className="u">秒</span>
             </div>
           </div>
           <div className="desk-plan-stat">
             <div className="l">放松</div>
             <div className="v">
               {selected.relax}
-              <span className="u">s</span>
+              <span className="u">秒</span>
             </div>
           </div>
           <div className="desk-plan-stat">
@@ -91,10 +91,10 @@ export function DeskTrainView({ onStart }: { onStart: (p: Plan) => void }) {
           </div>
         </div>
 
-        <div className="desk-set-note">预计耗时 <b>{estMin}</b> 分钟（{(selected.contract + selected.relax) * selected.reps * selected.sets}s）</div>
+        <div className="desk-set-note">预计耗时 <b>{estMin}</b> 分钟（{(selected.contract + selected.relax) * selected.reps * selected.sets}秒）</div>
 
         <button className="desk-cta" onClick={() => onStart(selected)}>
-          开始这组训练
+          开始一组训练
           <span className="arrow">→</span>
         </button>
       </div>
@@ -103,5 +103,5 @@ export function DeskTrainView({ onStart }: { onStart: (p: Plan) => void }) {
 }
 
 function pad2idx(n: number): string {
-  return (n < 9 ? "0" : "") + (n + 1);
+  return String(n).padStart(2, "0");
 }

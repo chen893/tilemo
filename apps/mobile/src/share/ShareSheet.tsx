@@ -8,7 +8,6 @@
 import { useMemo, useRef, useState } from "react";
 import {
   Modal,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -18,11 +17,12 @@ import {
 } from "react-native";
 import { captureRef } from "react-native-view-shot";
 import * as Sharing from "expo-sharing";
+import * as FileSystem from "expo-file-system";
 import { gatherCardData, type CardData, type CardType, type MilestoneCopy } from "@tilemo/share-card";
 import { ShareCardView } from "./ShareCardView";
 import { useDataStore } from "../data";
 import { useTheme } from "../theme";
-import { fs, sp } from "../ui/primitives";
+import { Button, IconButton, fs, rd, sp } from "../ui/primitives";
 
 export interface ShareInit {
   type: CardType;
@@ -30,6 +30,10 @@ export interface ShareInit {
 }
 
 const PREVIEW_W = 340; // 预览宽度；view-shot 按设备像素出图（≈ @2x/@3x），分享清晰。
+
+function titleFor(t?: CardType): string {
+  return t === "milestone" ? "里程碑" : t === "review" ? "回顾" : "今日";
+}
 
 export function ShareSheet({ init, onClose }: { init: ShareInit | null; onClose: () => void }) {
   const { colors, mode } = useTheme();
@@ -71,6 +75,9 @@ export function ShareSheet({ init, onClose }: { init: ShareInit | null; onClose:
       await Sharing.shareAsync(uri, { mimeType: "image/png", dialogTitle: "今天，提了么" });
     } catch {
       /* 用户取消 */
+    } finally {
+      // captureRef 的 tmpfile 落在缓存目录；分享后清理，避免反复分享堆积 PNG。
+      FileSystem.deleteAsync(uri, { idempotent: true }).catch(() => {});
     }
   };
 
@@ -78,14 +85,13 @@ export function ShareSheet({ init, onClose }: { init: ShareInit | null; onClose:
     <Modal visible={!!init} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={[styles.panel, { backgroundColor: colors.paper }]}>
-          <View style={[styles.head, { justifyContent: "flex-end" }]}>
-            <Pressable
-              onPress={onClose}
-              style={[styles.close, { borderColor: colors.ruleStrong }]}
-              hitSlop={8}
-            >
+          <View style={styles.head}>
+            <Text style={{ color: colors.text, fontSize: fs.base, fontWeight: "600" }}>
+              {titleFor(init?.type)}
+            </Text>
+            <IconButton colors={colors} onPress={onClose}>
               <Text style={{ color: colors.text2, fontSize: 20, lineHeight: 20 }}>×</Text>
-            </Pressable>
+            </IconButton>
           </View>
 
           <ScrollView style={{ maxHeight: "68%" }} contentContainerStyle={{ paddingBottom: sp.s3 }}>
@@ -99,15 +105,9 @@ export function ShareSheet({ init, onClose }: { init: ShareInit | null; onClose:
           </ScrollView>
 
           <View style={styles.actions}>
-            <Pressable
-              style={[styles.btn, { backgroundColor: colors.accent }]}
-              onPress={onShare}
-              disabled={busy}
-            >
-              <Text style={{ color: "#FFFFFF", fontSize: fs.base, fontWeight: "600" }}>
-                {busy ? "处理中…" : "保存 / 分享"}
-              </Text>
-            </Pressable>
+            <Button colors={colors} variant="solid" full disabled={busy} onPress={onShare}>
+              {busy ? "处理中…" : "保存 / 分享"}
+            </Button>
           </View>
         </View>
       </View>
@@ -123,21 +123,13 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(20,16,14,0.55)",
     padding: sp.s4,
   },
-  panel: { width: "92%", maxWidth: 400, borderRadius: 24, padding: sp.s4 },
+  panel: { width: "92%", maxWidth: 400, borderRadius: rd.md, padding: sp.s4 },
   head: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: sp.s3,
-  },
-  close: {
-    width: 32,
-    height: 32,
-    borderRadius: 999,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
   },
   preview: { alignItems: "center" },
   actions: { flexDirection: "row", gap: sp.s2, marginTop: sp.s3 },
-  btn: { flex: 1, height: 48, borderRadius: 14, alignItems: "center", justifyContent: "center" },
 });

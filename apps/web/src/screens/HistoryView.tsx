@@ -178,7 +178,7 @@ function SessionRow({ session, planName }: { session: Session; planName: string 
         <div className="meta">{mins} 分钟</div>
       </div>
       <span className={"tag" + (session.finished ? "" : " is-partial")}>
-        {session.finished ? "已完成" : "未完成"}
+        {session.finished ? "完成" : "部分"}
       </span>
     </div>
   );

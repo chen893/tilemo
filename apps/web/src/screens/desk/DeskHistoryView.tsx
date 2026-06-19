@@ -10,12 +10,10 @@ const MONTHS = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", 
 
 export function DeskHistoryView() {
   const store = useDataStore((s) => s.store);
-  const settings = useDataStore((s) => s.settings);
   const plans = useDataStore((s) => s.plans);
   const streak = useDataStore((s) => s.streak);
 
   const stats = store ? aggregateStats(store) : null;
-  const goalDefault = settings?.dailyGoalGroups ?? 1;
   const thisYear = new Date().getFullYear();
 
   const [heatYear, setHeatYear] = useState<number>(thisYear);
@@ -186,7 +184,7 @@ export function DeskHistoryView() {
         {selectedKey && (
           <>
             {selectedSessions.length === 0 ? (
-              <div className="desk-day-empty">这一天没有训练记录</div>
+              <div className="desk-day-empty">这一天没有记录。安静的一天。</div>
             ) : (
               selectedSessions.map((s, i) => {
                 const durMin = Math.max(1, Math.round(s.durationSec / 60));
@@ -197,7 +195,7 @@ export function DeskHistoryView() {
                       <div className="meta">{s.completedReps} 次 · {durMin} 分钟</div>
                     </div>
                     <span className={"tag" + (s.finished ? "" : " is-partial")}>
-                      {s.finished ? "已完成" : "未完成"}
+                      {s.finished ? "完成" : "部分"}
                     </span>
                   </div>
                 );

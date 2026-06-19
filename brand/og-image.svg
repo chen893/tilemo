@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <!-- Tilemo · social share card (Open Graph / Twitter). 1200×630. -->
+  <rect width="1200" height="630" fill="#FAF3EC" />
+  <!-- hero seed mark (coral, matches the in-app .seed) -->
+  <path d="M 320.0 165.0 L 320.0 165.0 A 120.0 180.0 0 0 1 440.0 345.0 L 440.0 345.0 A 165.0 120.0 0 0 1 275.0 465.0 L 275.0 465.0 A 135.0 150.0 0 0 1 140.0 315.0 L 140.0 315.0 A 180.0 150.0 0 0 1 320.0 165.0 Z" fill="#E85A4F" />
+  <g font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif" text-rendering="geometricPrecision">
+    <text x="540" y="322" font-size="118" font-weight="700" letter-spacing="2" fill="#2B2320">今天<tspan fill="#E85A4F">提了</tspan>么</text>
+    <text x="544" y="402" font-size="34" letter-spacing="1" fill="#5C4F47">每天问你一句 · 陪你提一组 · 替你记一笔</text>
+    <text x="546" y="464" font-size="26" letter-spacing="4" fill="#E85A4F">离线 · 本地 · 私密</text>
+  </g>
+</svg>

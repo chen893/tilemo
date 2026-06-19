@@ -37,10 +37,10 @@ export function TrainView({ onStart }: { onStart: (p: Plan) => void }) {
               <p className="plan-card-desc">{p.desc}</p>
               <div className="plan-card-params">
                 <span className="plan-chip">
-                  收紧<span className="v">{p.contract}s</span>
+                  收紧<span className="v">{p.contract}秒</span>
                 </span>
                 <span className="plan-chip">
-                  放松<span className="v">{p.relax}s</span>
+                  放松<span className="v">{p.relax}秒</span>
                 </span>
                 <span className="plan-chip">
                   次<span className="v">{p.reps}</span>

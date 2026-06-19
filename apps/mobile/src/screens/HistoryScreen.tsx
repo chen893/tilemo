@@ -91,7 +91,7 @@ export function HistoryScreen() {
 
       {/* Stats */}
       <View style={[styles.statsRow, { borderColor: colors.rule }]}>
-        <Stat colors={colors} n={streak?.current ?? 0} label="连续天" />
+        <Stat colors={colors} n={streak?.current ?? 0} label="连续" />
         <Stat colors={colors} n={stats.days} label="训练天" />
         <Stat colors={colors} n={stats.sessions} label="总组数" />
       </View>
@@ -147,7 +147,7 @@ export function HistoryScreen() {
             >
               <Text style={{ color: colors.text, fontSize: 12, fontWeight: "600" }}>{cell.day}</Text>
               {cell.cnt > 0 && (
-                <Text style={{ color: colors.text2, fontSize: 9, marginTop: 1 }}>{cell.cnt}组</Text>
+                <Text style={{ color: colors.text2, fontSize: 9, marginTop: sp.s1 }}>{cell.cnt}组</Text>
               )}
             </Pressable>
           );
@@ -178,7 +178,7 @@ export function HistoryScreen() {
                     <Text style={{ color: colors.text, fontSize: fs.base, fontWeight: "600" }}>
                       {planName(ses.planId)} · {ses.completedReps} 次
                     </Text>
-                    <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: 2 }}>
+                    <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: sp.s1 }}>
                       {mins} 分钟
                     </Text>
                   </View>
@@ -206,7 +206,7 @@ function Stat({ colors, n, label }: { colors: import("@tilemo/design-tokens").Co
   return (
     <View style={styles.stat}>
       <Text style={{ color: colors.accent, fontSize: fs.xl, fontWeight: "700" }}>{n}</Text>
-      <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: 2 }}>{label}</Text>
+      <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: sp.s1 }}>{label}</Text>
     </View>
   );
 }
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
   dowRow: { flexDirection: "row" },
   dow: { flex: 1, textAlign: "center", fontSize: fs.xs, marginBottom: sp.s2 },
   grid: { flexDirection: "row", flexWrap: "wrap" },
-  cell: { width: `${100 / 7}%`, aspectRatio: 1, padding: 2 },
+  cell: { width: `${100 / 7}%`, aspectRatio: 1, padding: sp.s1 },
   cellBtn: {
     alignItems: "center",
     justifyContent: "center",

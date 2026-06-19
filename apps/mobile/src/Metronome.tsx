@@ -5,9 +5,9 @@
 // We subscribe to snapshots and render prep / breath / done stages with RN +
 // reanimated. Haptics fire on phase change, gated by settings.haptics.
 //
-// Audio: intentionally skipped (RN has no Web Audio; a bundled sine via expo-av
-// would add weight for little value — haptics + visual are the priority per the
-// spec). See report.
+// Audio: two short sine beeps via expo-av (contract=880Hz, relax=660Hz), mirroring
+// web's WebAudio feedback(). Preloaded once, replayed on each phase edge, gated
+// by settings.sound.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -19,13 +19,14 @@ import Animated, {
   useReducedMotion,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
+import { Audio } from "expo-av";
 import { type Plan } from "@tilemo/data";
 import { Metro, type MetroSnapshot, recordSession } from "@tilemo/core";
 import { detectStreakMilestone, type MilestoneCopy } from "@tilemo/share-card";
 import { useDataStore } from "./data";
 import { useOpenShare } from "./share/ShareContext";
 import { useTheme } from "./theme";
-import { fs, sp } from "./ui/primitives";
+import { IconButton, fs, rd, sp } from "./ui/primitives";
 
 const BREATH_CONTRACT = 0.82; // shape scale on contract (matches web --breath-tense)
 const BREATH_RELAX = 1.05; // shape scale on relax
@@ -41,6 +42,7 @@ export function Metronome({
   const store = useDataStore((s) => s.store);
   const refresh = useDataStore((s) => s.refresh);
   const hapticsOn = useDataStore((s) => s.settings?.haptics) ?? true;
+  const soundOn = useDataStore((s) => s.settings?.sound) ?? true;
   const openShare = useOpenShare();
   const streakMilestoneRef = useRef<MilestoneCopy | null>(null);
 
@@ -48,6 +50,10 @@ export function Metronome({
   const scale = useSharedValue(1);
   const reduceMotion = useReducedMotion();
   const lastPhase = useRef<string>("");
+  const soundHi = useRef<Audio.Sound | null>(null);
+  const soundLo = useRef<Audio.Sound | null>(null);
+  // 首拍补偿：若第一个 phase 在音频加载完成前到达，记下阶段，就绪后补播，避免首拍静默。
+  const pendingBeep = useRef<"contract" | "relax" | null>(null);
   const closedRef = useRef(false);
 
   // Ref indirection so the Metro hooks (constructed once via useMemo) can always
@@ -98,7 +104,42 @@ export function Metronome({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plan.id]);
 
-  // Drive breath shape + haptics from snapshot.
+  // Preload the two beeps once; play in silent mode so a muted phone still cues.
+  useEffect(() => {
+    let mounted = true;
+    Audio.setAudioModeAsync({ playsInSilentModeIOS: true }).catch(() => {});
+    (async () => {
+      try {
+        const [hi, lo] = await Promise.all([
+          Audio.Sound.createAsync(require("../assets/audio/beep_high.wav")),
+          Audio.Sound.createAsync(require("../assets/audio/beep_low.wav")),
+        ]);
+        if (!mounted) {
+          await Promise.all([hi.sound.unloadAsync(), lo.sound.unloadAsync()]);
+          return;
+        }
+        soundHi.current = hi.sound;
+        soundLo.current = lo.sound;
+        // 若首拍在音频就绪前到达，现在补播，保证 收/紧 提示音从第一拍起完整。
+        if (pendingBeep.current) {
+          const s = pendingBeep.current === "contract" ? hi.sound : lo.sound;
+          pendingBeep.current = null;
+          s.replayAsync().catch(() => {});
+        }
+      } catch {
+        /* audio unavailable — overlay stays silent, haptics/visual still cue */
+      }
+    })();
+    return () => {
+      mounted = false;
+      soundHi.current?.unloadAsync().catch(() => {});
+      soundLo.current?.unloadAsync().catch(() => {});
+      soundHi.current = null;
+      soundLo.current = null;
+    };
+  }, []);
+
+  // Drive breath shape + haptics + beep from snapshot.
   useEffect(() => {
     if (!snap) return;
     if (snap.stage !== "breath") {
@@ -117,17 +158,28 @@ export function Metronome({
       });
     }
 
-    // Haptic on phase change.
+    // Haptic + beep on phase change (independent toggles).
     const key = snap.phase;
-    if (hapticsOn && key !== lastPhase.current) {
+    if (key !== lastPhase.current) {
       lastPhase.current = key;
-      if (snap.phase === "contract") {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-      } else {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+      if (hapticsOn) {
+        if (key === "contract") {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+        } else {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+        }
+      }
+      if (soundOn) {
+        const s = key === "contract" ? soundHi.current : soundLo.current;
+        if (s) {
+          s.replayAsync().catch(() => {});
+        } else {
+          // 音频尚未加载完成：记下阶段，加载后补播。
+          pendingBeep.current = key;
+        }
       }
     }
-  }, [snap, scale, plan.contract, plan.relax, hapticsOn, reduceMotion]);
+  }, [snap, scale, plan.contract, plan.relax, hapticsOn, soundOn, reduceMotion]);
 
   // Animated style MUST be created unconditionally (rules of hooks) — even before
   // the first snapshot arrives. It reads the shared value, so it's a no-op until
@@ -146,16 +198,16 @@ export function Metronome({
     <View style={[styles.overlay, { backgroundColor: colors.paper }]}>
       {/* Top-right close (only meaningful once not running-prep) */}
       <View style={styles.topBar}>
-        <Pressable
+        <IconButton
+          colors={colors}
           hitSlop={12}
           onPress={() => {
             metro.endEarly();
             handleClose();
           }}
-          style={[styles.closeBtn, { borderColor: colors.ruleStrong }]}
         >
           <Text style={{ color: colors.text3, fontSize: fs.lg, fontWeight: "500" }}>×</Text>
-        </Pressable>
+        </IconButton>
       </View>
 
       {stage === "prep" && (
@@ -284,27 +336,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: sp.gutter,
     paddingTop: sp.s8,
   },
-  closeBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   center: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: sp.gutter },
   eyebrow: {
     fontSize: fs.sm,
     fontWeight: "600",
-    letterSpacing: 6,
-    textTransform: "uppercase",
   },
   hint: { fontSize: fs.base },
   breathWrap: { width: 240, height: 240, alignItems: "center", justifyContent: "center" },
   breathBlob: {
     width: 200,
     height: 200,
-    borderRadius: 120,
+    borderRadius: rd.pill,
   },
   controls: {
     flexDirection: "row",
@@ -318,7 +360,7 @@ const styles = StyleSheet.create({
   ctrlBtn: {
     paddingVertical: sp.s3,
     paddingHorizontal: sp.s6,
-    borderRadius: 999,
+    borderRadius: rd.pill,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",

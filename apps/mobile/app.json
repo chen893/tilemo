@@ -7,12 +7,26 @@
     "scheme": "tilemo",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FAF3EC"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.tilemo.app"
     },
     "android": {
-      "package": "com.tilemo.app"
+      "package": "com.tilemo.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundImage": "./assets/adaptive-background.png",
+        "backgroundColor": "#E85A4F"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
     },
     "plugins": []
   }

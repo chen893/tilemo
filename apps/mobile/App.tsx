@@ -125,7 +125,7 @@ function Shell({
                 style={{
                   color: active ? colors.accent : colors.text3,
                   fontSize: fs.xs,
-                  marginTop: 2,
+                  marginTop: sp.s1,
                   fontWeight: active ? "600" : "400",
                 }}
               >

@@ -4,7 +4,7 @@
 import { useMemo } from "react";
 import type { Plan } from "@tilemo/data";
 import type { Session } from "@tilemo/data";
-import { heatLevel, levelOfDay, pad2, QUOTES, todayKey, ymd } from "@tilemo/core";
+import { dayMeetsGoal, heatLevel, levelOfDay, pad2, QUOTES, todayKey, ymd } from "@tilemo/core";
 import { useDataStore } from "../../data";
 
 const WD = ["日", "一", "二", "三", "四", "五", "六"];
@@ -36,6 +36,7 @@ export function DeskHomeView({ onStart }: { onStart: (p: Plan) => void }) {
       date: Date;
       level: number;
       n: number;
+      met: boolean;
       lbl: string;
       dd: string;
       isToday: boolean;
@@ -50,6 +51,9 @@ export function DeskHomeView({ onStart }: { onStart: (p: Plan) => void }) {
         date: d,
         level: levelOfDay(entry),
         n,
+        // 与 streak / aggregateStats 同口径：用当日记录的 goalGroups 快照判定达标，
+        // 而非"当前设置"——否则改目标后首页节奏卡与连续天数/历史会互相矛盾。
+        met: dayMeetsGoal(entry),
         lbl: WD[d.getDay()],
         dd: pad2(d.getDate()),
         isToday: key === tStr,
@@ -62,16 +66,16 @@ export function DeskHomeView({ onStart }: { onStart: (p: Plan) => void }) {
   // cadence 统计
   const cadence = useMemo(() => {
     const totalSets = week.reduce((a, d) => a + d.n, 0);
-    const metDays = week.filter((d) => d.n >= (settings?.dailyGoalGroups ?? 3)).length;
+    const metDays = week.filter((d) => d.met).length;
     const maxSets = Math.max(1, ...week.map((d) => d.n));
     return { totalSets, metDays, maxSets };
-  }, [week, settings?.dailyGoalGroups]);
+  }, [week]);
 
   const defaultPlan = plans.find((p) => p.id === settings?.defaultPlanId) ?? plans[0];
 
   const cadenceNote =
     cadence.metDays >= 7
-      ? "本周全勤——你已把呼吸编进了肌肉。"
+      ? "本周全勤——你已把节奏刻进了肌肉。"
       : cadence.metDays >= 5
         ? "本周节奏稳健，再坚持两天就满一周。"
         : cadence.metDays >= 3
@@ -105,10 +109,8 @@ export function DeskHomeView({ onStart }: { onStart: (p: Plan) => void }) {
           onClick={() => defaultPlan && onStart(defaultPlan)}
         >
           {isDone
-            ? done > goal
-              ? "今天，提了。再来一组"
-              : "今天，提了。继续保持"
-            : "开始这组训练"}
+            ? "今天，提了。再来一组"
+            : "开始一组训练"}
           <span className="arrow">→</span>
         </button>
 
@@ -127,7 +129,7 @@ export function DeskHomeView({ onStart }: { onStart: (p: Plan) => void }) {
                     <div className="meta">{s.completedReps} 次 · {durMin} 分钟</div>
                   </div>
                   <span className={"tag" + (s.finished ? "" : " is-partial")}>
-                    {s.finished ? "已完成" : "未完成"}
+                    {s.finished ? "完成" : "部分"}
                   </span>
                 </div>
               );

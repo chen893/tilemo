@@ -1,6 +1,18 @@
-# 今天提了么 (Tilemo)
+<p align="center">
+  <img src="apps/web/public/icon.svg" width="84" alt="今天提了么" />
+</p>
 
-每日提肛（凯格尔 / 盆底肌训练）打卡与引导训练工具。**离线、本地、私密**。
+<h1 align="center">今天提了么 (Tilemo)</h1>
+
+<p align="center">
+  每日提肛（凯格尔 / 盆底肌训练）打卡与引导训练工具。<strong>离线 · 本地 · 私密</strong>。
+</p>
+
+<p align="center">
+  <a href="https://github.com/chen893/tilemo/stargazers"><img src="https://img.shields.io/github/stars/chen893/tilemo?style=social" alt="GitHub stars" /></a>
+  <img src="https://img.shields.io/badge/platform-iOS%20%7C%20Android%20%7C%20Web-E85A4F?style=flat-square" alt="platform" />
+  <a href="https://tilemo-web.vercel.app/"><img src="https://img.shields.io/badge/live-tilemo--web.vercel.app-2B2320?style=flat-square" alt="live" /></a>
+</p>
 
 monorepo:一个 React Native 移动 app + 一个网页端,共享同一套内核(数据 / 节拍引擎 / 设计 token)。
 

@@ -25,3 +25,16 @@ export function pickQuote(index: number): string {
   const n = QUOTES.length;
   return QUOTES[((index % n) + n) % n];
 }
+
+/** 回顾卡主标题轮换池（更"总结"口吻，与日常配文 QUOTES 独立）。 */
+export const REVIEW_HEADLINES: string[] = [
+  "坚持的形状，是一格一格亮起来的",
+  "日复一日，身体在悄悄记住",
+  "看得见的，是你不声不响的坚持",
+];
+
+/** 按 index 取一句回顾主标题（负数/越界安全）。 */
+export function pickReviewHeadline(index: number): string {
+  const n = REVIEW_HEADLINES.length;
+  return REVIEW_HEADLINES[((index % n) + n) % n];
+}

@@ -18,6 +18,12 @@ const K_LOG_PREFIX = "tgm:log:";
 
 const DEFAULT_STREAK: Streak = { current: 0, longest: 0, lastCheckedDate: null };
 
+/** 返回 DayEntry 的隔离副本（拷贝 sessions 数组）。缓存对外只发副本，
+ *  外部对返回值的就地改动（如 sessions.push）不会污染缓存，必须经 setDay 落库。 */
+function cloneDay(d: DayEntry): DayEntry {
+  return { ...d, sessions: d.sessions ? d.sessions.slice() : [] };
+}
+
 export interface ExportBundle {
   settings: Settings;
   plans: Plan[];
@@ -68,7 +74,10 @@ export class Store {
   }
 
   getDay(key: string): DayEntry | null {
-    if (this.dayCache.has(key)) return this.dayCache.get(key) ?? null;
+    if (this.dayCache.has(key)) {
+      const cached = this.dayCache.get(key) ?? null;
+      return cached ? cloneDay(cached) : null;
+    }
     const raw = this.adapter.getItem(K_LOG_PREFIX + key);
     let v: DayEntry | null = null;
     if (raw) {
@@ -79,12 +88,13 @@ export class Store {
       }
     }
     this.dayCache.set(key, v);
-    return v;
+    return v ? cloneDay(v) : null;
   }
 
   setDay(key: string, data: DayEntry): void {
     this.adapter.setItem(K_LOG_PREFIX + key, JSON.stringify(data));
-    this.dayCache.set(key, data);
+    // 缓存隔离副本，断开与调用方持有的对象引用，避免外部后续改动污染缓存。
+    this.dayCache.set(key, cloneDay(data));
   }
 
   getStreak(): Streak {

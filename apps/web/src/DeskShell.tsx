@@ -10,6 +10,7 @@ import { DeskHomeView } from "./screens/desk/DeskHomeView";
 import { DeskTrainView } from "./screens/desk/DeskTrainView";
 import { DeskHistoryView } from "./screens/desk/DeskHistoryView";
 import { DeskSettingsView } from "./screens/desk/DeskSettingsView";
+import { useOpenShare } from "./share/ShareContext";
 
 const WD = ["日", "一", "二", "三", "四", "五", "六"];
 
@@ -41,6 +42,7 @@ export function DeskShell({
   const store = useDataStore((s) => s.store);
   const refresh = useDataStore((s) => s.refresh);
   const streak = useDataStore((s) => s.streak);
+  const openShare = useOpenShare();
 
   const now = new Date();
   const today = store?.getDay(todayKey()) ?? null;
@@ -138,7 +140,7 @@ export function DeskShell({
                 aria-pressed={settings?.theme === t}
                 onClick={() => setTheme(t)}
               >
-                {t === "light" ? "浅" : t === "dark" ? "深" : "跟随"}
+                {t === "light" ? "浅" : t === "dark" ? "深" : "跟随系统"}
               </button>
             ))}
           </div>
@@ -154,6 +156,10 @@ export function DeskShell({
             </div>
             <h1>{hdr.title}</h1>
           </div>
+          <button className="desk-share-btn" onClick={() => openShare({ type: "review" })}>
+            <IconShare />
+            <span>分享</span>
+          </button>
         </header>
 
         <div className="desk-views">
@@ -212,6 +218,14 @@ function IconLeaf() {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
       <path d="M20 4C9 4 4 9 4 18c0 0 0 2 2 2 9 0 14-5 14-16z" strokeLinejoin="round" />
       <path d="M4 20C8 14 12 10 18 7" strokeLinecap="round" />
+    </svg>
+  );
+}
+function IconShare() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="M12 15V4M12 4l-4 4M12 4l4 4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5 12v6a2 2 0 002 2h10a2 2 0 002-2v-6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

@@ -55,8 +55,8 @@ export function TrainScreen({ onStart }: { onStart: (plan: Plan) => void }) {
             )}
             <Text style={[styles.desc, { color: colors.text2 }]}>{p.desc}</Text>
             <View style={styles.chips}>
-              <Chip colors={colors} label="收紧" value={`${p.contract}s`} />
-              <Chip colors={colors} label="放松" value={`${p.relax}s`} />
+              <Chip colors={colors} label="收紧" value={`${p.contract}秒`} />
+              <Chip colors={colors} label="放松" value={`${p.relax}秒`} />
               <Chip colors={colors} label="次" value={`${p.reps}`} />
               <Chip colors={colors} label="组" value={`${p.sets}`} />
             </View>
@@ -81,12 +81,12 @@ function Chip({
     <View
       style={{
         paddingHorizontal: sp.s3,
-        paddingVertical: sp.s2,
-        borderRadius: 999,
+        paddingVertical: sp.s3,
+        borderRadius: rd.pill,
         backgroundColor: colors.paperDeep,
         flexDirection: "row",
         alignItems: "baseline",
-        gap: 4,
+        gap: sp.s1,
       }}
     >
       <Text style={{ color: colors.text3, fontSize: fs.xs }}>{label}</Text>
@@ -117,8 +117,8 @@ const styles = StyleSheet.create({
     fontSize: fs.xs,
     borderWidth: 1,
     paddingHorizontal: sp.s2,
-    paddingVertical: 2,
-    borderRadius: 999,
+    paddingVertical: sp.s1,
+    borderRadius: rd.pill,
     fontWeight: "600",
   },
   desc: { fontSize: fs.base, marginTop: sp.s3, lineHeight: 22 },

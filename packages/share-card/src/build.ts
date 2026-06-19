@@ -4,7 +4,7 @@
 import { color, type ColorSet, type ThemeMode } from "@tilemo/design-tokens";
 import { BRAND, LANDING_URL } from "./config";
 import type { MilestoneCopy } from "./quotes";
-import { pickQuote } from "./quotes";
+import { pickQuote, pickReviewHeadline } from "./quotes";
 import { buildQr } from "./qr";
 import type { CardData, CardType } from "./types";
 
@@ -54,7 +54,7 @@ export function buildCardData(o: BuildOpts): CardData {
     data.headline = o.milestone.headline;
     data.badge = o.milestone.badge;
   } else if (o.type === "review") {
-    data.headline = "坚持的形状，是一格一格亮起来的";
+    data.headline = pickReviewHeadline(o.quoteIndex ?? 0);
   } else {
     data.eyebrow = "今天";
     data.headline = o.goalTotal > 0 && o.goalDone >= o.goalTotal ? "今天，提了。" : "又稳了一点。";

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1242 2436" width="1242" height="2436">
+  <!-- Tilemo · Expo splash (1242×2436, iPhone 6.5"). Paper bg + centered seed + wordmark. -->
+  <rect width="1242" height="2436" fill="#FAF3EC" />
+  <path d="M 661.0 968.0 L 661.0 968.0 A 160.0 240.0 0 0 1 821.0 1208.0 L 821.0 1208.0 A 220.0 160.0 0 0 1 601.0 1368.0 L 601.0 1368.0 A 180.0 200.0 0 0 1 421.0 1168.0 L 421.0 1168.0 A 240.0 200.0 0 0 1 661.0 968.0 Z" fill="#E85A4F" />
+  <g font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif" text-anchor="middle" text-rendering="geometricPrecision">
+    <text x="621" y="1540" font-size="108" font-weight="700" letter-spacing="3" fill="#2B2320">今天<tspan fill="#E85A4F">提了</tspan>么</text>
+    <text x="621" y="1618" font-size="30" letter-spacing="6" fill="#E85A4F">离线 · 本地 · 私密</text>
+  </g>
+</svg>

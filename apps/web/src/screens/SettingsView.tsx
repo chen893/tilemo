@@ -1,6 +1,6 @@
 // @tilemo/web — 设置视图（移动壳）。镜像 mobile SettingsScreen，复用 core 计算。
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { clamp } from "@tilemo/core";
 import type { Plan, Settings as SettingsT, ThemeSetting } from "@tilemo/data";
 import { GITHUB_URL } from "@tilemo/share-card";
@@ -19,6 +19,7 @@ export function SettingsView() {
   const refresh = useDataStore((s) => s.refresh);
 
   const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<number | null>(null);
 
   const update = (patch: Partial<SettingsT>) => {
     if (!store || !settings) return;
@@ -28,7 +29,8 @@ export function SettingsView() {
 
   const showToast = (msg: string) => {
     setToast(msg);
-    window.setTimeout(() => setToast(null), 1800);
+    if (toastTimer.current !== null) window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToast(null), 1800);
   };
 
   const exportData = () => {
@@ -43,7 +45,8 @@ export function SettingsView() {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // 延迟撤销：FF/Safari 在 a.click() 后异步拉取 blob，立即 revoke 会让导出文件为空/失败。
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
     showToast("已导出");
   };
 
@@ -65,7 +68,7 @@ export function SettingsView() {
           <div className="setting-row">
             <div>
               <div className="lbl">每天几组</div>
-              <div className="desc">连续达标即计入 streak</div>
+              <div className="desc">连续达标即计入连续天数</div>
             </div>
             <div className="stepper">
               <button
@@ -111,9 +114,8 @@ export function SettingsView() {
         <div className="settings-card">
           <ToggleRow
             label="声音"
-            hint="节拍音 — 暂未实现"
+            hint="收 / 放 切换时播放轻提示音"
             value={settings.sound}
-            disabled
             onToggle={() => update({ sound: !settings.sound })}
           />
           <ToggleRow
@@ -149,7 +151,7 @@ export function SettingsView() {
       {/* 数据 */}
       <Group title="数据">
         <button className="export-btn" onClick={exportData}>
-          导出 JSON 数据
+          导出我的数据
         </button>
         <p style={{ color: "var(--text-3)", fontSize: "var(--t-sm)", marginTop: "var(--s-2)" }}>
           全部数据仅存于本设备，导出生成 tgm-data.json。
@@ -163,7 +165,7 @@ export function SettingsView() {
         <span className="private">本地存储 · 无云端</span>
         <p style={{ marginTop: "var(--s-4)" }}>
           <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
-            ★ 开源 · GitHub 欢迎 Star ↗
+            开源 · GitHub 欢迎 Star ↗
           </a>
         </p>
       </div>

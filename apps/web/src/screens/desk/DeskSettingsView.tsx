@@ -2,7 +2,7 @@
 // 左：分类导航；右：对应面板。复用移动壳 setting-row / stepper / seg / settings-card 体系。
 
 import { useState } from "react";
-import { aggregateStats, clamp } from "@tilemo/core";
+import { aggregateStats, clamp, dayMeetsGoal } from "@tilemo/core";
 import { GITHUB_URL } from "@tilemo/share-card";
 import type { ThemeSetting } from "@tilemo/data";
 import { useDataStore } from "../../data";
@@ -12,7 +12,7 @@ type Cat = "goal" | "plan" | "feedback" | "appearance" | "data" | "about";
 const CATS: { id: Cat; nm: string; dc: string; icon: JSX.Element }[] = [
   { id: "goal", nm: "每日目标", dc: "几组，调到舒服", icon: <IconTarget /> },
   { id: "plan", nm: "默认方案", dc: "挑一组作为起手", icon: <IconLayers /> },
-  { id: "feedback", nm: "反馈", dc: "声音 · 触感", icon: <IconWave /> },
+  { id: "feedback", nm: "体验", dc: "声音 · 触感", icon: <IconWave /> },
   { id: "appearance", nm: "外观", dc: "主题 · 每日一句", icon: <IconPalette /> },
   { id: "data", nm: "数据", dc: "导出 · 统计", icon: <IconArchive /> },
   { id: "about", nm: "关于", dc: "隐私 · 开源", icon: <IconInfo /> },
@@ -49,7 +49,8 @@ export function DeskSettingsView() {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // 延迟撤销：FF/Safari 在 a.click() 后异步拉取 blob，立即 revoke 会让导出文件为空/失败。
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   const lastTsStr = stats && stats.lastTs > 0 ? new Date(stats.lastTs).toLocaleString("zh-CN") : "尚无";
@@ -116,7 +117,7 @@ export function DeskSettingsView() {
             <div className="desk-set-extra-cell">
               <div className="l">达标天占比</div>
               <div className="v">
-                {sevenDayMetRate(store, settings.dailyGoalGroups)}<span className="u">%</span>
+                {sevenDayMetRate(store)}<span className="u">%</span>
               </div>
               <div className="dc">近 7 天达标天数 / 7</div>
             </div>
@@ -132,7 +133,7 @@ export function DeskSettingsView() {
             <div className="setting-row">
               <div>
                 <div className="lbl">默认方案</div>
-                <div className="desc">将从首页 CTA 与训练页详情启动</div>
+                <div className="desc">将从首页按钮与训练页详情启动</div>
               </div>
               <div className="plan-select">
                 {plans.map((p) => (
@@ -156,11 +157,11 @@ export function DeskSettingsView() {
             </div>
             <div className="row">
               <span className="k">收紧</span>
-              <span className="vv">{currentPlan?.contract ?? 0}s</span>
+              <span className="vv">{currentPlan?.contract ?? 0}秒</span>
             </div>
             <div className="row">
               <span className="k">放松</span>
-              <span className="vv">{currentPlan?.relax ?? 0}s</span>
+              <span className="vv">{currentPlan?.relax ?? 0}秒</span>
             </div>
             <div className="row">
               <span className="k">每组次数</span>
@@ -175,13 +176,13 @@ export function DeskSettingsView() {
 
         {/* feedback */}
         <div className={"desk-set-panel" + (cat === "feedback" ? " is-active" : "")}>
-          <h3 className="desk-set-panel-head">反馈</h3>
+          <h3 className="desk-set-panel-head">体验</h3>
           <p className="desk-set-panel-sub">呼吸节拍的提示音与触感反馈。</p>
 
           <div className="settings-card">
             <div className="setting-row">
               <div>
-                <div className="lbl">声音提示</div>
+                <div className="lbl">声音</div>
                 <div className="desc">收 / 放 切换时播放轻提示音</div>
               </div>
               <span
@@ -217,7 +218,7 @@ export function DeskSettingsView() {
             <div className="setting-row">
               <div>
                 <div className="lbl">主题</div>
-                <div className="desc">跟随系统、强制浅色或深色</div>
+                <div className="desc">跟随系统，或指定浅色 / 深色</div>
               </div>
               <div className="seg">
                 {(["light", "system", "dark"] as const).map((t) => (
@@ -255,11 +256,11 @@ export function DeskSettingsView() {
           <div className="settings-card">
             <div className="setting-row">
               <div>
-                <div className="lbl">导出 JSON</div>
+                <div className="lbl">导出我的数据</div>
                 <div className="desc">含设置、方案、全部日志与连续天数</div>
               </div>
               <button className="desk-cta" style={{ padding: "10px 20px", fontSize: "var(--t-sm)" }} onClick={exportData}>
-                导出数据
+                导出我的数据
               </button>
             </div>
           </div>
@@ -292,7 +293,7 @@ export function DeskSettingsView() {
             <span className="private">🔒 全部数据仅存于本设备</span>
             <p style={{ marginTop: "var(--s-4)" }}>
               <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
-                ★ 开源 · GitHub 欢迎 Star ↗
+                开源 · GitHub 欢迎 Star ↗
               </a>
             </p>
           </div>
@@ -304,7 +305,7 @@ export function DeskSettingsView() {
             </div>
             <div className="row">
               <span className="k">存储</span>
-              <span className="vv">localStorage（本机）</span>
+              <span className="vv">本机存储</span>
             </div>
             <div className="row">
               <span className="k">联网</span>
@@ -332,7 +333,6 @@ function sevenDayAvg(store: ReturnType<typeof useDataStore.getState>["store"]): 
 
 function sevenDayMetRate(
   store: ReturnType<typeof useDataStore.getState>["store"],
-  goal: number,
 ): number {
   if (!store) return 0;
   const now = new Date();
@@ -340,8 +340,8 @@ function sevenDayMetRate(
   for (let i = 0; i < 7; i++) {
     const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
     const key = `${d.getFullYear()}-${pad2m(d.getMonth() + 1)}-${pad2m(d.getDate())}`;
-    const n = store.getDay(key)?.sessions?.length ?? 0;
-    if (n >= goal) met++;
+    // 与 streak / aggregateStats 同口径：用当日记录的 goalGroups 快照判定，而非当前设置。
+    if (dayMeetsGoal(store.getDay(key))) met++;
   }
   return Math.round((met / 7) * 100);
 }

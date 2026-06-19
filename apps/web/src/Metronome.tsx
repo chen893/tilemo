@@ -63,6 +63,12 @@ export function Metronome({ plan, onClose }: { plan: Plan; onClose: () => void }
     return () => {
       unsub();
       metro.dispose();
+      // 关闭 WebAudio 上下文：浏览器对并发 AudioContext 数有上限（~6），
+      // 每次开节拍器新建却不 close，反复进出训练后提示音会静默失效。
+      if (audioRef.current) {
+        audioRef.current.close().catch(() => {});
+        audioRef.current = null;
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plan.id, metro]);

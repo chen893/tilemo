@@ -65,13 +65,13 @@ export function SettingsScreen() {
 
       {/* Daily goal */}
       <Section colors={colors} label="每日目标">
-        <View style={styles.rowBetween}>
+        <View style={[styles.rowBetween, { paddingVertical: sp.s4 }]}>
           <View style={{ flex: 1 }}>
             <Text style={{ color: colors.text, fontSize: fs.base, fontWeight: "600" }}>
               每天几组
             </Text>
-            <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: 2 }}>
-              连续达标即计入 streak
+            <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: sp.s1 }}>
+              连续达标即计入连续天数
             </Text>
           </View>
           <Stepper
@@ -120,7 +120,7 @@ export function SettingsScreen() {
 
       {/* Toggles */}
       <Section colors={colors} label="体验">
-        <ToggleRow colors={colors} label="声音" hint="（节拍音 — 暂未实现）" value={false} disabled onToggle={() => {}} />
+        <ToggleRow colors={colors} label="声音" hint="收 / 放 切换时播放轻提示音" value={settings.sound} onToggle={() => update({ sound: !settings.sound })} />
         <ToggleRow
           colors={colors}
           label="触感反馈"
@@ -152,7 +152,7 @@ export function SettingsScreen() {
           onPress={exportData}
           style={{ marginVertical: sp.s4 }}
         >
-          {exporting ? "导出中…" : "导出 JSON 数据"}
+          {exporting ? "导出中…" : "导出我的数据"}
         </Button>
         <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: sp.s2 }}>
           {Platform.OS === "ios" ? "通过系统分享面板保存。" : "通过系统分享。"}
@@ -161,19 +161,17 @@ export function SettingsScreen() {
 
       {/* 开源 */}
       <Section colors={colors} label="开源">
-        <Button
-          colors={colors}
-          variant="deep"
-          tint="accent"
-          full
+        <Pressable
           onPress={() => Linking.openURL(GITHUB_URL)}
-          style={{ marginVertical: sp.s4 }}
+          style={({ pressed }) => ({ paddingVertical: sp.s4, opacity: pressed ? 0.6 : 1 })}
         >
-          ★ GitHub · 欢迎 Star
-        </Button>
-        <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: sp.s2 }}>
-          {GITHUB_URL.replace("https://", "")}
-        </Text>
+          <Text style={{ color: colors.text, fontSize: fs.base, fontWeight: "600" }}>
+            GitHub · 欢迎 Star ↗
+          </Text>
+          <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: sp.s1 }}>
+            {GITHUB_URL.replace("https://", "")}
+          </Text>
+        </Pressable>
       </Section>
 
       <View style={{ height: sp.s8 }} />
@@ -226,7 +224,7 @@ function ToggleRow({
     >
       <View style={{ flex: 1 }}>
         <Text style={{ color: colors.text, fontSize: fs.base, fontWeight: "600" }}>{label}</Text>
-        {hint && <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: 2 }}>{hint}</Text>}
+        {hint && <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: sp.s1 }}>{hint}</Text>}
       </View>
       <View
         style={[
@@ -294,19 +292,19 @@ function ThemeSeg({
 const styles = StyleSheet.create({
   container: { padding: sp.gutter, paddingTop: sp.s6 },
   title: { fontSize: 28, fontWeight: "700", marginBottom: sp.s4 },
-  sectionLabel: { fontSize: fs.xs, fontWeight: "600", letterSpacing: 2, marginBottom: sp.s2, textTransform: "uppercase" },
+  sectionLabel: { fontSize: fs.xs, fontWeight: "600", marginBottom: sp.s2 },
   sectionBody: { borderRadius: rd.md, borderWidth: 1, paddingHorizontal: sp.s4 },
   rowBetween: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   toggleRow: { paddingVertical: sp.s4 },
-  switch: { width: 48, height: 28, borderRadius: 14, borderWidth: 1, justifyContent: "center" },
-  switchKnob: { width: 22, height: 22, borderRadius: 11 },
+  switch: { width: 48, height: 28, borderRadius: rd.pill, borderWidth: 1, justifyContent: "center" },
+  switchKnob: { width: 22, height: 22, borderRadius: rd.pill },
   planList: { flexDirection: "row", flexWrap: "wrap", gap: sp.s2, paddingVertical: sp.s4 },
   planChip: {
     paddingHorizontal: sp.s4,
-    paddingVertical: sp.s2,
+    paddingVertical: sp.s3,
     borderRadius: rd.pill,
     borderWidth: 1,
   },
-  seg: { flexDirection: "row", borderWidth: 1, borderRadius: rd.pill, padding: 3, marginVertical: sp.s4 },
-  segItem: { flex: 1, paddingVertical: sp.s2, borderRadius: rd.pill, alignItems: "center" },
+  seg: { flexDirection: "row", borderWidth: 1, borderRadius: rd.pill, padding: sp.s1, marginVertical: sp.s4 },
+  segItem: { flex: 1, paddingVertical: sp.s3, borderRadius: rd.pill, alignItems: "center" },
 });

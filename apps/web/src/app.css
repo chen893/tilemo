@@ -1442,6 +1442,21 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   border-radius: var(--blob-pill);
 }
 
+/* GitHub 链接：低调文字链，融进关于块的安静调性；hover 才点亮 accent */
+.about a,
+.about-block a {
+  color: var(--text-2);
+  text-decoration: underline;
+  text-decoration-color: var(--rule-strong);
+  text-underline-offset: 3px;
+  transition: color var(--dur-fast) var(--ease);
+}
+.about a:hover,
+.about-block a:hover {
+  color: var(--accent);
+  text-decoration-color: var(--accent);
+}
+
 /* ============================================================
    底部 tab bar — 有机浮岛
    ============================================================ */
@@ -2089,6 +2104,22 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   /* 今日进度（2/3）已移到侧栏常驻徽 .desk-nav-today，
      header 不再每页重复它。非 home 视图隐藏徽章，header 只留 eyebrow + title。 */
   .desk-header .status.is-hidden { display: none; }
+  .desk-share-btn {
+    align-self: center;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 16px;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--blob-pill);
+    background: var(--paper-soft);
+    color: var(--text-2);
+    font-size: var(--t-sm);
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+  }
+  .desk-share-btn:hover { color: var(--accent); border-color: var(--accent); }
+  .desk-share-btn svg { width: 16px; height: 16px; }
 
   /* —— 桌面视图容器 —— */
   .desk-views { position: relative; flex: 1; }

@@ -1,6 +1,7 @@
 // @tilemo/mobile — 成就卡片视图（react-native-view-shot 的截图目标）。
-// 设计稿坐标 1080×1350，按传入 width 等比缩放，与 web Canvas 渲染 1:1 对齐。
-// 纯展示组件：接收 CardData，自包含，不依赖全局状态。
+// 设计稿坐标 1080×1350，按传入 width 等比缩放。布局对齐 apps/web/src/share.ts 的
+// renderCard（结构、字号、底部带、0 状态「今天格点亮」一致；RN 用 top 定位、Canvas
+// 用 baseline，坐标各自取值但视觉对应）。纯展示组件：接收 CardData，自包含。
 
 import { memo } from "react";
 import { Text, View } from "react-native";
@@ -44,17 +45,17 @@ export function ShareCardView({ data, width }: { data: CardData; width: number }
 
   return (
     <View style={{ width, height: H, backgroundColor: c.paper, overflow: "hidden" }}>
-      {/* eyebrow（daily/review 顶部） */}
+      {/* eyebrow（milestone 用大号 DAY N 作焦点，另绘） */}
       {data.type !== "milestone" && data.eyebrow ? (
         <Text
           style={{
             position: "absolute",
-            top: s(130),
+            top: s(96),
             left: pad,
-            fontSize: s(32),
+            fontSize: s(30),
             fontWeight: "600",
             color: c.text3,
-            letterSpacing: s(4),
+            letterSpacing: s(6),
           }}
         >
           {data.eyebrow}
@@ -67,7 +68,7 @@ export function ShareCardView({ data, width }: { data: CardData; width: number }
           <Text
             style={{
               position: "absolute",
-              top: s(380),
+              top: s(290),
               left: 0,
               width: W,
               textAlign: "center",
@@ -82,11 +83,11 @@ export function ShareCardView({ data, width }: { data: CardData; width: number }
           <Text
             style={{
               position: "absolute",
-              top: s(560),
+              top: s(450),
               left: pad,
               width: W - pad * 2,
               textAlign: "center",
-              fontSize: s(54),
+              fontSize: s(56),
               fontWeight: "700",
               color: c.text,
             }}
@@ -97,7 +98,7 @@ export function ShareCardView({ data, width }: { data: CardData; width: number }
             <View
               style={{
                 position: "absolute",
-                top: s(770),
+                top: s(590),
                 alignSelf: "center",
                 paddingHorizontal: s(40),
                 paddingVertical: s(16),
@@ -105,7 +106,7 @@ export function ShareCardView({ data, width }: { data: CardData; width: number }
                 backgroundColor: c.accent,
               }}
             >
-              <Text style={{ fontSize: s(34), fontWeight: "700", color: "#FFFFFF", letterSpacing: s(4) }}>
+              <Text style={{ fontSize: s(32), fontWeight: "700", color: "#FFFFFF", letterSpacing: s(4) }}>
                 {data.badge}
               </Text>
             </View>
@@ -113,11 +114,11 @@ export function ShareCardView({ data, width }: { data: CardData; width: number }
           <Text
             style={{
               position: "absolute",
-              top: s(900),
+              top: s(730),
               left: 0,
               width: W,
               textAlign: "center",
-              fontSize: s(36),
+              fontSize: s(30),
               color: c.text3,
             }}
           >
@@ -129,9 +130,10 @@ export function ShareCardView({ data, width }: { data: CardData; width: number }
           <Text
             style={{
               position: "absolute",
-              top: s(230),
+              top: s(96),
               left: pad,
-              fontSize: s(48),
+              width: W - pad * 2,
+              fontSize: s(60),
               fontWeight: "700",
               color: c.text,
             }}
@@ -140,11 +142,12 @@ export function ShareCardView({ data, width }: { data: CardData; width: number }
           </Text>
           {(() => {
             const cols = data.heatCols ?? 6;
-            const cell = 108 * scale;
+            const cell = 110 * scale;
             const gap = 14 * scale;
             const gridW = cols * cell + (cols - 1) * gap;
             const startX = (W - gridW) / 2;
-            const startY = 380 * scale;
+            const startY = 200 * scale;
+            const rows = Math.ceil(data.heat.length / cols);
             return (
               <>
                 <View
@@ -158,30 +161,37 @@ export function ShareCardView({ data, width }: { data: CardData; width: number }
                     gap,
                   }}
                 >
-                  {data.heat.map((lv, i) => (
-                    <View
-                      key={i}
-                      style={{
-                        width: cell,
-                        height: cell,
-                        borderRadius: cell * 0.22,
-                        backgroundColor: heatColor(data.colors, lv),
-                      }}
-                    />
-                  ))}
+                  {data.heat.map((lv, i) => {
+                    // 0 状态：把「今天」(最后一格)点亮成第一格，呼应「从今天开始」
+                    const lit = data.streakDays === 0 && i === data.heat.length - 1;
+                    return (
+                      <View
+                        key={i}
+                        style={{
+                          width: cell,
+                          height: cell,
+                          borderRadius: cell * 0.22,
+                          backgroundColor: lit ? c.heat3 : heatColor(data.colors, lv),
+                          borderWidth: lit ? 3 : 1,
+                          borderColor: lit ? c.accent : c.rule,
+                        }}
+                      />
+                    );
+                  })}
                 </View>
                 <Text
                   style={{
                     position: "absolute",
-                    top: startY + Math.ceil(data.heat.length / cols) * (cell + gap) + 4 * scale,
+                    top: startY + rows * (cell + gap) + 26 * scale,
                     left: 0,
                     width: W,
                     textAlign: "center",
-                    fontSize: s(34),
-                    color: c.text3,
+                    fontSize: s(44),
+                    fontWeight: "700",
+                    color: c.accent,
                   }}
                 >
-                  连续 {data.streakDays} 天
+                  {data.streakDays > 0 ? `连续 ${data.streakDays} 天` : "从今天，开始打卡"}
                 </Text>
               </>
             );
@@ -193,9 +203,9 @@ export function ShareCardView({ data, width }: { data: CardData; width: number }
           <Text
             style={{
               position: "absolute",
-              top: s(220),
+              top: s(150),
               left: pad,
-              fontSize: s(56),
+              fontSize: s(58),
               fontWeight: "700",
               color: c.text,
             }}
@@ -205,7 +215,7 @@ export function ShareCardView({ data, width }: { data: CardData; width: number }
           <Text
             style={{
               position: "absolute",
-              top: s(470),
+              top: s(330),
               left: 0,
               width: W,
               textAlign: "center",
@@ -219,11 +229,11 @@ export function ShareCardView({ data, width }: { data: CardData; width: number }
           <Text
             style={{
               position: "absolute",
-              top: s(685),
+              top: s(540),
               left: 0,
               width: W,
               textAlign: "center",
-              fontSize: s(34),
+              fontSize: s(30),
               color: c.text3,
               letterSpacing: s(6),
             }}
@@ -233,7 +243,7 @@ export function ShareCardView({ data, width }: { data: CardData; width: number }
           <Text
             style={{
               position: "absolute",
-              top: s(765),
+              top: s(645),
               left: 0,
               width: W,
               textAlign: "center",
@@ -246,7 +256,7 @@ export function ShareCardView({ data, width }: { data: CardData; width: number }
           <View
             style={{
               position: "absolute",
-              top: s(815),
+              top: s(690),
               left: pad,
               width: W - pad * 2,
               height: s(14),
@@ -266,12 +276,12 @@ export function ShareCardView({ data, width }: { data: CardData; width: number }
         </>
       )}
 
-      {/* 副文案（review 卡省略） */}
+      {/* 副文案（QUOTES 一句）；review 卡省略 */}
       {data.type !== "review" ? (
         <Text
           style={{
             position: "absolute",
-            bottom: s(300),
+            top: s(data.type === "milestone" ? 860 : 820),
             left: pad,
             width: W - pad * 2,
             textAlign: "center",
@@ -283,14 +293,14 @@ export function ShareCardView({ data, width }: { data: CardData; width: number }
         </Text>
       ) : null}
 
-      {/* 底部：二维码 + 品牌 */}
-      <QrBlock data={data} size={s(100)} left={pad} top={H - s(282)} />
+      {/* 底部带：左下 QR（加大 + quiet zone）+ 扫码 caption，右下品牌 */}
+      <QrBlock data={data} size={s(190)} left={pad} top={H - s(280)} />
       <Text
         style={{
           position: "absolute",
-          bottom: s(104),
+          bottom: s(60),
           left: pad,
-          fontSize: s(22),
+          fontSize: s(26),
           color: c.text3,
         }}
       >
@@ -299,9 +309,9 @@ export function ShareCardView({ data, width }: { data: CardData; width: number }
       <Text
         style={{
           position: "absolute",
-          bottom: s(152),
+          bottom: s(130),
           right: pad,
-          fontSize: s(34),
+          fontSize: s(38),
           fontWeight: "700",
           color: c.text,
           textAlign: "right",
