@@ -2,6 +2,7 @@
 // 双壳 DOM 都挂（Shell.tsx），CSS media query（≥1024）显隐：.desk 接管 / #app 隐藏。
 // 签名同 MobileShell：{ tab, setTab, onStart }。
 
+import type { ReactNode } from "react";
 import type { Plan } from "@tilemo/data";
 import { pad2, todayKey } from "@tilemo/core";
 import type { Tab } from "./MobileShell";
@@ -14,7 +15,7 @@ import { useOpenShare } from "./share/ShareContext";
 
 const WD = ["日", "一", "二", "三", "四", "五", "六"];
 
-const NAV: { id: Tab; label: string; icon: JSX.Element }[] = [
+const NAV: { id: Tab; label: string; icon: ReactNode }[] = [
   { id: "home", label: "今日", icon: <IconHome /> },
   { id: "train", label: "训练", icon: <IconDumbbell /> },
   { id: "history", label: "记录", icon: <IconCalendar /> },
@@ -22,7 +23,7 @@ const NAV: { id: Tab; label: string; icon: JSX.Element }[] = [
 ];
 
 // header eyebrow/title per tab
-const HEADER: Record<Tab, { eyebrow: string; title: JSX.Element }> = {
+const HEADER: Record<Tab, { eyebrow: string; title: ReactNode }> = {
   home: { eyebrow: "日课 · 今天", title: <span>今天，<span className="em">提了</span>么？</span> },
   train: { eyebrow: "训练 · 方案", title: <span>挑<span className="em">一组</span>开始</span> },
   history: { eyebrow: "记录 · 足迹", title: <span>你的<span className="em">足迹</span></span> },

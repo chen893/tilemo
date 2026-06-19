@@ -1,5 +1,6 @@
 // @tilemo/web — 移动壳（<1024px）：报头 + 当前视图 + 底部 tabbar。
 
+import type { ReactNode } from "react";
 import type { Plan } from "@tilemo/data";
 import { HomeView } from "./screens/HomeView";
 import { TrainView } from "./screens/TrainView";
@@ -9,7 +10,7 @@ import { useOpenShare } from "./share/ShareContext";
 
 export type Tab = "home" | "train" | "history" | "settings";
 
-const TABS: { id: Tab; label: string; icon: JSX.Element }[] = [
+const TABS: { id: Tab; label: string; icon: ReactNode }[] = [
   { id: "home", label: "今日", icon: <IconHome /> },
   { id: "train", label: "训练", icon: <IconDumbbell /> },
   { id: "history", label: "记录", icon: <IconCalendar /> },

@@ -1,7 +1,7 @@
 // @tilemo/web — 桌面设置视图：6 子分类 master-detail。
 // 左：分类导航；右：对应面板。复用移动壳 setting-row / stepper / seg / settings-card 体系。
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { aggregateStats, clamp, dayMeetsGoal } from "@tilemo/core";
 import { GITHUB_URL } from "@tilemo/share-card";
 import type { ThemeSetting } from "@tilemo/data";
@@ -9,7 +9,7 @@ import { useDataStore } from "../../data";
 
 type Cat = "goal" | "plan" | "feedback" | "appearance" | "data" | "about";
 
-const CATS: { id: Cat; nm: string; dc: string; icon: JSX.Element }[] = [
+const CATS: { id: Cat; nm: string; dc: string; icon: ReactNode }[] = [
   { id: "goal", nm: "每日目标", dc: "几组，调到舒服", icon: <IconTarget /> },
   { id: "plan", nm: "默认方案", dc: "挑一组作为起手", icon: <IconLayers /> },
   { id: "feedback", nm: "体验", dc: "声音 · 触感", icon: <IconWave /> },
