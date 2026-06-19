@@ -33,8 +33,9 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10
+        # 不传 version：pnpm 版本由根 package.json 的 packageManager(pnpm@10.33.0) 决定。
+        # 同时指定 version 输入与 packageManager 会触发 action-setup@v4 的
+        # "Multiple versions of pnpm specified" 报错。
 
       - name: Setup Node
         uses: actions/setup-node@v4
