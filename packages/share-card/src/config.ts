@@ -6,6 +6,9 @@ export const LANDING_URL = "https://tilemo-web.vercel.app/";
 /** 开源仓库地址。卡片二维码指向这里（扫码直达源码），并作落款小字。 */
 export const GITHUB_URL = "https://github.com/chen893/tilemo";
 
+/** App 下载页（GitHub Releases，移动 / 桌面安装包）。 */
+export const RELEASE_URL = "https://github.com/chen893/tilemo/releases";
+
 /** 品牌落款（中文 slogan 优先，圈内人懂、圈外人好奇）。 */
 export const BRAND = "今天，提了么";
 

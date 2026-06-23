@@ -3,7 +3,7 @@
 
 import { useState, type ReactNode } from "react";
 import { aggregateStats, clamp, dayMeetsGoal } from "@tilemo/core";
-import { GITHUB_URL } from "@tilemo/share-card";
+import { GITHUB_URL, RELEASE_URL } from "@tilemo/share-card";
 import type { ThemeSetting } from "@tilemo/data";
 import { useDataStore } from "../../data";
 
@@ -291,7 +291,12 @@ export function DeskSettingsView() {
             <p>「今天提了么」是一个安静的小工具——每天问你一句、陪你提一组、替你记一笔。</p>
             <p>不注册、不联网、不上传。你的每一次呼吸记录都只存在这台设备上。</p>
             <span className="private">🔒 全部数据仅存于本设备</span>
-            <p style={{ marginTop: "var(--s-4)" }}>
+            <p className="link-row">
+              <a href={RELEASE_URL} target="_blank" rel="noopener noreferrer">
+                下载 App（iOS · Android · 桌面）↗
+              </a>
+            </p>
+            <p className="link-row">
               <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
                 开源 · GitHub 欢迎 Star ↗
               </a>

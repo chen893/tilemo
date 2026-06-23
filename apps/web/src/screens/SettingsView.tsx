@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { clamp } from "@tilemo/core";
 import type { Plan, Settings as SettingsT, ThemeSetting } from "@tilemo/data";
-import { GITHUB_URL } from "@tilemo/share-card";
+import { GITHUB_URL, RELEASE_URL } from "@tilemo/share-card";
 import { useDataStore } from "../data";
 
 const THEME_OPTS: { v: ThemeSetting; label: string }[] = [
@@ -163,7 +163,12 @@ export function SettingsView() {
         <div className="h">关于</div>
         <p>「今天提了么」是一个安静的小工具——每天问你一句、陪你提一组、替你记一笔。</p>
         <span className="private">本地存储 · 无云端</span>
-        <p style={{ marginTop: "var(--s-4)" }}>
+        <p className="link-row">
+          <a href={RELEASE_URL} target="_blank" rel="noopener noreferrer">
+            下载 App（iOS · Android · 桌面）↗
+          </a>
+        </p>
+        <p className="link-row">
           <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
             开源 · GitHub 欢迎 Star ↗
           </a>

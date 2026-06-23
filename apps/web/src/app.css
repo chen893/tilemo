@@ -1456,6 +1456,9 @@ button { font-family: inherit; cursor: pointer; border: 0; background: transpare
   color: var(--accent);
   text-decoration-color: var(--accent);
 }
+/* 关于块内的链接行：两行间距与正文节奏一致 */
+.about .link-row { margin-top: var(--s-3); }
+.about-block .link-row { margin-top: var(--s-3); }
 
 /* ============================================================
    底部 tab bar — 有机浮岛
