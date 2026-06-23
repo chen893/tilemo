@@ -22,6 +22,13 @@ export function Metronome({ plan, onClose }: { plan: Plan; onClose: () => void }
   const audioRef = useRef<AudioContext | null>(null);
   const milestoneRef = useRef<MilestoneCopy | null>(null);
   const openShare = useOpenShare();
+  // openShare 是 ShareContext 里的 useCallback([store, settings])，settings 在每次
+  // refresh() 后引用都换 → openShare 引用随之换。若把 openShare 放进 metro 的 useMemo
+  // 依赖，refresh() 会让 metro 被重建并重跑 metro.open(plan)，用户看到的现象就是
+  // 「done 后突然回到准备中、又开始了一组」。用 ref 间接，metro 只依赖真正稳定的
+  // (store, refresh) —— 详见 web/mobile Metronome 注释。
+  const openShareRef = useRef(openShare);
+  openShareRef.current = openShare;
 
   const handleClose = () => {
     if (closedRef.current) return;
@@ -49,12 +56,12 @@ export function Metronome({ plan, onClose }: { plan: Plan; onClose: () => void }
           if (completion && milestoneRef.current) {
             const m = milestoneRef.current;
             milestoneRef.current = null;
-            setTimeout(() => openShare({ type: "milestone", milestone: m }), 900);
+            setTimeout(() => openShareRef.current({ type: "milestone", milestone: m }), 900);
           }
         },
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [store, refresh, openShare],
+    [store, refresh],
   );
 
   useEffect(() => {
@@ -135,7 +142,11 @@ export function Metronome({ plan, onClose }: { plan: Plan; onClose: () => void }
           <span className="num">{stage === "breath" ? snap.setIdx + 1 : stage === "done" ? snap.sets : 0}</span>
           <span className="sep">/</span>
           <span className="num">{snap.sets}</span>
-          组
+          组 ·
+          <span className="num">{snap.startedReps}</span>
+          <span className="sep">/</span>
+          <span className="num">{snap.totalReps}</span>
+          次
         </div>
         <button className="metronome-close" aria-label="关闭" onClick={handleClose}>
           ✕

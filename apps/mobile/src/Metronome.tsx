@@ -65,6 +65,12 @@ export function Metronome({
     closedRef.current = true;
     onCloseRef.current();
   }, []);
+  // openShare 是 ShareContext 里的 useCallback([store, settings])，settings 在每次
+  // refresh() 后引用都换 → openShare 引用随之换。若把 openShare 放进 metro 的 useMemo
+  // 依赖，refresh() 会让 metro 被重建并重跑 metro.open(plan)，用户看到的现象就是
+  // 「done 后突然回到准备中、又开始了一组」。用 ref 间接，让 metro 只依赖稳定的引用。
+  const openShareRef = useRef(openShare);
+  openShareRef.current = openShare;
 
   const metro = useMemo(() => {
     return new Metro({
@@ -86,12 +92,12 @@ export function Metronome({
         if (completion && streakMilestoneRef.current) {
           const m = streakMilestoneRef.current;
           streakMilestoneRef.current = null;
-          setTimeout(() => openShare({ type: "milestone", milestone: m }), 280);
+          setTimeout(() => openShareRef.current({ type: "milestone", milestone: m }), 280);
         }
       },
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store, refresh, handleClose, openShare]);
+  }, [store, refresh, handleClose]);
 
   // Subscribe + open on mount; dispose on unmount.
   useEffect(() => {
