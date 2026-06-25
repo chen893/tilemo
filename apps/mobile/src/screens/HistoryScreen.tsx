@@ -14,11 +14,13 @@ import { fs, rd, sp } from "../ui/primitives";
 
 const DOW = ["日", "一", "二", "三", "四", "五", "六"];
 
-export function HistoryScreen() {
+export function HistoryScreen({ onStart }: { onStart: (plan: import("@tilemo/data").Plan) => void }) {
   const { colors } = useTheme();
   const store = useDataStore((s) => s.store);
   const streak = useDataStore((s) => s.streak);
   const plans = useDataStore((s) => s.plans);
+  const defaultPlanId = useDataStore((s) => s.settings?.defaultPlanId);
+  const defaultPlan = plans.find((p) => p.id === defaultPlanId) ?? plans[0] ?? null;
 
   const [cursor, setCursor] = useState(() => {
     const d = new Date();
@@ -64,6 +66,7 @@ export function HistoryScreen() {
   }, [cursor, store]);
 
   const selectedEntry: DayEntry | null = selectedKey ? (store?.getDay(selectedKey) ?? null) : null;
+  const selectedIsToday = selectedKey === todayKey();
 
   const planName = (id: string) => plans.find((p) => p.id === id)?.name ?? "自定义";
 
@@ -166,9 +169,25 @@ export function HistoryScreen() {
             </Text>
           </View>
           {!selectedEntry || !selectedEntry.sessions.length ? (
-            <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: sp.s3 }}>
-              这一天没有记录。安静的一天。
-            </Text>
+            selectedIsToday && defaultPlan ? (
+              <View style={styles.dayEmptyRow}>
+                <Text style={{ color: colors.text3, fontSize: fs.sm, flex: 1 }}>
+                  今天还没留下足迹。
+                </Text>
+                <Pressable
+                  style={[styles.dayGoBtn, { backgroundColor: colors.accent }]}
+                  onPress={() => onStart(defaultPlan)}
+                >
+                  <Text style={{ color: "#FFFFFF", fontSize: fs.sm, fontWeight: "700" }}>
+                    去训练 →
+                  </Text>
+                </Pressable>
+              </View>
+            ) : (
+              <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: sp.s3 }}>
+                这一天没有记录。安静的一天。
+              </Text>
+            )
           ) : (
             selectedEntry.sessions.map((ses, i) => {
               const mins = Math.round((ses.durationSec / 60) * 10) / 10;
@@ -205,7 +224,7 @@ export function HistoryScreen() {
 function Stat({ colors, n, label }: { colors: import("@tilemo/design-tokens").ColorSet; n: number; label: string }) {
   return (
     <View style={styles.stat}>
-      <Text style={{ color: colors.accent, fontSize: fs.xl, fontWeight: "700" }}>{n}</Text>
+      <Text style={{ color: colors.success, fontSize: fs.xl, fontWeight: "700" }}>{n}</Text>
       <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: sp.s1 }}>{label}</Text>
     </View>
   );
@@ -254,5 +273,17 @@ const styles = StyleSheet.create({
     paddingVertical: sp.s3,
     borderBottomWidth: 1,
     marginTop: sp.s2,
+  },
+  dayEmptyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: sp.s3,
+    gap: sp.s3,
+  },
+  dayGoBtn: {
+    paddingVertical: sp.s2,
+    paddingHorizontal: sp.s4,
+    borderRadius: rd.pill,
   },
 });

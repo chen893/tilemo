@@ -23,8 +23,10 @@ const NAV: { id: Tab; label: string; icon: ReactNode }[] = [
 ];
 
 // header eyebrow/title per tab
+// home 的 h1 用中性的「今日」作锚点，不再重复 brand wordmark 的「提了么」，
+// 既消除侧栏/hero 的三连重复，又保住跨 tab 顶部 chrome 的一致性。
 const HEADER: Record<Tab, { eyebrow: string; title: ReactNode }> = {
-  home: { eyebrow: "日课 · 今天", title: <span>今天，<span className="em">提了</span>么？</span> },
+  home: { eyebrow: "日课 · 今天", title: <span><span className="em">今日</span></span> },
   train: { eyebrow: "训练 · 方案", title: <span>挑<span className="em">一组</span>开始</span> },
   history: { eyebrow: "记录 · 足迹", title: <span>你的<span className="em">足迹</span></span> },
   settings: { eyebrow: "设置 · 偏好", title: <span>调成你的<span className="em">样子</span></span> },
@@ -171,7 +173,7 @@ export function DeskShell({
             {tab === "train" && <DeskTrainView onStart={onStart} />}
           </div>
           <div className={"desk-view" + (tab === "history" ? " is-active" : "")}>
-            {tab === "history" && <DeskHistoryView />}
+            {tab === "history" && <DeskHistoryView onStart={onStart} />}
           </div>
           <div className={"desk-view" + (tab === "settings" ? " is-active" : "")}>
             {tab === "settings" && <DeskSettingsView />}

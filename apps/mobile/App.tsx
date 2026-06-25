@@ -93,7 +93,7 @@ function Shell({
       <View style={{ flex: 1, paddingTop: insets.top }}>
         {tab === "home" && <HomeScreen onStart={openMetro} />}
         {tab === "train" && <TrainScreen onStart={openMetro} />}
-        {tab === "history" && <HistoryScreen />}
+        {tab === "history" && <HistoryScreen onStart={openMetro} />}
         {tab === "settings" && <SettingsScreen />}
       </View>
 

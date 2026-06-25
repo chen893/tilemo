@@ -1,0 +1,264 @@
+/* ============================================================
+   V3 记录 — 三数字 + 月历 blob 热力
+   ============================================================ */
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s-3);
+  margin: var(--s-5) 0 var(--s-7);
+}
+.stat-cell {
+  padding: var(--s-4);                    /* 16px ≥ 最大半径 16px ✓（原 16/12，统一为 16，保证水平 padding ≥ radius） */
+  background: var(--paper-soft);
+  border-radius: 15px 16px 14px 16px;     /* max 16px，文字大号"7"+标签到边距 16px ≥ 16 ✓ */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 120px;
+}
+.stat-cell:nth-child(1) { border-radius: 14px 16px 15px 13px; }
+.stat-cell:nth-child(2) { border-radius: 16px 13px 14px 15px; }
+.stat-cell:nth-child(3) { border-radius: 13px 15px 16px 14px; }
+.stat-cell.is-accent { background: var(--success); color: #fff; }
+.stat-cell .l {
+  font-size: var(--t-xs);
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  color: var(--text-3);
+  margin-bottom: var(--s-2);
+}
+.stat-cell.is-accent .l { color: rgba(255,255,255,0.85); }
+.stat-cell .v {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(32px, 10vw, 52px);
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  color: var(--text);
+}
+.stat-cell.is-accent .v { color: #fff; }
+/* streak=0 弱化：连续卡仅在有连续天数时才高亮，否则回退普通卡 + 弱化副标 */
+.stat-cell.is-empty .v { color: var(--text-3); }
+.stat-cell .sub {
+  font-size: var(--t-xs);
+  color: var(--text-3);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-top: 4px;
+}
+
+/* —— 月历 —— */
+.cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--s-4);
+  gap: var(--s-3);
+}
+.cal-nav .title {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-xl);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+.cal-nav .title .y { color: var(--text-3); margin-right: 8px; font-weight: 600; }
+.cal-nav-actions { display: flex; gap: var(--s-2); }
+.cal-nav button {
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text);
+  background: var(--paper-soft);
+  border-radius: var(--blob-1);
+  transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.cal-nav button:hover { background: var(--accent); color: #fff; }
+.cal-nav button:active { transform: scale(0.94); }
+
+.cal-dow-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--s-2);
+  margin-bottom: var(--s-2);
+}
+.cal-dow {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  text-align: center;
+  color: var(--text-3);
+  padding: var(--s-1) 0;
+}
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--s-2);
+}
+.cal-cell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;                            /* 6px；角半径 ≤ 14px 仍可能 > 6，但单字居中、bounding box 远离四角 → 见下方自测 */
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-sm);
+  font-weight: 700;
+  color: var(--text-3);
+  position: relative;
+  border-radius: var(--card-radius-cal);   /* 12/14/12/14 px — 单字符居中 */
+  background: transparent;
+  transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.cal-cell:nth-child(odd) { border-radius: 14px 12px 14px 12px; }
+.cal-cell:nth-child(3n) { border-radius: 12px 14px 13px 11px; }
+.cal-cell.empty { background: transparent; pointer-events: none; opacity: 0; }
+.cal-cell:not(.empty):hover {
+  background: var(--paper-soft);
+  color: var(--text);
+}
+.cal-cell[data-level="0"]:not(.empty) { color: var(--text-3); }
+.cal-cell[data-level="1"] { background: var(--heat-1); color: var(--text); }
+.cal-cell[data-level="2"] { background: var(--heat-2); color: var(--text); }
+.cal-cell[data-level="3"] { background: var(--heat-3); color: #fff; }
+.cal-cell .n { line-height: 1; font-size: var(--t-sm); }
+.cal-cell .cnt {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  opacity: 0.75;
+  margin-top: 2px;
+}
+/* 今日 = 全月最吸睛的一格：复合表达——
+   1) 强制用最深饱和暖朱档填充（无论当日是否达标）；
+   2) 朱红描边环再强调"焦点"；
+   3) 数字描细以保白底可读。
+   保证"今日 = 视觉最强档"，与达标档明度体系不冲突（达标档无描边、较浅）。 */
+.cal-cell.is-today,
+.cal-cell[data-level].is-today {
+  background: var(--accent);
+  color: #fff;
+  outline: 2px solid var(--accent-hot);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(232,90,79,0.14);
+  z-index: 3;
+}
+[data-theme="dark"] .cal-cell.is-today,
+[data-theme="dark"] .cal-cell[data-level].is-today {
+  background: var(--accent);
+  color: var(--paper);
+  outline-color: var(--accent-hot);
+  box-shadow: 0 0 0 4px rgba(255,107,94,0.18);
+}
+.cal-cell.is-today .n,
+.cal-cell.is-today .cnt { font-weight: 800; }
+.cal-cell.is-today .n,
+.cal-cell.is-today[data-level] .n { color: #fff; }
+[data-theme="dark"] .cal-cell.is-today .n,
+[data-theme="dark"] .cal-cell.is-today[data-level] .n { color: var(--paper); }
+.cal-cell.is-today .cnt { color: rgba(255,255,255,0.9); opacity: 1; }
+[data-theme="dark"] .cal-cell.is-today .cnt { color: rgba(31,24,20,0.85); }
+.cal-cell.is-selected {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+  z-index: 2;
+}
+/* 选中 = 今日：选中环优先（更外、更高），保留今日填充 */
+.cal-cell.is-today.is-selected { z-index: 4; }
+
+/* 日详情 */
+.day-detail {
+  margin-top: var(--s-6);
+  padding: var(--s-5);                     /* 24px ≥ 最大半径 24px ✓ */
+  background: var(--paper-soft);
+  border-radius: var(--card-radius-a);     /* 22/24/23/21 px */
+  animation: fadeUp var(--dur) var(--ease);
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.day-detail-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: var(--s-3);
+  gap: var(--s-3);
+  flex-wrap: wrap;
+}
+.day-detail-head .d {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-lg);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+.day-detail-head .s {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-sm);
+  font-weight: 700;
+  color: var(--text-3);
+}
+.session-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: var(--s-3) 0;
+  gap: var(--s-3);
+  border-top: 1px solid var(--rule);
+}
+.session-item:first-of-type { border-top: 0; }
+.session-item .plan {
+  font-size: var(--t-base);
+  font-weight: 700;
+  color: var(--text);
+}
+.session-item .meta {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-3);
+  font-size: var(--t-xs);
+  margin-top: 2px;
+}
+.session-item .tag {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  padding: 4px 12px;
+  background: var(--success);
+  color: #fff;
+  border-radius: var(--blob-pill);
+  white-space: nowrap;
+}
+.session-item .tag.is-partial {
+  background: var(--accent-soft);
+  color: var(--accent-hot);
+}
+.day-empty {
+  color: var(--text-3);
+  font-size: var(--t-sm);
+  padding: var(--s-2) 0;
+}
+/* 今日空态：克制的「去训练」出口 */
+.day-empty--action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: var(--s-3) 0;
+}
+.day-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--blob-pill);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  transition: background-color var(--dur-fast) var(--ease);
+}
+.day-go:hover { background: var(--accent-hot); }
+.day-go .arrow { font-family: var(--font-num); font-weight: 600; }
+[data-theme="dark"] .day-go { color: var(--paper); }
+

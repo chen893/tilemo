@@ -1,0 +1,119 @@
+/* ============================================================
+   V2 训练 — 有机方案卡
+   ============================================================ */
+.section-head { margin-bottom: var(--s-6); }
+.section-title {
+  font-size: clamp(28px, 8vw, 44px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  margin: 0;
+  color: var(--text);
+}
+.section-title .em { color: var(--accent); }
+
+.plan-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+.plan-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: var(--s-5);                   /* 24px ≥ 最大半径 24px ✓ */
+  background: var(--paper-soft);
+  border-radius: var(--card-radius-a);   /* 22/24/23/21 px */
+  position: relative;
+  transition: transform var(--dur) var(--ease-breath),
+              background-color var(--dur-fast) var(--ease);
+  overflow: hidden;
+}
+.plan-card:nth-child(even) { border-radius: var(--card-radius-b); }   /* 24/21/22/23 */
+.plan-card:nth-child(3n) { border-radius: var(--card-radius-c); }     /* 21/23/24/22 */
+.plan-card:hover {
+  transform: translateY(-3px) scale(1.01);
+  background: var(--paper-deep);
+}
+.plan-card:active {
+  transform: scale(0.98);
+}
+.plan-card.is-default {
+  background: var(--accent);
+  color: #fff;
+}
+.plan-card.is-default:hover { background: var(--accent-hot); }
+.plan-card-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  margin-bottom: var(--s-2);
+}
+.plan-card-name {
+  font-size: clamp(22px, 6vw, 30px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin: 0;
+}
+.plan-card-index {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-xs);
+  font-weight: 700;
+  opacity: 0.6;
+  letter-spacing: 0.04em;
+}
+.plan-card-default-tag {
+  display: inline-block;
+  font-size: var(--t-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: var(--s-2);
+  padding: 3px 10px;
+  background: rgba(255,255,255,0.25);
+  border-radius: var(--blob-pill);
+}
+.plan-card:not(.is-default) .plan-card-default-tag {
+  background: var(--accent);
+  color: #fff;
+}
+.plan-card-desc {
+  font-size: var(--t-sm);
+  opacity: 0.8;
+  margin: 0 0 var(--s-4);
+  line-height: 1.55;
+}
+.plan-card-params {
+  display: flex;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+.plan-chip {
+  font-size: var(--t-xs);
+  padding: 5px 11px;
+  background: rgba(255,255,255,0.18);
+  border-radius: var(--blob-pill);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  letter-spacing: 0.02em;
+}
+.plan-card:not(.is-default) .plan-chip {
+  background: var(--paper);
+  color: var(--text-2);
+}
+.plan-chip .v {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  color: inherit;
+  font-weight: 800;
+  font-size: var(--t-sm);
+}
+.plan-card:not(.is-default) .plan-chip .v { color: var(--text); }
+

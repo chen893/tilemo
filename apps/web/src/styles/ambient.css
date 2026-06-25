@@ -1,0 +1,44 @@
+/* ============================================================
+   ambient 呼吸装饰（全 app 生命感的母题）
+   ============================================================ */
+.ambient {
+  position: fixed;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.55;
+}
+.ambient-1 {
+  top: -8vh; right: -10vw;
+  width: 42vw; height: 42vw; max-width: 340px; max-height: 340px;
+  background: var(--accent-soft);
+  border-radius: var(--blob-1);
+  filter: blur(28px);
+  animation: ambient-breath var(--dur-breath-cycle) var(--ease-breath) infinite;
+}
+.ambient-2 {
+  bottom: 8vh; left: -12vw;
+  width: 36vw; height: 36vw; max-width: 280px; max-height: 280px;
+  background: var(--paper-deep);
+  border-radius: var(--blob-2);
+  filter: blur(32px);
+  animation: ambient-breath var(--dur-breath-cycle) var(--ease-breath) infinite reverse;
+  animation-delay: -2200ms;
+  opacity: 0.7;
+}
+@keyframes ambient-breath {
+  0%, 100% { transform: scale(1) rotate(0deg); border-radius: var(--blob-1); }
+  50%      { transform: scale(1.12) rotate(8deg); border-radius: var(--blob-2); }
+}
+/* 桌面：ambient 更大、更舒展，填充大画布 */
+@media (min-width: 1024px){
+  .ambient-1 {
+    width: 32vw; height: 32vw; max-width: 560px; max-height: 560px;
+    top: -12vh; right: -6vw;
+    filter: blur(48px);
+  }
+  .ambient-2 {
+    width: 28vw; height: 28vw; max-width: 480px; max-height: 480px;
+    bottom: -8vh; left: -6vw;
+    filter: blur(56px);
+  }
+}

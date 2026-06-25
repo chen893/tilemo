@@ -57,7 +57,7 @@ export function DeskTrainView({ onStart }: { onStart: (p: Plan) => void }) {
         })}
       </ul>
 
-      {/* 右：方案详情 */}
+      {/* 右：方案详情 —— 不重复左侧的参数 chip，只补决策辅助：预计耗时 + 呼吸提示 + 大开始按钮 */}
       <div className="desk-plan-detail">
         <div className="eyebrow">
           <span className="seed" aria-hidden="true" />
@@ -66,32 +66,12 @@ export function DeskTrainView({ onStart }: { onStart: (p: Plan) => void }) {
         <h3 className="name">{selected.name}</h3>
         <p className="desc">{selected.desc}</p>
 
-        <div className="desk-plan-detail-grid">
-          <div className="desk-plan-stat">
-            <div className="l">收紧</div>
-            <div className="v">
-              {selected.contract}
-              <span className="u">秒</span>
-            </div>
-          </div>
-          <div className="desk-plan-stat">
-            <div className="l">放松</div>
-            <div className="v">
-              {selected.relax}
-              <span className="u">秒</span>
-            </div>
-          </div>
-          <div className="desk-plan-stat">
-            <div className="l">每组次数</div>
-            <div className="v">{selected.reps}</div>
-          </div>
-          <div className="desk-plan-stat">
-            <div className="l">组数</div>
-            <div className="v">{selected.sets}</div>
-          </div>
-        </div>
-
         <div className="desk-set-note">预计耗时 <b>{estMin}</b> 分钟（{(selected.contract + selected.relax) * selected.reps * selected.sets}秒）</div>
+
+        <div className="desk-breath-tip">
+          <div className="h">呼吸提示</div>
+          <p>收紧时吸气，放松时呼气，跟着节拍走——不用刻意，身体会自己找到节奏。</p>
+        </div>
 
         <button className="desk-cta" onClick={() => onStart(selected)}>
           开始一组训练

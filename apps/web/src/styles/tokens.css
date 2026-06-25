@@ -1,0 +1,105 @@
+/* ============================================================
+   v6 — 布局层 PIVOT「PC 网页端 + 移动 app 端」
+   视觉语言 1:1 沿自 v5（有机曲线 / 呼吸 / 绷紧的弦 / 呼吸体 / 暖朱）
+   新增：满屏宽多区网页布局（≥1024px）+ web 式顶导 + 侧边日志栏
+        移动（<768px）= 单列 app + 底部 tabbar（沿用 v5）
+        平板（768-1023px）= 过渡形态
+   功能逻辑 + localStorage 数据模型 1:1 沿自 v5（tgm:* 不变）
+   ============================================================ */
+:root {
+  /* —— 色彩（暖身体色） —— */
+  --paper:        #FAF3EC;  /* 暖纸白，带皮肤温度 */
+  --paper-soft:   #F3E8DC;  /* 次级暖底，tonal 层叠 */
+  --paper-deep:   #EBDDCB;  /* 更深的暖分层 */
+  --ink:          #2B2320;  /* 暖墨，正文 */
+  --accent:       #E85A4F;  /* 单一鲜活暖朱（coral/朱陶），全站强调 */
+  --accent-hot:   #D63A2E;  /* 收紧时升温加重 */
+  --accent-soft:  #F4B4A8;  /* 放松态柔和 */
+  --success:      #C8402E;  /* 暖朱阶·最深饱和档（达成/连续成就，统一暖朱单色） */
+
+  /* 文本秩序（浅色，全部 ≥4.5:1 on paper） */
+  --text:         #2B2320;  /* = ink, 13.4:1 */
+  --text-2:       #5C4F47;  /* 7.6:1 AA ✓ 次级正文 */
+  --text-3:       #6F5F50;  /* 5.57:1 AA ✓ muted（小号元数据，留余量） */
+  --rule:         rgba(43,35,32,0.12);   /* 柔弧分隔 */
+  --rule-strong:  rgba(43,35,32,0.24);
+
+  /* 热力 4 档（暖色 tonal 层叠，第 4 档 = 强调实色） */
+  --heat-0:       transparent;
+  --heat-1:       #F0DCC9;  /* 部分：浅暖陶 */
+  --heat-2:       #E8B59A;  /* 达标：中暖陶 */
+  --heat-3:       var(--accent);  /* 超额：鲜活暖朱 */
+
+  /* —— 间距（4 倍数，偏松，呼吸感） —— */
+  --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px;
+  --s-5: 24px; --s-6: 32px; --s-7: 48px; --s-8: 64px;
+  --gutter: clamp(20px, 6vw, 48px);
+
+  /* —— 字号 —— */
+  --t-xs:   12px;
+  --t-sm:   14px;
+  --t-base: 16px;
+  --t-md:   18px;
+  --t-lg:   22px;
+  --t-xl:   28px;
+  --t-2xl:  40px;
+
+  /* —— 字体 —— */
+  --font: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Source Han Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+  --font-num: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", system-ui, sans-serif;
+
+  /* —— 有机圆角（非对称 blob 语法）—— 仅用于无边缘文字的装饰形 —— */
+  --blob-1: 60% 40% 55% 45% / 50% 60% 40% 50%;
+  --blob-2: 45% 55% 60% 40% / 60% 45% 55% 40%;
+  --blob-3: 55% 45% 40% 60% / 45% 55% 45% 55%;
+  --blob-pill: 999px;
+
+  /* —— 克制圆角（承载文字/数字的内容容器专用，px + 轻微不对称保留有机感）——
+     硬约束：使用这些值的容器 padding 必须 ≥ 最大角半径，保证角弧不跨过内容 bbox。
+     内容卡默认 padding 24px，故最大角半径 ≤ 24px */
+  --card-radius-a: 22px 24px 23px 21px;   /* 主内容卡（plan-card / stat-cell / day-detail / settings-card） */
+  --card-radius-b: 24px 21px 22px 23px;   /* 交替（nth-child 2） */
+  --card-radius-c: 21px 23px 24px 22px;   /* 交替（nth-child 3） */
+  --card-radius-streak: 20px 22px 21px 19px;  /* streak-block：max 22px */
+  --card-radius-about:  22px 20px 23px 21px;  /* about 块：max 23px */
+  --card-radius-cal:    12px 14px 12px 14px;  /* cal-cell：小方格，单字居中，max 14px */
+
+  --radius-md: 18px;
+  --radius-lg: 28px;
+
+  /* —— 动效 —— */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-breath: cubic-bezier(0.45, 0.05, 0.55, 0.95);  /* 呼吸同频 */
+  --ease-droop: cubic-bezier(0.34, 1.2, 0.64, 1);       /* 弦松弛的满足释放 */
+  --dur-fast: 160ms;
+  --dur: 320ms;
+  --dur-breath-cycle: 4500ms;  /* 全 app 签名：4.5s 一个呼吸 */
+  --dur-breath: 3000ms;        /* 节拍器每拍过渡时长（JS 按方案秒数覆盖；默认 3s） */
+
+  color-scheme: light;
+}
+
+/* 深色模式：暖夜（非纯黑，带皮肤余温） */
+[data-theme="dark"] {
+  --paper:        #1F1814;
+  --paper-soft:   #2A201A;
+  --paper-deep:   #352821;
+  --ink:          #F2E8DC;
+  --accent:       #FF6B5E;   /* 深色下提亮保对比 */
+  --accent-hot:   #FF8270;
+  --accent-soft:  #8A4538;
+  --success:      #F26B5F;   /* 暖朱阶·深色提亮档（统一暖朱单色） */
+
+  --text:         #F2E8DC;   /* 13.1:1 */
+  --text-2:       #C4B5A6;   /* 9.0:1 AA ✓ */
+  --text-3:       #A09080;   /* 5.67:1 AA ✓ muted */
+  --rule:         rgba(242,232,220,0.14);
+  --rule-strong:  rgba(242,232,220,0.30);
+
+  --heat-0:       transparent;
+  --heat-1:       #3D2E24;
+  --heat-2:       #6B4234;
+  --heat-3:       var(--accent);
+
+  color-scheme: dark;
+}

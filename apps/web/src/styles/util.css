@@ -1,0 +1,23 @@
+/* ============================================================
+   prefers-reduced-motion — 呼吸停，形态保留
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
+  .cta { animation: none !important; transform: none !important; }
+  .ambient { animation: none !important; }
+  .ambient-1, .ambient-2 { opacity: 0.3; }
+  .breath-shape, .breath-inner { transition: none !important; transform: none !important; }
+  .metronome.is-contract .breath-shape { transform: scale(0.9); transition: none !important; }
+  .metronome.is-relax .breath-shape { transform: scale(1); transition: none !important; }
+  .home-question { transition: none !important; }
+  .string-path { transition: none !important; }
+  .mini-dot .blob { animation: none !important; }
+  .desk-week-dot .blob { animation: none !important; }
+  .desk-cta { animation: none !important; transform: none !important; }
+  .desk-nav-item.is-active::before { transition: none !important; }
+  .masthead-word .seed { animation: none !important; }
+}

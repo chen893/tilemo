@@ -148,7 +148,17 @@ export function Metronome({ plan, onClose }: { plan: Plan; onClose: () => void }
           <span className="num">{snap.totalReps}</span>
           次
         </div>
-        <button className="metronome-close" aria-label="关闭" onClick={handleClose}>
+        <button
+          className="metronome-close"
+          aria-label="关闭"
+          onClick={() => {
+            // 与 mobile 对齐：✕ 在进行中也走 endEarly，记录已完成的部分次数，避免误触丢失进度。
+            if (stage === "breath" && snap.startedReps > 0) {
+              metro.endEarly();
+            }
+            handleClose();
+          }}
+        >
           ✕
         </button>
       </div>

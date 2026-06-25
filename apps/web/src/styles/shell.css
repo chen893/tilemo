@@ -1,0 +1,416 @@
+/* ============================================================
+   app 容器
+   移动：单列窄 app（沿用 v5）；桌面：满屏宽多区网页
+   ============================================================ */
+.app {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  min-height: 100dvh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  z-index: 1;
+}
+@media (min-width: 768px){
+  .app { max-width: 100%; }
+}
+
+/* ============================================================
+   webnav — 桌面 web 式顶导（≥1024px 出现）
+   字标 + 日期戳 + 状态 + 导航四项；非底部 tabbar
+   ============================================================ */
+.webnav {
+  display: none;
+}
+@media (min-width: 1024px){
+  .webnav {
+    display: flex;
+    align-items: center;
+    gap: var(--s-5);
+    padding: calc(var(--s-4) + env(safe-area-inset-top)) var(--webnav-gutter, clamp(32px, 5vw, 96px)) var(--s-4);
+    border-bottom: 1px solid var(--rule);
+    background: var(--paper);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    backdrop-filter: saturate(1.05);
+  }
+  .webnav .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: var(--t-lg);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    flex-shrink: 0;
+  }
+  .webnav .brand .seed {
+    width: 12px; height: 12px;
+    background: var(--accent);
+    border-radius: var(--blob-1);
+    animation: seed-breath var(--dur-breath-cycle) var(--ease-breath) infinite;
+  }
+  .webnav .brand .wordmark .accent { color: var(--accent); }
+  .webnav .stamp {
+    font-family: var(--font-num);
+    font-variant-numeric: tabular-nums;
+    font-size: var(--t-sm);
+    font-weight: 700;
+    color: var(--text-3);
+    white-space: nowrap;
+  }
+  .webnav .stamp .dow { margin-left: 6px; }
+  .webnav .spacer { flex: 1; }
+  .webnav .status {
+    font-size: var(--t-xs);
+    font-weight: 700;
+    color: var(--text-3);
+    letter-spacing: 0.04em;
+    padding: 5px 14px;
+    border-radius: var(--blob-pill);
+    background: var(--paper-soft);
+    transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+    margin-right: var(--s-4);
+  }
+  .webnav .status.is-on {
+    background: var(--accent);
+    color: #fff;
+  }
+  .webnav-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    background: var(--paper-soft);
+    border-radius: var(--blob-pill);
+    padding: 4px;
+    position: relative;
+  }
+  .webnav-nav .nav-btn {
+    position: relative;
+    z-index: 1;
+    padding: 8px 18px;
+    font-size: var(--t-sm);
+    font-weight: 700;
+    color: var(--text-2);
+    border-radius: var(--blob-pill);
+    transition: color var(--dur-fast) var(--ease);
+    white-space: nowrap;
+  }
+  .webnav-nav .nav-btn:hover { color: var(--text); }
+  .webnav-nav .nav-btn.is-active { color: #fff; }
+  .webnav-nav .nav-btn:active { transform: scale(0.94); }
+  .webnav-nav .nav-indicator {
+    position: absolute;
+    top: 4px;
+    left: 0;
+    height: calc(100% - 8px);
+    width: 0;
+    background: var(--accent);
+    border-radius: var(--blob-pill);
+    transform: translateX(0);
+    transition: transform 260ms var(--ease-breath), width 260ms var(--ease-breath);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .webnav-nav .nav-indicator.no-anim { transition: none; }
+}
+
+/* ============================================================
+   报头（移动 / 平板）— 柔和日期戳 + 状态
+   桌面隐藏，被 .webnav 取代
+   ============================================================ */
+.masthead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: calc(var(--s-5) + env(safe-area-inset-top)) var(--gutter) var(--s-4);
+}
+.masthead-stamp {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-md);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--text);
+}
+.masthead-stamp .dow {
+  color: var(--text-3);
+  font-weight: 600;
+  margin-left: 8px;
+  font-size: var(--t-sm);
+}
+.masthead-word {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--t-xs);
+  font-weight: 700;
+  color: var(--text-3);
+  letter-spacing: 0.04em;
+}
+.masthead-word .seed {
+  width: 8px; height: 8px;
+  background: var(--accent);
+  border-radius: var(--blob-1);
+  animation: seed-breath var(--dur-breath-cycle) var(--ease-breath) infinite;
+}
+@keyframes seed-breath {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50%      { transform: scale(1.4); opacity: 1; }
+}
+.masthead-status {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  color: var(--text-3);
+  letter-spacing: 0.04em;
+  padding: 4px 12px;
+  border-radius: var(--blob-pill);
+  background: var(--paper-soft);
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.masthead-status.is-on {
+  background: var(--accent);
+  color: #fff;
+}
+@media (min-width: 1024px){
+  .masthead { display: none; }
+}
+
+/* ============================================================
+   视图层 — 淡入 + 微沉降（呼吸同频）
+   ============================================================ */
+.views { flex: 1; position: relative; overflow: hidden; }
+.view {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--s-4) var(--gutter) calc(var(--s-8) + 110px);
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.view.is-active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  z-index: 1;
+}
+
+/* —— 桌面网页布局：满屏宽多区 —— */
+@media (min-width: 1024px){
+  .view {
+    padding-top: var(--s-7);
+    padding-bottom: var(--s-8);
+    padding-left: clamp(32px, 5vw, 96px);
+    padding-right: clamp(32px, 5vw, 96px);
+  }
+
+  /* —— 今日：双区，主舞台 + 右侧日志栏 —— */
+  #view-home {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.8fr);
+    grid-template-areas:
+      "eyebrow  side"
+      "quote    side"
+      "question side"
+      "string   side"
+      "progress side"
+      "cta      side";
+    column-gap: clamp(40px, 5vw, 88px);
+    align-items: start;
+  }
+  #view-home > .eyebrow      { grid-area: eyebrow; }
+  #view-home > .home-quote   { grid-area: quote; }
+  #view-home > .home-question{ grid-area: question; }
+  #view-home > .string-hero  { grid-area: string; height: 96px; }
+  #view-home > .home-progress{ grid-area: progress; }
+  #view-home > #home-cta     { grid-area: cta; max-width: 540px; }
+  #view-home > .home-side    { grid-area: side; display: flex; flex-direction: column; gap: var(--s-5); }
+  #view-home > .home-side::before {
+    content: "日志 · 最近";
+    font-size: var(--t-xs);
+    letter-spacing: 0.14em;
+    font-weight: 700;
+    color: var(--text-3);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  /* 侧栏内：streak 永远显示（桌面有空间），margin 归零 */
+  #view-home .home-side .streak-block {
+    margin-top: 0; max-height: none; opacity: 1; pointer-events: auto;
+    padding: var(--s-5);
+  }
+  #view-home .home-side .streak-block:not(.is-show) {
+    /* 桌面：即便未开始连续也展示占位，作为"日志栏"骨架 */
+    opacity: 0.55;
+  }
+  #view-home .home-side .mini { margin-top: 0; }
+
+  /* 主舞台放大（桌面沉浸） */
+  #view-home .home-question {
+    font-size: clamp(56px, 6.5vw, 96px);
+  }
+  #view-home .home-progress .big {
+    font-size: clamp(96px, 9vw, 140px);
+  }
+  #view-home .string-hero svg { height: 100%; }
+  #view-home .cta { min-height: 76px; }
+
+  /* —— 训练：双区，标题/导览在左，方案阵列在右 —— */
+  #view-train {
+    display: grid;
+    grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
+    column-gap: clamp(40px, 5vw, 88px);
+    align-items: start;
+  }
+  #view-train > .section-head {
+    position: sticky;
+    top: var(--s-7);
+  }
+  #view-train > .plan-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: var(--s-4);
+  }
+
+  /* —— 记录：三栏数据 + 月历/详情并列（满屏宽，与 home/train 同左边缘/同宽） —— */
+  #view-history {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    margin: 0;
+  }
+  #view-history .section-head { max-width: none; }
+  #view-history .stat-row {
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    max-width: none;
+    margin-top: var(--s-6);
+  }
+  #view-history .stat-cell { min-height: 150px; }
+  #view-history .cal-wrap {
+    display: grid;
+    /* 满宽下：月历更舒展，日详情更宽，内部仍多区 */
+    grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+    column-gap: clamp(40px, 5vw, 88px);
+    align-items: start;
+  }
+
+  /* —— 设置：满屏宽双列网格 + 卡片分栏（与 home/train 同左边缘/同宽） —— */
+  #view-settings {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    margin: 0;
+  }
+  #view-settings .section-head { max-width: none; }
+  #view-settings .settings-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: var(--s-4) clamp(40px, 5vw, 88px);
+    align-items: start;
+  }
+  #view-settings .settings-grid .settings-group { margin-bottom: 0; }
+  #view-settings .about { grid-column: 1 / -1; }
+}
+
+/* —— 平板过渡形态（768-1023px）—— */
+@media (min-width: 768px) and (max-width: 1023px){
+  .app { max-width: 100%; }
+  .view {
+    padding-left: clamp(32px, 6vw, 64px);
+    padding-right: clamp(32px, 6vw, 64px);
+  }
+  #view-train .plan-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: var(--s-3);
+  }
+  #view-home .home-question {
+    font-size: clamp(48px, 9vw, 72px);
+  }
+  #view-home .home-progress .big {
+    font-size: clamp(80px, 14vw, 112px);
+  }
+}
+/* —— 小标签 —— */
+.eyebrow {
+  font-size: var(--t-xs);
+  letter-spacing: 0.14em;
+  font-weight: 700;
+  color: var(--text-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: var(--s-2);
+}
+.eyebrow .seed {
+  width: 6px; height: 6px;
+  background: var(--accent);
+  border-radius: var(--blob-1);
+}
+/* ============================================================
+   底部 tab bar — 有机浮岛
+   ============================================================ */
+.tabbar {
+  position: sticky;
+  bottom: 0;
+  left: 0; right: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: var(--paper);
+  border-top: 1px solid var(--rule);
+  padding: var(--s-2) var(--gutter) calc(var(--s-2) + env(safe-area-inset-bottom));
+  z-index: 10;
+  transition: transform var(--dur) var(--ease);
+}
+.tabbar.is-hidden {
+  transform: translateY(100%);
+  pointer-events: none;
+}
+.tab-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 4px;
+  width: 0;
+  background: var(--accent);
+  border-radius: var(--blob-pill);
+  transform: translateX(0);
+  transition: transform 260ms var(--ease-breath), width 260ms var(--ease-breath);
+  pointer-events: none;
+  z-index: 2;
+}
+.tab-indicator.no-anim { transition: none; }
+.tab {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: var(--s-2) 0;
+  color: var(--text-3);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  min-height: 52px;
+  transition: color var(--dur-fast) var(--ease);
+  border-radius: var(--blob-pill);
+}
+.tab svg { width: 22px; height: 22px; stroke-width: 2.2; }
+.tab.is-active { color: var(--accent); }
+.tab:active { transform: scale(0.92); }
+
+/* 桌面隐藏底部 tabbar（改用 .webnav） */
+@media (min-width: 1024px){
+  .tabbar { display: none !important; }
+  .view {
+    padding-bottom: var(--s-8) !important;
+  }
+}
+

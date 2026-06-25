@@ -89,18 +89,39 @@ export function DeskHomeView({ onStart }: { onStart: (p: Plan) => void }) {
   return (
     <div className="desk-home">
       <div className="desk-home-main">
-        {settings?.dailyQuote && <p className="desk-home-quote">{quote}</p>}
-
         <h2 className={"desk-hero-question" + (isDone ? " is-settled" : " is-tense")}>
-          今天，<span className="accent">提了</span>么？
+          {isDone ? (
+            <>
+              今天，已<span className="accent">达标</span>。
+            </>
+          ) : (
+            <>
+              今天，<span className="accent">提起</span>来。
+            </>
+          )}
         </h2>
 
-        <div className={"desk-progress" + (isDone ? " is-done" : "")}>
-          <span className="big">{done}</span>
-          <span className="goal">
-            / {goal}
-            <span className="unit">组目标</span>
-          </span>
+        {settings?.dailyQuote && <p className="desk-home-quote">{quote}</p>}
+
+        {/* 呼吸分隔：把「为什么」（宣告/quote）与「做什么」（进度/行动）分开 */}
+        <div className="desk-today-rule" aria-hidden="true" />
+
+        <div className="desk-today-progress">
+          <div
+            className={"desk-segments" + (isDone ? " is-done" : "")}
+            role="img"
+            aria-label={`今日进度 ${done} / ${goal} 组`}
+          >
+            {Array.from({ length: Math.max(1, goal) }).map((_, i) => (
+              <span key={i} className={"desk-seg" + (i < done ? " is-filled" : "")} />
+            ))}
+          </div>
+          <div className="desk-progress-count">
+            <span className="n">{done}</span>
+            <span className="sep">/</span>
+            <span className="goal">{goal}</span>
+            <span className="unit">组</span>
+          </div>
         </div>
 
         <button
@@ -108,17 +129,23 @@ export function DeskHomeView({ onStart }: { onStart: (p: Plan) => void }) {
           disabled={!defaultPlan}
           onClick={() => defaultPlan && onStart(defaultPlan)}
         >
-          {isDone
-            ? "今天，提了。再来一组"
-            : "开始一组训练"}
+          {isDone ? "再来一组" : "开始一组训练"}
           <span className="arrow">→</span>
         </button>
+
+        <p className="desk-today-note">
+          {isDone
+            ? "今天的量够了——肌肉记得这份坚持。"
+            : done > 0
+              ? `还差 ${goal - done} 组，提起来。`
+              : "还没有训练，提起来就算今天赢。"}
+        </p>
 
         {/* 今日 sessions 列表（桌面独有） */}
         <div className="desk-sessions-card">
           <div className="desk-sessions-head">今日训练 · {done} 组</div>
           {sessions.length === 0 ? (
-            <div className="desk-sessions-empty">今天还没有训练</div>
+            <div className="desk-sessions-empty">完成第一组，开启今天的小坚持。</div>
           ) : (
             sessions.map((s, i) => {
               const durMin = Math.max(1, Math.round(s.durationSec / 60));
@@ -140,16 +167,18 @@ export function DeskHomeView({ onStart }: { onStart: (p: Plan) => void }) {
 
       {/* 右栏：streak + week + cadence */}
       <aside className="desk-home-aside">
-        <div className="desk-aside-card">
+        <div className={"desk-aside-card" + ((streak?.current ?? 0) > 0 ? "" : " is-empty")}>
           <div className="h">连续</div>
           <div className="desk-streak-big">
             <span className="v">{streak?.current ?? 0}</span>
             <span className="u">天</span>
           </div>
-          {(streak?.longest ?? 0) > 0 && (
+          {(streak?.longest ?? 0) > 0 ? (
             <div className="desk-streak-longest">
               最长 <b>{streak?.longest}</b> 天
             </div>
+          ) : (
+            <div className="desk-streak-longest">即将开启连续打卡</div>
           )}
         </div>
 

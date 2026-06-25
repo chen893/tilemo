@@ -39,7 +39,7 @@ export function MobileShell({
       <section className="view is-active" aria-label={tab} id={"view-" + tab}>
         {tab === "home" && <HomeView onStart={onStart} />}
         {tab === "train" && <TrainView onStart={onStart} />}
-        {tab === "history" && <HistoryView />}
+        {tab === "history" && <HistoryView onStart={onStart} />}
         {tab === "settings" && <SettingsView />}
       </section>
 

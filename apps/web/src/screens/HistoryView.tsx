@@ -2,15 +2,16 @@
 
 import { useMemo, useState } from "react";
 import { aggregateStats, levelOfDay, pad2, todayKey, ymd } from "@tilemo/core";
-import type { DayEntry, Session } from "@tilemo/data";
+import type { DayEntry, Plan, Session } from "@tilemo/data";
 import { useDataStore } from "../data";
 
 const WD_SHORT = ["日", "一", "二", "三", "四", "五", "六"];
 
-export function HistoryView() {
+export function HistoryView({ onStart }: { onStart: (p: Plan) => void }) {
   const store = useDataStore((s) => s.store);
   const streak = useDataStore((s) => s.streak);
   const plans = useDataStore((s) => s.plans);
+  const settings = useDataStore((s) => s.settings);
 
   const [calCursor, setCalCursor] = useState(() => {
     const d = new Date();
@@ -54,6 +55,8 @@ export function HistoryView() {
 
   const selectedEntry: DayEntry | null = selectedKey ? store?.getDay(selectedKey) ?? null : null;
   const findPlan = (id: string) => plans.find((p) => p.id === id)?.name ?? "自定义";
+  const defaultPlan = plans.find((p) => p.id === settings?.defaultPlanId) ?? plans[0] ?? null;
+  const selectedIsToday = selectedKey === todayKey();
 
   const shiftMonth = (delta: number) => {
     setCalCursor((c) => {
@@ -82,9 +85,10 @@ export function HistoryView() {
 
       {/* 统计行 */}
       <div className="stat-row">
-        <div className="stat-cell is-accent">
+        <div className={"stat-cell" + ((streak?.current ?? 0) > 0 ? " is-accent" : " is-empty")}>
           <span className="l">连续</span>
           <span className="v">{streak?.current ?? 0}</span>
+          {(streak?.current ?? 0) === 0 && <span className="sub">即将开启连续打卡</span>}
         </div>
         <div className="stat-cell">
           <span className="l">训练天</span>
@@ -155,7 +159,18 @@ export function HistoryView() {
             </span>
           </div>
           {selectedEntry.sessions.length === 0 ? (
-            <p className="day-empty">这一天没有记录。安静的一天。</p>
+            selectedIsToday ? (
+              <div className="day-empty day-empty--action">
+                <span>今天还没留下足迹。</span>
+                {defaultPlan && (
+                  <button className="day-go" onClick={() => onStart(defaultPlan)}>
+                    去训练<span className="arrow">→</span>
+                  </button>
+                )}
+              </div>
+            ) : (
+              <p className="day-empty">这一天没有记录。安静的一天。</p>
+            )
           ) : (
             selectedEntry.sessions.map((ses, i) => (
               <SessionRow key={i} session={ses} planName={findPlan(ses.planId)} />

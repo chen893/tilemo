@@ -1,0 +1,24 @@
+/* ============================================================
+   Toast（有机胶囊）
+   ============================================================ */
+.toast {
+  position: fixed;
+  left: 50%; top: var(--s-5);
+  transform: translate(-50%, -16px);
+  background: var(--text);
+  color: var(--paper);
+  padding: var(--s-3) var(--s-5);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  border-radius: var(--blob-pill);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 200;
+  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+  max-width: 90vw;
+  text-align: center;
+}
+.toast.is-show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}

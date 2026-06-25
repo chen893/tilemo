@@ -1,0 +1,358 @@
+/* ============================================================
+   V1 今日 — 主问句 + 绷紧的弦 hero
+   ============================================================ */
+.home-quote {
+  font-size: var(--t-sm);
+  color: var(--text-2);
+  line-height: 1.65;
+  margin: var(--s-2) 0 var(--s-6);
+  max-width: 30em;
+}
+
+/* —— 主问句：温暖自信，不攻击性 —— */
+.home-question {
+  font-size: clamp(40px, 11vw, 72px);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  margin: 0 0 var(--s-5);
+  color: var(--text);
+  transition: letter-spacing var(--dur-breath-cycle) var(--ease-breath),
+              color var(--dur) var(--ease);
+}
+/* 未完成时：字距略紧 = "绷着" 的张力 */
+.home-question.is-tense {
+  letter-spacing: 0.005em;
+}
+/* 完成时：字距松开 = "松弛/安顿" */
+.home-question.is-settled {
+  letter-spacing: -0.015em;
+  color: var(--text);
+}
+.home-question .accent { color: var(--accent); }
+
+/* —— hero：绷紧的弦（进度表达） —— */
+.string-hero {
+  position: relative;
+  width: 100%;
+  height: 64px;
+  margin: var(--s-2) 0 var(--s-3);
+}
+.string-hero svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+/* 弦的 path：未完成时绷紧（向上微拱），完成时松弛下垂 */
+.string-path {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  transition: d var(--dur-breath-cycle) var(--ease-droop),
+              stroke var(--dur) var(--ease),
+              stroke-width var(--dur) var(--ease);
+}
+.string-hero.is-done .string-path {
+  stroke: var(--success);
+  stroke-width: 3;
+}
+/* 弦的两端锚点（有机小 blob） */
+.string-anchor {
+  fill: var(--accent);
+}
+.string-hero.is-done .string-anchor {
+  fill: var(--success);
+}
+.string-meta {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  pointer-events: none;
+}
+.string-meta .ratio {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-sm);
+  font-weight: 700;
+  color: var(--text-2);
+  letter-spacing: 0.02em;
+  background: var(--paper);
+  padding: 2px 10px;
+  border-radius: var(--blob-pill);
+}
+.string-meta .lbl {
+  font-size: var(--t-xs);
+  color: var(--text-3);
+  font-weight: 600;
+}
+
+/* —— 巨型进度数字（圆润温暖） —— */
+.home-progress {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-3);
+  margin: var(--s-2) 0 var(--s-6);
+}
+.home-progress .big {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(56px, 16vw, 96px);
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  transition: color var(--dur) var(--ease);
+}
+.home-progress .goal {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(18px, 4.5vw, 24px);
+  font-weight: 700;          /* 提一档（600→700），桌面远观可读 */
+  color: var(--text-2);      /* 提一档（text-3 → text-2，7.6:1 AA ✓），副字层级更清晰 */
+}
+.home-progress .goal .unit {
+  font-family: var(--font);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  color: var(--text-2);
+  margin-left: 4px;
+}
+.home-progress.is-done .big { color: var(--accent); }
+
+/* —— CTA：有机 blob 形 + 呼吸（全 app 签名） —— */
+.cta {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 64px;
+  padding: var(--s-4) var(--s-6);
+  font-size: clamp(17px, 4.5vw, 21px);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #fff;
+  background: var(--accent);
+  border-radius: var(--blob-1);
+  transition: background-color var(--dur-fast) var(--ease),
+              color var(--dur-fast) var(--ease),
+              border-radius var(--dur-breath-cycle) var(--ease-breath),
+              transform var(--dur-fast) var(--ease);
+  animation: cta-breath var(--dur-breath-cycle) var(--ease-breath) infinite;
+}
+@keyframes cta-breath {
+  0%, 100% {
+    transform: scale(1);
+    border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%;
+  }
+  50% {
+    transform: scale(1.03);
+    border-radius: 45% 55% 60% 40% / 60% 45% 55% 40%;
+  }
+}
+.cta:hover {
+  background: var(--accent-hot);
+}
+.cta:active {
+  /* 按压 = 肌肉收紧 */
+  transform: scale(0.97) !important;
+  animation-play-state: paused;
+  background: var(--accent-hot);
+}
+.cta .arrow {
+  font-family: var(--font-num);
+  font-weight: 600;
+  transition: transform var(--dur) var(--ease);
+}
+.cta:hover .arrow { transform: translateX(5px); }
+/* 完成 CTA：保持实心胶囊形态（与进行中同形），只换文案 + 降饱和到暖朱阶最深档 --success。
+   主行动始终是同一形态，避免描边/实心的跳变。 */
+.cta.is-done {
+  background: var(--success);
+  color: #fff;
+}
+.cta.is-done:hover { background: var(--accent-hot); }
+
+/* 深色 CTA 对比度补强：白字 on #FF6B5E 仅 2.79 不达 AA，
+   改用暖墨(--paper)字 on #FF6B5E = 6.27 / on #FF8270 = 7.24 / on #F26B5E(success) = 5.8 均 AA ✓。
+   覆盖常态与完成态（同一形态同一文本色规则），箭头继承 currentColor。 */
+[data-theme="dark"] .cta { color: var(--paper); }
+
+/* 完成释放：一次温柔的沉降脉冲（不是烟花） */
+@keyframes cta-settle {
+  0%   { transform: scale(1); }
+  25%  { transform: scale(1.06); background: var(--success); }
+  60%  { transform: scale(0.98); }
+  100% { transform: scale(1); }
+}
+.cta.is-settling {
+  animation: cta-settle 1.6s var(--ease-droop);
+}
+
+/* —— 连续天数徽章（有机胶囊） —— */
+.streak-block {
+  margin-top: var(--s-6);
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: var(--s-5);                       /* 24px ≥ 最大半径 22px ✓ */
+  background: var(--paper-soft);
+  border-radius: var(--card-radius-streak);  /* 20/22/21/19 px */
+  opacity: 0;
+  pointer-events: none;
+  max-height: 0;
+  overflow: hidden;
+  transition: opacity var(--dur) var(--ease),
+              max-height var(--dur) var(--ease),
+              padding var(--dur) var(--ease),
+              margin var(--dur) var(--ease);
+  margin-bottom: 0;
+}
+.streak-block.is-show {
+  opacity: 1;
+  pointer-events: auto;
+  max-height: 120px;
+  margin-bottom: var(--s-4);
+}
+.streak-block .leaf {
+  width: 36px; height: 36px;
+  background: var(--success);
+  border-radius: var(--blob-2);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+.streak-block .leaf svg { width: 18px; height: 18px; }
+.streak-block .text { flex: 1; min-width: 0; }
+.streak-block .text .lbl {
+  font-size: var(--t-xs);
+  color: var(--text-3);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+}
+.streak-block .text .v {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(28px, 8vw, 40px);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--success);
+  letter-spacing: -0.02em;
+}
+.streak-block .text .v .unit {
+  font-family: var(--font);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  color: var(--text-3);
+  margin-left: 4px;
+}
+
+/* —— 最近 7 天迷你热力（有机 blob 点） —— */
+.mini {
+  margin-top: var(--s-6);
+}
+.mini-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: var(--s-4);
+  gap: var(--s-3);
+  flex-wrap: wrap;
+}
+.mini-head .t {
+  font-size: var(--t-xs);
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  color: var(--text-2);
+}
+.mini-head .legend {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.mini-head .legend i {
+  display: inline-block;
+  width: 11px; height: 11px;
+  border-radius: var(--blob-1);
+}
+.mini-head .legend .l0 { background: var(--paper-deep); }
+.mini-head .legend .l1 { background: var(--heat-1); }
+.mini-head .legend .l2 { background: var(--heat-2); }
+.mini-head .legend .l3 { background: var(--heat-3); }
+
+.mini-dots {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--s-2);
+}
+.mini-dot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: var(--s-2) 0;
+}
+.mini-dot .blob {
+  width: clamp(28px, 9vw, 40px);
+  height: clamp(28px, 9vw, 40px);
+  border-radius: var(--blob-1);
+  background: var(--paper-deep);
+  position: relative;
+  transition: background-color var(--dur-fast) var(--ease),
+              transform var(--dur) var(--ease);
+  animation: blob-morph 12s var(--ease-breath) infinite;
+}
+.mini-dot:nth-child(odd) .blob { animation-delay: -3s; border-radius: var(--blob-2); }
+.mini-dot:nth-child(3n) .blob { animation-delay: -6s; border-radius: var(--blob-3); }
+@keyframes blob-morph {
+  0%, 100% { border-radius: var(--blob-1); }
+  33%      { border-radius: var(--blob-2); }
+  66%      { border-radius: var(--blob-3); }
+}
+.mini-dot[data-level="1"] .blob { background: var(--heat-1); }
+.mini-dot[data-level="2"] .blob { background: var(--heat-2); }
+.mini-dot[data-level="3"] .blob { background: var(--heat-3); }
+.mini-dot.is-today .blob {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+/* 今日点：进行中（未达标，level 0/1）= 空心环（白色内点）；
+   完成时（达标，level 2/3）= 实心（隐藏内点，露出底色 = 与已达标日同色）。
+   图例：环=进行中 / 实心=完成。 */
+.mini-dot.is-today .blob::after {
+  content: "";
+  position: absolute;
+  inset: 30%;
+  background: #fff;
+  border-radius: var(--blob-1);
+  opacity: 0.7;
+}
+.mini-dot.is-today[data-level="2"] .blob::after,
+.mini-dot.is-today[data-level="3"] .blob::after {
+  display: none;                            /* 完成态：实心，无内点 */
+}
+.mini-dot .lbl {
+  font-size: 10px;
+  color: var(--text-3);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.mini-dot.is-today .lbl { color: var(--accent); }
+.mini-dot .dd {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-sm);
+  font-weight: 800;
+  color: var(--text);
+}

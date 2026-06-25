@@ -2,15 +2,16 @@
 // 热力 365/366 格用事件委托（grid 容器单 click → closest + data-key）。
 
 import { useMemo, useState } from "react";
-import type { Session } from "@tilemo/data";
-import { aggregateStats, heatLevel, levelOfDay, pad2, ymd } from "@tilemo/core";
+import type { Plan, Session } from "@tilemo/data";
+import { aggregateStats, levelOfDay, ymd } from "@tilemo/core";
 import { useDataStore } from "../../data";
 
 const MONTHS = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"];
 
-export function DeskHistoryView() {
+export function DeskHistoryView({ onStart }: { onStart: (p: Plan) => void }) {
   const store = useDataStore((s) => s.store);
   const plans = useDataStore((s) => s.plans);
+  const settings = useDataStore((s) => s.settings);
   const streak = useDataStore((s) => s.streak);
 
   const stats = store ? aggregateStats(store) : null;
@@ -69,6 +70,8 @@ export function DeskHistoryView() {
   const selectedDay = selectedKey ? store?.getDay(selectedKey) ?? null : null;
   const selectedSessions: Session[] = selectedDay?.sessions ?? [];
   const planName = (id: string) => plans.find((p) => p.id === id)?.name ?? "方案";
+  const defaultPlan = plans.find((p) => p.id === settings?.defaultPlanId) ?? plans[0] ?? null;
+  const selectedIsToday = selectedKey === ymd(new Date());
 
   const fmtDay = (key: string | null) => {
     if (!key) return "";
@@ -85,10 +88,12 @@ export function DeskHistoryView() {
     <div className="desk-history">
       {/* 统计 4 格 */}
       <div className="desk-stat-row">
-        <div className="desk-stat-cell is-accent">
+        <div className={"desk-stat-cell" + ((streak?.current ?? 0) > 0 ? " is-accent" : " is-empty")}>
           <div className="l">连续天</div>
           <div className="v">{streak?.current ?? 0}</div>
-          <div className="sub">最长 {streak?.longest ?? 0} 天</div>
+          <div className="sub">
+            {(streak?.current ?? 0) > 0 ? `最长 ${streak?.longest ?? 0} 天` : "即将开启连续打卡"}
+          </div>
         </div>
         <div className="desk-stat-cell">
           <div className="l">总天数</div>
@@ -184,7 +189,18 @@ export function DeskHistoryView() {
         {selectedKey && (
           <>
             {selectedSessions.length === 0 ? (
-              <div className="desk-day-empty">这一天没有记录。安静的一天。</div>
+              selectedIsToday ? (
+                <div className="desk-day-empty desk-day-empty--action">
+                  <span>今天还没留下足迹。</span>
+                  {defaultPlan && (
+                    <button className="desk-day-go" onClick={() => onStart(defaultPlan)}>
+                      去训练<span className="arrow">→</span>
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="desk-day-empty">这一天没有记录。安静的一天。</div>
+              )
             ) : (
               selectedSessions.map((s, i) => {
                 const durMin = Math.max(1, Math.round(s.durationSec / 60));

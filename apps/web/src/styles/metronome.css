@@ -1,0 +1,307 @@
+/* ============================================================
+   V5 节拍器 — 全屏有机呼吸形
+   ============================================================ */
+.metronome {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--paper);
+  display: none;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur) var(--ease);
+  /* 与壳同温：暖纸 paper-soft tonal 分层（= body 背景） */
+  background-image:
+    radial-gradient(120% 80% at 100% 0%, var(--paper-soft) 0%, transparent 55%),
+    radial-gradient(100% 60% at 0% 100%, var(--paper-soft) 0%, transparent 60%);
+  overflow: hidden;
+}
+/* 节拍器 z-index:100 盖住了全 app 的 .ambient 暖朱光晕，
+   在沉浸态内部补一个同源、极克制的暖朱 ambient，让它"回到主 app 语境"。
+   仅修温度，不加 nav/eyebrow，保留去 chrome 的专注感。 */
+.metronome::before {
+  content: "";
+  position: absolute;
+  top: -10vh; right: -8vw;
+  width: 38vw; height: 38vw; max-width: 420px; max-height: 420px;
+  background: var(--accent-soft);
+  border-radius: var(--blob-1);
+  filter: blur(48px);
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: 0;
+  animation: ambient-breath var(--dur-breath-cycle) var(--ease-breath) infinite;
+}
+.metronome::after {
+  content: "";
+  position: absolute;
+  bottom: -8vh; left: -10vw;
+  width: 32vw; height: 32vw; max-width: 360px; max-height: 360px;
+  background: var(--paper-deep);
+  border-radius: var(--blob-2);
+  filter: blur(52px);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 0;
+  animation: ambient-breath var(--dur-breath-cycle) var(--ease-breath) infinite reverse;
+  animation-delay: -2200ms;
+}
+.metronome-top, .metronome-stage, .metronome-bottom { position: relative; z-index: 1; }
+.metronome.is-open {
+  display: flex;
+  opacity: 1;
+  pointer-events: auto;
+}
+.metronome-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(var(--s-5) + env(safe-area-inset-top)) var(--gutter) var(--s-4);
+  gap: var(--s-3);
+}
+.metronome-top .progress-text {
+  font-size: var(--t-xs);
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  color: var(--text-3);
+}
+.metronome-top .progress-text .num {
+  color: var(--text);
+  font-size: var(--t-md);
+  font-weight: 800;
+}
+.metronome-top .progress-text .sep { color: var(--text-3); margin: 0 4px; }
+.metronome-close {
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text);
+  background: var(--paper-soft);
+  border-radius: var(--blob-1);
+  flex-shrink: 0;
+  transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.metronome-close:hover { background: var(--accent); color: #fff; }
+
+.metronome-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-5);
+  text-align: center;
+  position: relative;
+}
+
+/* —— 有机呼吸形（核心，反 v3/v4 同心圆环） —— */
+.breath-organism {
+  position: relative;
+  width: min(78vw, 380px);
+  height: min(78vw, 380px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+@media (min-width: 1024px){
+  /* 桌面：呼吸体更舒展更大，沉浸 */
+  .breath-organism {
+    width: min(42vw, 520px);
+    height: min(42vw, 520px);
+  }
+  .breath-count {
+    font-size: clamp(120px, 14vw, 200px);
+  }
+  .prep .num-321 {
+    font-size: clamp(180px, 22vw, 280px);
+  }
+}
+.breath-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  overflow: visible;
+}
+/* 主形：肺叶/身体状的有机 blob path */
+.breath-shape {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+  stroke-width: 2;
+  transition: fill var(--dur-breath) var(--ease-breath),
+              stroke var(--dur-breath) var(--ease-breath),
+              transform var(--dur-breath) var(--ease-breath);
+  transform-origin: 50% 50%;
+  transform-box: fill-box;
+}
+/* 内层柔和形 */
+.breath-inner {
+  fill: var(--accent);
+  opacity: 0.25;
+  transition: transform var(--dur-breath) var(--ease-breath),
+              opacity var(--dur-breath) var(--ease-breath);
+  transform-origin: 50% 50%;
+  transform-box: fill-box;
+}
+
+/* 收紧 phase：形向内收紧 + 升温（accent-hot 加重） */
+.metronome.is-contract .breath-shape {
+  fill: var(--accent);
+  stroke: var(--accent-hot);
+  transform: scale(0.82);
+}
+.metronome.is-contract .breath-inner {
+  fill: var(--accent-hot);
+  opacity: 0.55;
+  transform: scale(0.7);
+}
+/* 放松 phase：形舒展扩大 + 柔和（accent-soft 降温） */
+.metronome.is-relax .breath-shape {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+  transform: scale(1.05);
+}
+.metronome.is-relax .breath-inner {
+  fill: var(--accent);
+  opacity: 0.18;
+  transform: scale(1.0);
+}
+
+.breath-core {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-3);
+}
+.breath-count {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(80px, 22vw, 150px);
+  font-weight: 800;
+  line-height: 0.85;
+  letter-spacing: -0.04em;
+  color: var(--text);
+  transition: color var(--dur) var(--ease);
+}
+.metronome.is-contract .breath-count { color: var(--accent-hot); }
+.metronome.is-relax .breath-count { color: var(--text); }
+.breath-phase {
+  font-size: var(--t-md);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--text);
+  padding: 6px 18px;
+  background: var(--paper);
+  border-radius: var(--blob-pill);
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.metronome.is-contract .breath-phase {
+  background: var(--accent-hot);
+  color: #fff;
+}
+.metronome.is-relax .breath-phase {
+  background: var(--paper-soft);
+  color: var(--text-2);
+}
+
+/* —— 准备态 —— */
+.prep {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.prep .ready {
+  font-size: var(--t-sm);
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  color: var(--text-3);
+  margin-bottom: var(--s-4);
+}
+.prep .num-321 {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(120px, 32vw, 220px);
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 0.85;
+  letter-spacing: -0.04em;
+}
+
+/* —— 完成态 —— */
+.done {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-4);
+}
+.done-blob {
+  width: 90px; height: 90px;
+  background: var(--success);
+  border-radius: var(--blob-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  animation: done-bloom 1.6s var(--ease-droop);
+}
+@keyframes done-bloom {
+  0%   { transform: scale(0.4); border-radius: 50%; opacity: 0; }
+  40%  { transform: scale(1.15); border-radius: var(--blob-2); opacity: 1; }
+  70%  { transform: scale(0.95); }
+  100% { transform: scale(1); border-radius: var(--blob-1); }
+}
+.done-blob svg { width: 44px; height: 44px; }
+.done .title {
+  font-size: clamp(32px, 9vw, 56px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  margin: 0;
+  color: var(--text);
+}
+.done .title .em { color: var(--accent); }
+.done .sub {
+  color: var(--text-2);
+  font-size: var(--t-md);
+  max-width: 22em;
+  margin: 0 auto;
+  line-height: 1.55;
+}
+
+.metronome-bottom {
+  padding: var(--s-5) var(--gutter) calc(var(--s-5) + env(safe-area-inset-bottom));
+  display: flex;
+  gap: var(--s-3);
+}
+.mbtn {
+  flex: 1;
+  min-height: 56px;
+  font-size: var(--t-md);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  border-radius: var(--blob-pill);
+  transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+}
+.mbtn:active { transform: scale(0.97); }
+.mbtn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+.mbtn-primary:hover { background: var(--accent-hot); }
+.mbtn-ghost {
+  background: var(--paper-soft);
+  color: var(--text);
+}
+.mbtn-ghost:hover { background: var(--paper-deep); }
+.mbtn svg { width: 16px; height: 16px; }
+
