@@ -1,0 +1,7 @@
+{
+  "usingComponents": {
+    "player": "/components/player/player",
+    "share-card": "/components/share-card/share-card"
+  },
+  "navigationBarTitleText": "记录"
+}

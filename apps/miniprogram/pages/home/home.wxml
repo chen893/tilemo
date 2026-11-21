@@ -1,0 +1,54 @@
+<view class="page {{themeClass}}">
+  <view class="screen">
+    <view class="head">
+      <view class="head-row">
+        <text class="date">{{dateLabel}}</text>
+        <view class="share-btn" bindtap="onShare">
+          <image class="share-icon" src="{{shareIcon}}" mode="aspectFit" />
+        </view>
+      </view>
+      <view class="h1">{{isDone ? '今天，提了。' : '今天，提了么？'}}</view>
+      <view class="quote" wx:if="{{quote}}">{{quote}}</view>
+    </view>
+
+    <view class="progress">
+      <view class="progress-col">
+        <view class="big {{isDone ? 'is-ok' : ''}}">{{done}}</view>
+        <view class="cap">已完成组</view>
+      </view>
+      <view class="slash">/</view>
+      <view class="progress-col">
+        <view class="big is-dim">{{goal}}</view>
+        <view class="cap">今日目标</view>
+      </view>
+    </view>
+
+    <view class="streak-card" wx:if="{{streakCurrent > 0}}">
+      <view class="streak-col">
+        <view class="streak-label">当前连续</view>
+        <view class="streak-num">{{streakCurrent}} 天</view>
+      </view>
+      <view class="streak-divider"></view>
+      <view class="streak-col">
+        <view class="streak-label">历史最长</view>
+        <view class="streak-num is-dim">{{streakLongest}} 天</view>
+      </view>
+    </view>
+
+    <view class="week">
+      <view class="week-cell" wx:for="{{week}}" wx:key="key">
+        <view class="week-dot {{item.isToday ? 'is-today' : ''}} lv-{{item.level}}"></view>
+        <text class="week-label {{item.isToday ? 'is-today' : ''}}">{{item.label}}</text>
+      </view>
+    </view>
+
+    <view class="btn-primary {{isDone ? 'is-soft' : ''}} cta" bindtap="onStart">{{ctaText}}</view>
+
+    <view class="plan-subtle" wx:if="{{planName}}" bindtap="onSwitchPlan">
+      {{planName}} · {{planDuration}} · <text class="plan-subtle-link">切换 ›</text>
+    </view>
+  </view>
+
+  <player id="player" bind:close="onPlayerClose" />
+  <share-card id="shareCard" />
+</view>

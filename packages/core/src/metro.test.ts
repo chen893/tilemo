@@ -86,20 +86,24 @@ describe("Metro engine", () => {
     void recorded;
   });
 
-  // 回归：finishAll 把 close(true) 排到 1800ms 后。若 dispose() 不取消这个定时器，
-  // 旧 Metro 会在新 Metro 已接管之后才触发 onAfterClose → 双重关闭宿主。
-  it("dispose() cancels the deferred close() scheduled by finishAll", () => {
+  // 完成页不再自动关闭，需等待用户主动点击「好的」或外部调用 close(true)。
+  it("stays on done stage until close(true) is called, and dispose() keeps it clean", () => {
     const events: string[] = [];
     const m = new Metro({
       onRecord: () => events.push("record"),
-      onAfterClose: () => events.push("afterClose"),
+      onAfterClose: (completion) => events.push(`afterClose:${completion}`),
     });
+    let snap = m.snapshot();
+    m.subscribe((s) => (snap = s));
     m.open(DEFAULT_PLANS[0]); // 3/3/10/1
-    vi.advanceTimersByTime(PREP_MS + 60_000); // 完成：onRecord 已发,close 在 +1800ms 排队
+    vi.advanceTimersByTime(PREP_MS + 60_000);
     expect(events).toEqual(["record"]);
+    expect(snap.stage).toBe("done");
 
-    m.dispose(); // ← 关键：取消 pending close,避免 onAfterClose 在错误时机触发
-    vi.advanceTimersByTime(10_000); // 远超原本 1800ms 的窗口
-    expect(events).toEqual(["record"]); // afterClose 仍未发
+    vi.advanceTimersByTime(10_000);
+    expect(events).toEqual(["record"]); // 不自动关闭
+
+    m.close(true);
+    expect(events).toEqual(["record", "afterClose:true"]);
   });
 });

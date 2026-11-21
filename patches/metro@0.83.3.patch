@@ -1,0 +1,40 @@
+diff --git a/src/Assets.js b/src/Assets.js
+index 0870a4c62c7ef9e7fb3a93c0bed74aa8ea5a765e..ba6f22138bc5b2df2fa1c1b8697954c4fc57420e 100644
+--- a/src/Assets.js
++++ b/src/Assets.js
+@@ -14,7 +14,8 @@ var AssetPaths = _interopRequireWildcard(
+ );
+ var _crypto = _interopRequireDefault(require("crypto"));
+ var _fs = _interopRequireDefault(require("fs"));
+-var _imageSize = _interopRequireDefault(require("image-size"));
++var { imageSize } = require("image-size");
++var { imageSizeFromFile } = require("image-size/fromFile");
+ var _path = _interopRequireDefault(require("path"));
+ function _interopRequireDefault(e) {
+   return e && e.__esModule ? e : { default: e };
+@@ -65,7 +66,7 @@ function getAssetSize(type, content, filePath) {
+   if (content.length === 0) {
+     throw new Error(`Image asset \`${filePath}\` cannot be an empty file.`);
+   }
+-  const { width, height } = (0, _imageSize.default)(content);
++  const { width, height } = imageSize(content);
+   return {
+     width,
+     height,
+@@ -167,10 +168,12 @@ async function getAssetData(
+   assetUrlPath = (0, _pathUtils.normalizePathSeparatorsToPosix)(assetUrlPath);
+   const isImage = isAssetTypeAnImage(_path.default.extname(assetPath).slice(1));
+   const assetInfo = await getAbsoluteAssetInfo(assetPath, platform);
+-  const isImageInput = assetInfo.files[0].includes(".zip/")
+-    ? _fs.default.readFileSync(assetInfo.files[0])
+-    : assetInfo.files[0];
+-  const dimensions = isImage ? (0, _imageSize.default)(isImageInput) : null;
++  const imagePath = assetInfo.files[0];
++  const dimensions = isImage
++    ? imagePath.includes(".zip/")
++      ? imageSize(_fs.default.readFileSync(imagePath))
++      : await imageSizeFromFile(imagePath)
++    : null;
+   const scale = assetInfo.scales[0];
+   const assetData = {
+     __packager_asset: true,

@@ -1,0 +1,199 @@
+.month-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 40rpx 0 24rpx;
+}
+
+.month-nav {
+  width: 76rpx;
+  height: 76rpx;
+  line-height: 70rpx;
+  text-align: center;
+  font-size: 40rpx;
+  color: var(--text-2);
+  border-radius: 50%;
+}
+
+.month-nav:active {
+  background: var(--paper-soft);
+}
+
+.month-label {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.dow-row {
+  display: flex;
+}
+
+.dow {
+  flex: 1;
+  text-align: center;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--text-2);
+  margin-bottom: 16rpx;
+}
+
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.cal-cell {
+  width: 14.2857%;
+  height: 94rpx;
+  padding: 8rpx;
+  box-sizing: border-box;
+}
+
+.cal-box {
+  width: 100%;
+  height: 100%;
+  border-radius: 16rpx;
+  border: 2rpx solid var(--rule);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 三态解耦：圆点标今天 + 描边标选中 + 底色标训练量 */
+.cal-box.is-sel {
+  border: 4rpx solid var(--ink);
+}
+
+.cal-box.is-future {
+  opacity: 0.32;
+}
+
+.cal-day {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.cal-box.is-today .cal-day {
+  font-weight: 800;
+}
+
+.cal-cnt {
+  font-size: 18rpx;
+  font-weight: 600;
+  color: var(--text-2);
+  line-height: 1.2;
+  margin-top: 2rpx;
+}
+
+/* lv-3 深红底高对比文字，彻底解决红底深字糊成一团 */
+.cal-box.lv-3 .cal-day,
+.cal-box.lv-3 .cal-cnt {
+  color: var(--on-accent-btn);
+}
+
+.today-dot {
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-top: 4rpx;
+}
+
+.cal-box.lv-3 .today-dot {
+  background: var(--on-accent-btn);
+}
+
+.detail {
+  margin-top: 40rpx;
+  border-radius: 36rpx;
+  border: 2rpx solid var(--rule);
+  background: var(--paper-soft);
+  padding: 32rpx;
+}
+
+.detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.detail-date {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.detail-count {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.session {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 0;
+  border-bottom: 2rpx solid var(--rule);
+}
+
+.session:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.session-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.session-sub {
+  margin-top: 8rpx;
+  font-size: 26rpx;
+  color: var(--text-2);
+}
+
+.session-state {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--text-3);
+}
+
+.session-state.is-done {
+  color: var(--relax);
+}
+
+.empty-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24rpx;
+}
+
+.empty-text {
+  display: block;
+  margin-top: 24rpx;
+  font-size: 28rpx;
+  color: var(--text-2);
+}
+
+.empty-text.is-inline {
+  margin-top: 0;
+}
+
+.go-btn {
+  padding: 16rpx 32rpx;
+  border-radius: 40rpx;
+  background: var(--accent-btn);
+  color: var(--on-accent-btn);
+  font-size: 28rpx;
+  font-weight: 700;
+}

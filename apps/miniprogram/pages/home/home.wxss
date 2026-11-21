@@ -1,0 +1,198 @@
+.head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.date {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.share-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 88rpx;
+  height: 88rpx;
+  margin: -22rpx -22rpx -22rpx 0;
+}
+
+.share-btn:active {
+  opacity: 0.6;
+}
+
+.share-icon {
+  display: block;
+  width: 44rpx;
+  height: 44rpx;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 12rpx;
+}
+
+.h1 {
+  margin-right: 20rpx;
+}
+
+.met-badge {
+  padding: 8rpx 22rpx;
+  border-radius: 40rpx;
+  background: var(--relax-soft);
+  color: var(--relax);
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.quote {
+  margin-top: 20rpx;
+  font-size: 30rpx;
+  line-height: 46rpx;
+  color: var(--text-2);
+}
+
+/* 大数字进度 */
+.progress {
+  display: flex;
+  align-items: flex-start;
+  margin-top: 16rpx;
+  padding-bottom: 44rpx;
+  border-bottom: 2rpx solid var(--rule);
+}
+
+.progress-col {
+  flex: 1;
+}
+
+.big {
+  font-size: 144rpx;
+  line-height: 160rpx;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.big.is-ok {
+  color: var(--relax);
+}
+
+.big.is-dim {
+  color: var(--text-2);
+}
+
+.cap {
+  margin-top: 8rpx;
+  font-size: 28rpx;
+  color: var(--text-3);
+}
+
+.slash {
+  font-size: 80rpx;
+  font-weight: 300;
+  color: var(--text-3);
+  padding: 0 24rpx;
+  line-height: 1.6;
+}
+
+/* 连续 — 全宽双列对称卡片 */
+.streak-card {
+  margin-top: 40rpx;
+  padding: 32rpx 40rpx;
+  border-radius: 36rpx;
+  border: 2rpx solid var(--rule);
+  background: var(--paper-soft);
+  display: flex;
+  align-items: center;
+}
+
+.streak-col {
+  flex: 1;
+}
+
+.streak-label {
+  font-size: 24rpx;
+  color: var(--text-3);
+}
+
+.streak-num {
+  margin-top: 8rpx;
+  font-size: 52rpx;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.streak-num.is-dim {
+  color: var(--text);
+}
+
+.streak-divider {
+  width: 2rpx;
+  height: 72rpx;
+  background: var(--rule);
+  margin: 0 32rpx;
+}
+
+/* 本周 */
+.week {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 52rpx;
+}
+
+.week-cell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.week-dot {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 16rpx;
+  border: 3rpx solid var(--rule-strong);
+  box-sizing: border-box;
+}
+
+.week-dot.is-today {
+  border-color: var(--accent);
+}
+
+.week-label {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.week-label.is-today {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.cta {
+  margin-top: 52rpx;
+}
+
+.plan-subtle {
+  margin-top: 24rpx;
+  text-align: center;
+  font-size: 26rpx;
+  color: var(--text-3);
+  padding: 12rpx 0;
+}
+
+.plan-subtle:active {
+  opacity: 0.6;
+}
+
+.plan-subtle-link {
+  color: var(--accent);
+  font-weight: 600;
+}

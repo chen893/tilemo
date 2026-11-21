@@ -126,7 +126,21 @@
 }
 .home-progress.is-done .big { color: var(--accent); }
 
-/* —— CTA：有机 blob 形 + 呼吸（全 app 签名） —— */
+.home-plan-hint {
+  margin-bottom: var(--s-3);
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  background: var(--paper-soft);
+  border: 1px solid var(--rule);
+  font-size: var(--t-sm);
+  color: var(--text-2);
+}
+.home-plan-hint strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* —— CTA：有机 blob 形 + 呼吸（全 app 签名，AA 高对比） —— */
 .cta {
   position: relative;
   display: flex;
@@ -139,23 +153,20 @@
   font-size: clamp(17px, 4.5vw, 21px);
   font-weight: 700;
   letter-spacing: 0.01em;
-  color: #fff;
-  background: var(--accent);
+  color: var(--on-accent-btn);
+  background: var(--accent-btn);
   border-radius: var(--blob-1);
   transition: background-color var(--dur-fast) var(--ease),
               color var(--dur-fast) var(--ease),
-              border-radius var(--dur-breath-cycle) var(--ease-breath),
               transform var(--dur-fast) var(--ease);
   animation: cta-breath var(--dur-breath-cycle) var(--ease-breath) infinite;
 }
 @keyframes cta-breath {
   0%, 100% {
     transform: scale(1);
-    border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%;
   }
   50% {
-    transform: scale(1.03);
-    border-radius: 45% 55% 60% 40% / 60% 45% 55% 40%;
+    transform: scale(1.025);
   }
 }
 .cta:hover {
@@ -311,14 +322,12 @@
   position: relative;
   transition: background-color var(--dur-fast) var(--ease),
               transform var(--dur) var(--ease);
-  animation: blob-morph 12s var(--ease-breath) infinite;
 }
-.mini-dot:nth-child(odd) .blob { animation-delay: -3s; border-radius: var(--blob-2); }
-.mini-dot:nth-child(3n) .blob { animation-delay: -6s; border-radius: var(--blob-3); }
-@keyframes blob-morph {
-  0%, 100% { border-radius: var(--blob-1); }
-  33%      { border-radius: var(--blob-2); }
-  66%      { border-radius: var(--blob-3); }
+.mini-dot:nth-child(odd) .blob { border-radius: var(--blob-2); }
+.mini-dot:nth-child(3n) .blob { border-radius: var(--blob-3); }
+.mini-dot[data-level="0"] .blob {
+  background: var(--paper-soft);
+  border: 1px dashed var(--rule-strong);
 }
 .mini-dot[data-level="1"] .blob { background: var(--heat-1); }
 .mini-dot[data-level="2"] .blob { background: var(--heat-2); }

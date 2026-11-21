@@ -1,7 +1,18 @@
-// @tilemo/web — 记录视图（移动壳）。镜像 mobile HistoryScreen，复用 core 计算。
+// @tilemo/web — 记录视图（移动壳）。
+// 统计口径统一自 aggregateStats / completedCountOfDay；
+// 日历三态解耦：底部圆点标今天 + 描边标选中 + 底色标训练量；未来日期降权不可点。
 
 import { useMemo, useState } from "react";
-import { aggregateStats, levelOfDay, pad2, todayKey, ymd } from "@tilemo/core";
+import {
+  aggregateStats,
+  completedCountOfDay,
+  formatClock,
+  formatDuration,
+  levelOfDay,
+  pad2,
+  todayKey,
+  ymd,
+} from "@tilemo/core";
 import type { DayEntry, Plan, Session } from "@tilemo/data";
 import { useDataStore } from "../data";
 
@@ -17,7 +28,7 @@ export function HistoryView({ onStart }: { onStart: (p: Plan) => void }) {
     const d = new Date();
     return { y: d.getFullYear(), m: d.getMonth() };
   });
-  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [selectedKey, setSelectedKey] = useState<string | null>(todayKey());
 
   const stats = useMemo(
     () => (store ? aggregateStats(store) : null),
@@ -25,19 +36,22 @@ export function HistoryView({ onStart }: { onStart: (p: Plan) => void }) {
     [store, streak],
   );
 
+  const todayStr = todayKey();
+
   const grid = useMemo(() => {
     const firstDay = new Date(calCursor.y, calCursor.m, 1).getDay();
     const daysInMonth = new Date(calCursor.y, calCursor.m + 1, 0).getDate();
-    const todayStr = todayKey();
     const cells: {
       key: string | null;
       day: number | null;
       level: number;
-      count: number;
+      doneCnt: number;
+      totalCnt: number;
       isToday: boolean;
+      isFuture: boolean;
     }[] = [];
     for (let i = 0; i < firstDay; i++) {
-      cells.push({ key: null, day: null, level: 0, count: 0, isToday: false });
+      cells.push({ key: null, day: null, level: 0, doneCnt: 0, totalCnt: 0, isToday: false, isFuture: false });
     }
     for (let d = 1; d <= daysInMonth; d++) {
       const key = ymd(new Date(calCursor.y, calCursor.m, d));
@@ -46,17 +60,21 @@ export function HistoryView({ onStart }: { onStart: (p: Plan) => void }) {
         key,
         day: d,
         level: levelOfDay(entry),
-        count: entry?.sessions?.length ?? 0,
+        doneCnt: completedCountOfDay(entry),
+        totalCnt: entry?.sessions?.length ?? 0,
         isToday: key === todayStr,
+        isFuture: key > todayStr,
       });
     }
     return cells;
-  }, [calCursor, store]);
+  }, [calCursor, store, todayStr]);
 
-  const selectedEntry: DayEntry | null = selectedKey ? store?.getDay(selectedKey) ?? null : null;
+  const selectedEntry: DayEntry | null = selectedKey ? (store?.getDay(selectedKey) ?? null) : null;
   const findPlan = (id: string) => plans.find((p) => p.id === id)?.name ?? "自定义";
   const defaultPlan = plans.find((p) => p.id === settings?.defaultPlanId) ?? plans[0] ?? null;
-  const selectedIsToday = selectedKey === todayKey();
+  const selectedIsToday = selectedKey === todayStr;
+  const selectedDone = completedCountOfDay(selectedEntry);
+  const selectedGoal = selectedEntry?.goalGroups ?? (selectedIsToday ? (settings?.dailyGoalGroups ?? 3) : 0);
 
   const shiftMonth = (delta: number) => {
     setCalCursor((c) => {
@@ -86,7 +104,7 @@ export function HistoryView({ onStart }: { onStart: (p: Plan) => void }) {
       {/* 统计行 */}
       <div className="stat-row">
         <div className={"stat-cell" + ((streak?.current ?? 0) > 0 ? " is-accent" : " is-empty")}>
-          <span className="l">连续</span>
+          <span className="l">连续天</span>
           <span className="v">{streak?.current ?? 0}</span>
           {(streak?.current ?? 0) === 0 && <span className="sub">即将开启连续打卡</span>}
         </div>
@@ -95,8 +113,8 @@ export function HistoryView({ onStart }: { onStart: (p: Plan) => void }) {
           <span className="v">{stats?.totalDays ?? 0}</span>
         </div>
         <div className="stat-cell">
-          <span className="l">总组数</span>
-          <span className="v">{stats?.totalSessions ?? 0}</span>
+          <span className="l">完成组数</span>
+          <span className="v">{stats?.completedSessions ?? 0}</span>
         </div>
       </div>
 
@@ -134,31 +152,40 @@ export function HistoryView({ onStart }: { onStart: (p: Plan) => void }) {
           const cls =
             "cal-cell" +
             (cell.isToday ? " is-today" : "") +
-            (cell.key === selectedKey ? " is-selected" : "");
+            (cell.key === selectedKey ? " is-selected" : "") +
+            (cell.isFuture ? " is-future" : "");
           return (
             <button
               key={cell.key}
               className={cls}
               data-level={cell.level}
-              onClick={() => setSelectedKey(cell.key)}
+              disabled={cell.isFuture}
+              onClick={() => !cell.isFuture && setSelectedKey(cell.key)}
             >
               <span className="n">{cell.day}</span>
-              {cell.count > 0 && <span className="cnt">{cell.count}组</span>}
+              {cell.totalCnt > 0 ? (
+                <span className="cnt">{cell.doneCnt > 0 ? `${cell.doneCnt}组` : "部分"}</span>
+              ) : cell.isToday ? (
+                <span className="today-dot" aria-hidden="true" />
+              ) : null}
             </button>
           );
         })}
       </div>
 
       {/* 日详情 */}
-      {selectedKey && selectedEntry && (
+      {selectedKey && (
         <div className="day-detail">
           <div className="day-detail-head">
-            <span className="d">{selectedKey.replace(/-/g, ".").slice(5)}</span>
+            <span className="d">
+              {selectedKey.replace(/-/g, ".").slice(5)}
+              {selectedIsToday ? " · 今天" : ""}
+            </span>
             <span className="s">
-              {selectedEntry.sessions.length} / {selectedEntry.goalGroups ?? 0} 组
+              {selectedGoal > 0 ? `已完成 ${selectedDone} / ${selectedGoal} 组` : "未训练"}
             </span>
           </div>
-          {selectedEntry.sessions.length === 0 ? (
+          {!selectedEntry || selectedEntry.sessions.length === 0 ? (
             selectedIsToday ? (
               <div className="day-empty day-empty--action">
                 <span>今天还没留下足迹。</span>
@@ -183,14 +210,17 @@ export function HistoryView({ onStart }: { onStart: (p: Plan) => void }) {
 }
 
 function SessionRow({ session, planName }: { session: Session; planName: string }) {
-  const mins = Math.round((session.durationSec / 60) * 10) / 10;
+  const clock = formatClock(session.ts);
   return (
     <div className="session-item">
       <div>
         <div className="plan">
           {planName} · {session.completedReps} 次
         </div>
-        <div className="meta">{mins} 分钟</div>
+        <div className="meta">
+          {formatDuration(session.durationSec)}
+          {clock ? ` · ${clock}` : ""}
+        </div>
       </div>
       <span className={"tag" + (session.finished ? "" : " is-partial")}>
         {session.finished ? "完成" : "部分"}

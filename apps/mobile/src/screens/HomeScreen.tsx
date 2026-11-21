@@ -1,19 +1,29 @@
 // @tilemo/mobile — 今日 / Home screen.
 
 import { useMemo } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { levelOfDay, pad2, todayKey, ymd, QUOTES } from "@tilemo/core";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { completedCountOfDay, formatPlanDuration, levelOfDay, pad2, todayKey, ymd, QUOTES } from "@tilemo/core";
 import { useDataStore } from "../data";
 import { useOpenShare } from "../share/ShareContext";
 import { useTheme } from "../theme";
-import { Button, Card, fs, rd, sp, Txt } from "../ui/primitives";
+import { Button, fs, rd, sp } from "../ui/primitives";
 import type { Plan } from "@tilemo/data";
+
+const SHARE_ICON = {
+  light: require("../../assets/icons/share.png"),
+  dark: require("../../assets/icons/share-d.png"),
+};
 
 const WD = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
 
-export function HomeScreen({ onStart }: { onStart: (plan: Plan) => void }) {
-  const { colors } = useTheme();
+export function HomeScreen({
+  onStart,
+  onSwitchPlan,
+}: {
+  onStart: (plan: Plan) => void;
+  onSwitchPlan?: () => void;
+}) {
+  const { colors, mode } = useTheme();
   const openShare = useOpenShare();
   const settings = useDataStore((s) => s.settings);
   const plans = useDataStore((s) => s.plans);
@@ -24,7 +34,7 @@ export function HomeScreen({ onStart }: { onStart: (plan: Plan) => void }) {
   const now = new Date();
   const dateLabel = `${now.getMonth() + 1}.${pad2(now.getDate())} ${WD[now.getDay()]}`;
 
-  const done = today?.sessions?.length ?? 0;
+  const done = completedCountOfDay(today);
   const goal = settings?.dailyGoalGroups ?? 3;
   const isDone = done >= goal && done > 0;
 
@@ -45,24 +55,31 @@ export function HomeScreen({ onStart }: { onStart: (plan: Plan) => void }) {
       alwaysBounceVertical
     >
       <View style={styles.header}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <Text style={{ color: colors.text3, fontSize: fs.sm }}>{dateLabel}</Text>
-          <Pressable onPress={() => openShare({ type: "review" })} hitSlop={10}>
-            <Ionicons name="share-outline" size={22} color={colors.text2} />
+        <View style={styles.headerTop}>
+          <Text style={{ color: colors.text2, fontSize: fs.sm, fontWeight: "500" }}>{dateLabel}</Text>
+          <Pressable
+            onPress={() => openShare({ type: "review" })}
+            hitSlop={12}
+            style={({ pressed }) => [styles.shareBtn, { opacity: pressed ? 0.6 : 1 }]}
+            accessibilityLabel="分享回顾"
+          >
+            <Image source={mode === "dark" ? SHARE_ICON.dark : SHARE_ICON.light} style={{ width: 22, height: 22 }} resizeMode="contain" />
           </Pressable>
         </View>
-        <Text style={[styles.question, { color: colors.text, opacity: isDone ? 0.5 : 1 }]}>
-          今天，提了么？
+        <Text style={[styles.question, { color: colors.text }]}>
+          {isDone ? "今天，提了。" : "今天，提了么？"}
         </Text>
         {settings?.dailyQuote && (
-          <Text style={[styles.quote, { color: colors.text2 }]}>{quote}</Text>
+          <Text style={[styles.quote, { color: colors.text2 }]}>
+            {isDone ? "今日目标已达成，想加练随时再来一组。" : quote}
+          </Text>
         )}
       </View>
 
       {/* Progress big numerals */}
       <View style={[styles.progressRow, { borderBottomColor: colors.rule }]}>
         <View style={styles.numCol}>
-          <Text style={[styles.big, { color: isDone ? colors.success : colors.accent }]}>
+          <Text style={[styles.big, { color: isDone ? colors.relax : colors.accent }]}>
             {done}
           </Text>
           <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: sp.s1 }}>已完成组</Text>
@@ -70,26 +87,31 @@ export function HomeScreen({ onStart }: { onStart: (plan: Plan) => void }) {
         <Text style={[styles.slash, { color: colors.text3 }]}>/</Text>
         <View style={styles.numCol}>
           <Text style={[styles.big, { color: colors.text2 }]}>{goal}</Text>
-          <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: sp.s1 }}>目标</Text>
+          <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: sp.s1 }}>今日目标</Text>
         </View>
       </View>
 
-      {/* Streak */}
+      {/* Streak — 全宽双列对称卡片 */}
       {(s?.current ?? 0) > 0 && (
-        <View style={[styles.streak, { backgroundColor: colors.paperSoft }]}>
-          <Text style={{ color: colors.accent, fontSize: fs.xl, fontWeight: "700" }}>
-            连续 {s?.current} 天
-          </Text>
-          {(s?.longest ?? 0) > 0 && (
-            <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: sp.s1 }}>
-              最长 {s?.longest} 天
+        <View style={[styles.streakCard, { backgroundColor: colors.paperSoft, borderColor: colors.rule }]}>
+          <View style={styles.streakCol}>
+            <Text style={{ color: colors.text3, fontSize: fs.xs }}>当前连续</Text>
+            <Text style={{ color: colors.accent, fontSize: fs.xl, fontWeight: "700", marginTop: sp.s1 }}>
+              {s?.current} 天
             </Text>
-          )}
+          </View>
+          <View style={[styles.streakDivider, { backgroundColor: colors.rule }]} />
+          <View style={styles.streakCol}>
+            <Text style={{ color: colors.text3, fontSize: fs.xs }}>历史最长</Text>
+            <Text style={{ color: colors.text, fontSize: fs.xl, fontWeight: "700", marginTop: sp.s1 }}>
+              {s?.longest ?? s?.current} 天
+            </Text>
+          </View>
         </View>
       )}
 
       {/* Week heatmap */}
-      <View style={[styles.weekRow]}>
+      <View style={styles.weekRow}>
         {week.map((d) => {
           const entry = store?.getDay(d.key) ?? null;
           const lvl = levelOfDay(entry);
@@ -107,11 +129,20 @@ export function HomeScreen({ onStart }: { onStart: (plan: Plan) => void }) {
                           : lvl === 2
                             ? colors.heat2
                             : colors.heat3,
-                    borderColor: d.isToday ? colors.accent : colors.rule,
+                    borderColor: d.isToday ? colors.accent : colors.ruleStrong,
                   },
                 ]}
               />
-              <Text style={{ color: colors.text3, fontSize: 10, marginTop: sp.s1 }}>{d.label}</Text>
+              <Text
+                style={{
+                  color: d.isToday ? colors.accent : colors.text2,
+                  fontSize: fs.xs,
+                  fontWeight: d.isToday ? "700" : "500",
+                  marginTop: sp.s1,
+                }}
+              >
+                {d.label}
+              </Text>
             </View>
           );
         })}
@@ -123,16 +154,24 @@ export function HomeScreen({ onStart }: { onStart: (plan: Plan) => void }) {
         variant={isDone ? "soft" : "solid"}
         onPress={() => defaultPlan && onStart(defaultPlan)}
         disabled={!defaultPlan}
-        style={{ marginTop: sp.s5 }}
+        style={{ marginTop: sp.s6 }}
       >
-        {isDone ? "今天，提了。再来一组" : "开始一组训练"}
+        {isDone ? "再练一组" : "开始训练"}
       </Button>
 
-      <Card colors={colors} style={{ marginTop: sp.s5 }}>
-        <Txt colors={colors} color="text2" size={fs.sm}>
-          一组只要一分钟，做了就记得住。
-        </Txt>
-      </Card>
+      {/* 轻量方案提示，不再画大边框盒子，同时去掉底部无用常驻鸡汤卡 */}
+      {defaultPlan && (
+        <Pressable
+          onPress={onSwitchPlan}
+          hitSlop={10}
+          style={({ pressed }) => [styles.planSubtle, { opacity: pressed ? 0.6 : 1 }]}
+        >
+          <Text style={{ color: colors.text3, fontSize: fs.sm }}>
+            {defaultPlan.name} · {formatPlanDuration(defaultPlan)} ·{" "}
+            <Text style={{ color: colors.accent, fontWeight: "600" }}>切换 ›</Text>
+          </Text>
+        </Pressable>
+      )}
 
       <View style={{ height: sp.s8 }} />
     </ScrollView>
@@ -153,9 +192,13 @@ function buildWeek(): { key: string; label: string; isToday: boolean }[] {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: sp.gutter, paddingTop: sp.s6 },
+  container: { padding: sp.gutter, paddingTop: sp.s5 },
   header: { marginBottom: sp.s5 },
-  question: { fontSize: 34, fontWeight: "700", marginTop: sp.s2, letterSpacing: 1 },
+  headerTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  shareBtn: { width: 40, height: 40, alignItems: "center", justifyContent: "center", marginRight: -sp.s2 },
+  titleRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: sp.s3, marginTop: sp.s2 },
+  question: { fontSize: 34, fontWeight: "700", letterSpacing: 1 },
+  metBadge: { paddingHorizontal: sp.s3, paddingVertical: sp.s1, borderRadius: rd.pill },
   quote: { fontSize: fs.base, marginTop: sp.s3, lineHeight: 24 },
   progressRow: {
     flexDirection: "row",
@@ -166,13 +209,17 @@ const styles = StyleSheet.create({
   numCol: { flex: 1 },
   slash: { fontSize: 40, fontWeight: "300", marginHorizontal: sp.s3 },
   big: { fontSize: 72, fontWeight: "700", lineHeight: 80 },
-  streak: {
+  streakCard: {
     marginTop: sp.s5,
-    paddingHorizontal: sp.s5,
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: sp.s4,
+    paddingHorizontal: sp.s5,
     borderRadius: rd.md,
-    alignSelf: "flex-start",
+    borderWidth: 1,
   },
+  streakCol: { flex: 1 },
+  streakDivider: { width: 1, height: 36, marginHorizontal: sp.s4 },
   weekRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -184,5 +231,10 @@ const styles = StyleSheet.create({
     height: 28,
     borderRadius: rd.sm,
     borderWidth: 1.5,
+  },
+  planSubtle: {
+    marginTop: sp.s3,
+    alignItems: "center",
+    paddingVertical: sp.s2,
   },
 });

@@ -1,12 +1,9 @@
 // @tilemo/mobile — 设置 / Settings screen.
-//
-// daily-goal stepper, default-plan picker, sound/haptics/daily-quote toggles,
-// theme segmented control, and a 数据 section with JSON export via expo-sharing.
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Alert, Linking, Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import * as Sharing from "expo-sharing";
-import { clamp, todayKey } from "@tilemo/core";
+import { aggregateStats, clamp, todayKey } from "@tilemo/core";
 import type { Plan, Settings as SettingsT, ThemeSetting } from "@tilemo/data";
 import { useDataStore } from "../data";
 import { useTheme } from "../theme";
@@ -19,8 +16,12 @@ export function SettingsScreen() {
   const refresh = useDataStore((s) => s.refresh);
   const settings = useDataStore((s) => s.settings);
   const plans = useDataStore((s) => s.plans);
+  const today = useDataStore((s) => s.today);
 
   const [exporting, setExporting] = useState(false);
+
+  const stats = useMemo(() => (store ? aggregateStats(store) : null), [store, today]);
+  const hasLogs = (stats?.totalSessions ?? 0) > 0;
 
   const update = (patch: Partial<SettingsT>) => {
     if (!store || !settings) return;
@@ -32,17 +33,13 @@ export function SettingsScreen() {
   const setPlan = (p: Plan) => update({ defaultPlanId: p.id });
 
   const exportData = async () => {
-    if (!store || exporting) return;
+    if (!store || exporting || !hasLogs) return;
     setExporting(true);
     try {
       const bundle = store.exportAll();
       const json = JSON.stringify(bundle, null, 2);
       const fname = `tgm-data-${todayKey()}.json`;
       if (Sharing.isAvailableAsync && (await Sharing.isAvailableAsync())) {
-        // Write to a temp file the FS module expects; but we can also just use
-        // Share.share with the JSON as the message when FS isn't desired.
-        // Use Share as a portable fallback path (works on both platforms without
-        // a file write dependency).
         await Share.share({ message: json, title: fname });
       } else {
         await Share.share({ message: json, title: fname });
@@ -52,6 +49,25 @@ export function SettingsScreen() {
     } finally {
       setExporting(false);
     }
+  };
+
+  const onClearAll = () => {
+    if (!store) return;
+    Alert.alert(
+      "清空记录与设置？",
+      "训练记录、连续天数与偏好设置都会被清除，且无法恢复。建议先导出备份。",
+      [
+        { text: "取消", style: "cancel" },
+        {
+          text: "确认清空",
+          style: "destructive",
+          onPress: () => {
+            store.clearAll();
+            refresh();
+          },
+        },
+      ],
+    );
   };
 
   if (!settings) return null;
@@ -70,7 +86,7 @@ export function SettingsScreen() {
             <Text style={{ color: colors.text, fontSize: fs.base, fontWeight: "600" }}>
               每天几组
             </Text>
-            <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: sp.s1 }}>
+            <Text style={{ color: colors.text2, fontSize: fs.sm, marginTop: sp.s1 }}>
               连续达标即计入连续天数
             </Text>
           </View>
@@ -85,9 +101,9 @@ export function SettingsScreen() {
         </View>
       </Section>
 
-      {/* Default plan */}
+      {/* Default plan — 2×2 等宽网格，消灭 3+1 落单 */}
       <Section colors={colors} label="默认方案">
-        <View style={styles.planList}>
+        <View style={styles.planGrid}>
           {plans.map((p) => {
             const active = p.id === settings.defaultPlanId;
             return (
@@ -97,17 +113,17 @@ export function SettingsScreen() {
                 style={({ pressed }) => [
                   styles.planChip,
                   {
-                    backgroundColor: active ? colors.accent : colors.paperDeep,
-                    borderColor: active ? colors.accent : colors.rule,
+                    backgroundColor: active ? colors.accentBtn : colors.paperDeep,
+                    borderColor: active ? colors.accentBtn : colors.rule,
                     opacity: pressed ? 0.85 : 1,
                   },
                 ]}
               >
                 <Text
                   style={{
-                    color: active ? "#FFFFFF" : colors.text,
-                    fontSize: fs.base,
-                    fontWeight: "600",
+                    color: active ? colors.onAccentBtn : colors.text,
+                    fontSize: fs.sm,
+                    fontWeight: "700",
                   }}
                 >
                   {p.name}
@@ -116,15 +132,24 @@ export function SettingsScreen() {
             );
           })}
         </View>
+        <Text style={{ color: colors.text3, fontSize: fs.xs, paddingBottom: sp.s4 }}>
+          用于今日页一键开练
+        </Text>
       </Section>
 
       {/* Toggles */}
       <Section colors={colors} label="体验">
-        <ToggleRow colors={colors} label="声音" hint="收 / 放 切换时播放轻提示音" value={settings.sound} onToggle={() => update({ sound: !settings.sound })} />
+        <ToggleRow
+          colors={colors}
+          label="声音"
+          hint="收 / 放 切换时播放轻提示音"
+          value={settings.sound}
+          onToggle={() => update({ sound: !settings.sound })}
+        />
         <ToggleRow
           colors={colors}
           label="触感反馈"
-          hint="阶段切换时轻震"
+          hint="阶段切换时轻震一下"
           value={settings.haptics}
           onToggle={() => update({ haptics: !settings.haptics })}
         />
@@ -137,10 +162,11 @@ export function SettingsScreen() {
         />
       </Section>
 
-      {/* Theme */}
-      <Section colors={colors} label="外观">
+      {/* Theme — 去掉嵌套外框 */}
+      <View style={{ marginTop: sp.s5 }}>
+        <Text style={[styles.sectionLabel, { color: colors.text2 }]}>外观</Text>
         <ThemeSeg colors={colors} value={settings.theme} onChange={(t) => update({ theme: t })} />
-      </Section>
+      </View>
 
       {/* Data */}
       <Section colors={colors} label="数据">
@@ -148,15 +174,39 @@ export function SettingsScreen() {
           colors={colors}
           variant="deep"
           full
-          disabled={exporting}
+          disabled={exporting || !hasLogs}
           onPress={exportData}
-          style={{ marginVertical: sp.s4 }}
+          style={{ marginTop: sp.s4, marginBottom: sp.s2 }}
         >
           {exporting ? "导出中…" : "导出我的数据"}
         </Button>
-        <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: sp.s2 }}>
-          {Platform.OS === "ios" ? "通过系统分享面板保存。" : "通过系统分享。"}
+        <Text style={{ color: colors.text3, fontSize: fs.xs, marginBottom: sp.s4 }}>
+          {hasLogs
+            ? Platform.OS === "ios"
+              ? `共 ${stats?.totalDays ?? 0} 天记录，通过系统分享保存备份文本。`
+              : `共 ${stats?.totalDays ?? 0} 天记录，通过系统分享保存备份文本。`
+            : "本机还没有训练记录，完成一次训练后即可导出备份。"}
         </Text>
+
+        <View style={[styles.divider, { backgroundColor: colors.rule }]} />
+
+        <Pressable
+          onPress={onClearAll}
+          style={({ pressed }) => [
+            styles.rowBetween,
+            { paddingVertical: sp.s4, opacity: pressed ? 0.65 : 1 },
+          ]}
+        >
+          <View style={{ flex: 1, paddingRight: sp.s3 }}>
+            <Text style={{ color: colors.text, fontSize: fs.base, fontWeight: "600" }}>
+              清空记录与设置
+            </Text>
+            <Text style={{ color: colors.text3, fontSize: fs.xs, marginTop: sp.s1 }}>
+              删除后无法恢复，建议先导出备份
+            </Text>
+          </View>
+          <Text style={{ color: colors.danger, fontSize: fs.sm, fontWeight: "700" }}>清空</Text>
+        </Pressable>
       </Section>
 
       {/* 开源 */}
@@ -190,7 +240,7 @@ function Section({
 }) {
   return (
     <View style={{ marginTop: sp.s5 }}>
-      <Text style={[styles.sectionLabel, { color: colors.text3 }]}>{label}</Text>
+      <Text style={[styles.sectionLabel, { color: colors.text2 }]}>{label}</Text>
       <View style={[styles.sectionBody, { backgroundColor: colors.paperSoft, borderColor: colors.rule }]}>
         {children}
       </View>
@@ -230,8 +280,8 @@ function ToggleRow({
         style={[
           styles.switch,
           {
-            backgroundColor: value ? colors.accent : colors.paperDeep,
-            borderColor: value ? colors.accent : colors.ruleStrong,
+            backgroundColor: value ? colors.accentBtn : colors.paperDeep,
+            borderColor: value ? colors.accentBtn : colors.ruleStrong,
           },
         ]}
       >
@@ -261,7 +311,7 @@ function ThemeSeg({
     { v: "system", label: "跟随系统" },
   ];
   return (
-    <View style={[styles.seg, { borderColor: colors.ruleStrong }]}>
+    <View style={[styles.seg, { backgroundColor: colors.paperSoft, borderColor: colors.rule }]}>
       {opts.map((o) => {
         const active = o.v === value;
         return (
@@ -270,14 +320,14 @@ function ThemeSeg({
             onPress={() => onChange(o.v)}
             style={[
               styles.segItem,
-              { backgroundColor: active ? colors.accent : "transparent" },
+              { backgroundColor: active ? colors.accentBtn : "transparent" },
             ]}
           >
             <Text
               style={{
-                color: active ? "#FFFFFF" : colors.text,
+                color: active ? colors.onAccentBtn : colors.text,
                 fontSize: fs.sm,
-                fontWeight: "600",
+                fontWeight: "700",
               }}
             >
               {o.label}
@@ -290,7 +340,7 @@ function ThemeSeg({
 }
 
 const styles = StyleSheet.create({
-  container: { padding: sp.gutter, paddingTop: sp.s6 },
+  container: { padding: sp.gutter, paddingTop: sp.s5 },
   title: { fontSize: 28, fontWeight: "700", marginBottom: sp.s4 },
   sectionLabel: { fontSize: fs.xs, fontWeight: "600", marginBottom: sp.s2 },
   sectionBody: { borderRadius: rd.md, borderWidth: 1, paddingHorizontal: sp.s4 },
@@ -298,13 +348,22 @@ const styles = StyleSheet.create({
   toggleRow: { paddingVertical: sp.s4 },
   switch: { width: 48, height: 28, borderRadius: rd.pill, borderWidth: 1, justifyContent: "center" },
   switchKnob: { width: 22, height: 22, borderRadius: rd.pill },
-  planList: { flexDirection: "row", flexWrap: "wrap", gap: sp.s2, paddingVertical: sp.s4 },
+  planGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: sp.s2,
+    paddingTop: sp.s4,
+    paddingBottom: sp.s2,
+  },
   planChip: {
-    paddingHorizontal: sp.s4,
+    width: "48.5%",
     paddingVertical: sp.s3,
     borderRadius: rd.pill,
     borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  seg: { flexDirection: "row", borderWidth: 1, borderRadius: rd.pill, padding: sp.s1, marginVertical: sp.s4 },
+  seg: { flexDirection: "row", borderWidth: 1, borderRadius: rd.pill, padding: sp.s1 },
   segItem: { flex: 1, paddingVertical: sp.s3, borderRadius: rd.pill, alignItems: "center" },
+  divider: { height: 1 },
 });

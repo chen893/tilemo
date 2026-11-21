@@ -10,7 +10,7 @@
   .cta { animation: none !important; transform: none !important; }
   .ambient { animation: none !important; }
   .ambient-1, .ambient-2 { opacity: 0.3; }
-  .breath-shape, .breath-inner { transition: none !important; transform: none !important; }
+  .breath-shape, .breath-inner { animation: none !important; transition: none !important; transform: none !important; }
   .metronome.is-contract .breath-shape { transform: scale(0.9); transition: none !important; }
   .metronome.is-relax .breath-shape { transform: scale(1); transition: none !important; }
   .home-question { transition: none !important; }

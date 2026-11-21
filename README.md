@@ -62,7 +62,15 @@ pnpm test         # vitest(data + core)
 
 见 [DEPLOY.md](./DEPLOY.md):GitHub Actions 打包移动 app(EAS Build)+ Vercel 部署网页端。
 
+## 后续规划
+
+见 [多端方案与微信云服务调研](./docs/multi-platform-roadmap.md)：新增微信小程序、三端共用云数据的可行性、账号与同步方案，以及排行榜、对战和日常提醒的分阶段待办。
+
 ## 备注
 
 - `index.html`(仓库根)是迁移前的原始单文件应用,迁移期的**唯一参照物**;正式产物是 `apps/web`。
 - 移动端的节拍音暂为 stub(RN 无 Web Audio);视觉 + 触感已实现。
+
+## 许可证
+
+[MIT](./LICENSE)

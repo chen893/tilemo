@@ -13,7 +13,7 @@
   border-radius: 15px 16px 14px 16px;     /* max 16px，文字大号"7"+标签到边距 16px ≥ 16 ✓ */
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
   min-height: 120px;
 }
 .stat-cell:nth-child(1) { border-radius: 14px 16px 15px 13px; }
@@ -122,51 +122,31 @@
 .cal-cell[data-level="0"]:not(.empty) { color: var(--text-3); }
 .cal-cell[data-level="1"] { background: var(--heat-1); color: var(--text); }
 .cal-cell[data-level="2"] { background: var(--heat-2); color: var(--text); }
-.cal-cell[data-level="3"] { background: var(--heat-3); color: #fff; }
+.cal-cell[data-level="3"] { background: var(--heat-3); color: var(--on-accent-btn); }
+.cal-cell.is-future { opacity: 0.32; pointer-events: none; }
 .cal-cell .n { line-height: 1; font-size: var(--t-sm); }
 .cal-cell .cnt {
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.02em;
-  opacity: 0.75;
+  opacity: 0.85;
   margin-top: 2px;
 }
-/* 今日 = 全月最吸睛的一格：复合表达——
-   1) 强制用最深饱和暖朱档填充（无论当日是否达标）；
-   2) 朱红描边环再强调"焦点"；
-   3) 数字描细以保白底可读。
-   保证"今日 = 视觉最强档"，与达标档明度体系不冲突（达标档无描边、较浅）。 */
-.cal-cell.is-today,
-.cal-cell[data-level].is-today {
+.cal-cell .today-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 99px;
   background: var(--accent);
-  color: #fff;
-  outline: 2px solid var(--accent-hot);
+  margin-top: 3px;
+}
+.cal-cell[data-level="3"] .today-dot { background: var(--on-accent-btn); }
+/* 三态解耦：底部圆点标今天 + 描边标选中 + 底色标训练量 */
+.cal-cell.is-today .n { font-weight: 800; }
+.cal-cell.is-selected {
+  outline: 2px solid var(--ink);
   outline-offset: 2px;
-  box-shadow: 0 0 0 4px rgba(232,90,79,0.14);
   z-index: 3;
 }
-[data-theme="dark"] .cal-cell.is-today,
-[data-theme="dark"] .cal-cell[data-level].is-today {
-  background: var(--accent);
-  color: var(--paper);
-  outline-color: var(--accent-hot);
-  box-shadow: 0 0 0 4px rgba(255,107,94,0.18);
-}
-.cal-cell.is-today .n,
-.cal-cell.is-today .cnt { font-weight: 800; }
-.cal-cell.is-today .n,
-.cal-cell.is-today[data-level] .n { color: #fff; }
-[data-theme="dark"] .cal-cell.is-today .n,
-[data-theme="dark"] .cal-cell.is-today[data-level] .n { color: var(--paper); }
-.cal-cell.is-today .cnt { color: rgba(255,255,255,0.9); opacity: 1; }
-[data-theme="dark"] .cal-cell.is-today .cnt { color: rgba(31,24,20,0.85); }
-.cal-cell.is-selected {
-  outline: 2px solid var(--text);
-  outline-offset: 2px;
-  z-index: 2;
-}
-/* 选中 = 今日：选中环优先（更外、更高），保留今日填充 */
-.cal-cell.is-today.is-selected { z-index: 4; }
 
 /* 日详情 */
 .day-detail {
@@ -251,14 +231,13 @@
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  background: var(--accent);
-  color: #fff;
+  background: var(--accent-btn);
+  color: var(--on-accent-btn);
   border-radius: var(--blob-pill);
   font-size: var(--t-sm);
   font-weight: 700;
   transition: background-color var(--dur-fast) var(--ease);
 }
-.day-go:hover { background: var(--accent-hot); }
+.day-go:hover { filter: brightness(0.94); }
 .day-go .arrow { font-family: var(--font-num); font-weight: 600; }
-[data-theme="dark"] .day-go { color: var(--paper); }
 

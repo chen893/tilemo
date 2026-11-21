@@ -1,0 +1,52 @@
+{
+  "pages": [
+    "pages/home/home",
+    "pages/train/train",
+    "pages/history/history",
+    "pages/settings/settings"
+  ],
+  "window": {
+    "navigationBarTitleText": "提了么",
+    "navigationBarBackgroundColor": "@navBgColor",
+    "navigationBarTextStyle": "@navTxtStyle",
+    "backgroundColor": "@bgColor",
+    "backgroundTextStyle": "light"
+  },
+  "tabBar": {
+    "color": "@tabColor",
+    "selectedColor": "@tabSelectedColor",
+    "backgroundColor": "@tabBgColor",
+    "borderStyle": "@tabBorderStyle",
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "text": "今日",
+        "iconPath": "assets/tab/home.png",
+        "selectedIconPath": "assets/tab/home-on.png"
+      },
+      {
+        "pagePath": "pages/train/train",
+        "text": "训练",
+        "iconPath": "assets/tab/train.png",
+        "selectedIconPath": "assets/tab/train-on.png"
+      },
+      {
+        "pagePath": "pages/history/history",
+        "text": "记录",
+        "iconPath": "assets/tab/history.png",
+        "selectedIconPath": "assets/tab/history-on.png"
+      },
+      {
+        "pagePath": "pages/settings/settings",
+        "text": "设置",
+        "iconPath": "assets/tab/settings.png",
+        "selectedIconPath": "assets/tab/settings-on.png"
+      }
+    ]
+  },
+  "darkmode": true,
+  "themeLocation": "theme.json",
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

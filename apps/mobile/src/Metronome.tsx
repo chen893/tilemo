@@ -1,17 +1,13 @@
 // @tilemo/mobile — Metronome full-screen overlay.
 //
-// Driven by the SHARED @tilemo/core Metro engine (the whole point of the shared
-// engine — web uses the imperative port, mobile uses this observable one).
-// We subscribe to snapshots and render prep / breath / done stages with RN +
-// reanimated. Haptics fire on phase change, gated by settings.haptics.
-//
-// Audio: two short sine beeps via expo-av (contract=880Hz, relax=660Hz), mirroring
-// web's WebAudio feedback(). Preloaded once, replayed on each phase edge, gated
-// by settings.sound.
+// Driven by the SHARED @tilemo/core Metro engine.
+// 双通道视觉编码：收紧（暖陶土红向心收缩） vs 放松（鼠尾草绿向外舒展）；
+// 暂停态中央明确标注「已暂停」，完成页停留至用户主动操作。
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
+  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -21,15 +17,21 @@ import Animated, {
 import * as Haptics from "expo-haptics";
 import { Audio } from "expo-av";
 import { type Plan } from "@tilemo/data";
-import { Metro, type MetroSnapshot, recordSession } from "@tilemo/core";
+import {
+  Metro,
+  type MetroSnapshot,
+  completedCountOfDay,
+  formatPlanDuration,
+  recordSession,
+} from "@tilemo/core";
 import { detectStreakMilestone, type MilestoneCopy } from "@tilemo/share-card";
 import { useDataStore } from "./data";
 import { useOpenShare } from "./share/ShareContext";
 import { useTheme } from "./theme";
-import { IconButton, fs, rd, sp } from "./ui/primitives";
+import { fs, rd, sp } from "./ui/primitives";
 
-const BREATH_CONTRACT = 0.82; // shape scale on contract (matches web --breath-tense)
-const BREATH_RELAX = 1.05; // shape scale on relax
+const BREATH_CONTRACT = 0.78;
+const BREATH_RELAX = 1.06;
 
 export function Metronome({
   plan,
@@ -41,6 +43,8 @@ export function Metronome({
   const { colors } = useTheme();
   const store = useDataStore((s) => s.store);
   const refresh = useDataStore((s) => s.refresh);
+  const today = useDataStore((s) => s.today);
+  const goal = useDataStore((s) => s.settings?.dailyGoalGroups) ?? 3;
   const hapticsOn = useDataStore((s) => s.settings?.haptics) ?? true;
   const soundOn = useDataStore((s) => s.settings?.sound) ?? true;
   const openShare = useOpenShare();
@@ -48,16 +52,14 @@ export function Metronome({
 
   const [snap, setSnap] = useState<MetroSnapshot | null>(null);
   const scale = useSharedValue(1);
+  const ringScale = useSharedValue(1);
   const reduceMotion = useReducedMotion();
   const lastPhase = useRef<string>("");
   const soundHi = useRef<Audio.Sound | null>(null);
   const soundLo = useRef<Audio.Sound | null>(null);
-  // 首拍补偿：若第一个 phase 在音频加载完成前到达，记下阶段，就绪后补播，避免首拍静默。
   const pendingBeep = useRef<"contract" | "relax" | null>(null);
   const closedRef = useRef(false);
 
-  // Ref indirection so the Metro hooks (constructed once via useMemo) can always
-  // reach the latest close handler without re-creating the engine.
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
   const handleClose = useCallback(() => {
@@ -65,10 +67,7 @@ export function Metronome({
     closedRef.current = true;
     onCloseRef.current();
   }, []);
-  // openShare 是 ShareContext 里的 useCallback([store, settings])，settings 在每次
-  // refresh() 后引用都换 → openShare 引用随之换。若把 openShare 放进 metro 的 useMemo
-  // 依赖，refresh() 会让 metro 被重建并重跑 metro.open(plan)，用户看到的现象就是
-  // 「done 后突然回到准备中、又开始了一组」。用 ref 间接，让 metro 只依赖稳定的引用。
+
   const openShareRef = useRef(openShare);
   openShareRef.current = openShare;
 
@@ -85,8 +84,6 @@ export function Metronome({
           }
         }
       },
-      // Engine auto-closes ~1.8s after the done stage; unmount the overlay then.
-      // Also fires on endEarly→close. (User taps still go through handleClose.)
       onAfterClose: (completion) => {
         handleClose();
         if (completion && streakMilestoneRef.current) {
@@ -99,7 +96,6 @@ export function Metronome({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store, refresh, handleClose]);
 
-  // Subscribe + open on mount; dispose on unmount.
   useEffect(() => {
     const unsub = metro.subscribe((s) => setSnap(s));
     metro.open(plan);
@@ -110,7 +106,6 @@ export function Metronome({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plan.id]);
 
-  // Preload the two beeps once; play in silent mode so a muted phone still cues.
   useEffect(() => {
     let mounted = true;
     Audio.setAudioModeAsync({ playsInSilentModeIOS: true }).catch(() => {});
@@ -126,14 +121,13 @@ export function Metronome({
         }
         soundHi.current = hi.sound;
         soundLo.current = lo.sound;
-        // 若首拍在音频就绪前到达，现在补播，保证 收/紧 提示音从第一拍起完整。
         if (pendingBeep.current) {
           const s = pendingBeep.current === "contract" ? hi.sound : lo.sound;
           pendingBeep.current = null;
           s.replayAsync().catch(() => {});
         }
       } catch {
-        /* audio unavailable — overlay stays silent, haptics/visual still cue */
+        /* audio unavailable */
       }
     })();
     return () => {
@@ -145,53 +139,73 @@ export function Metronome({
     };
   }, []);
 
-  // Drive breath shape + haptics + beep from snapshot.
+  const snapStage = snap?.stage ?? null;
+  const snapState = snap?.state ?? null;
+  const snapPhase = snap?.phase ?? null;
+  const remainingRef = useRef(0);
+  remainingRef.current = snap?.remaining ?? 0;
+
   useEffect(() => {
-    if (!snap) return;
-    if (snap.stage !== "breath") {
-      // reset to neutral between stages
+    if (!snapStage) return;
+    if (snapStage !== "breath") {
+      lastPhase.current = "";
       scale.value = reduceMotion ? 1 : withTiming(1, { duration: 200 });
+      ringScale.value = reduceMotion ? 1 : withTiming(1, { duration: 200 });
       return;
     }
-    const target = snap.phase === "contract" ? BREATH_CONTRACT : BREATH_RELAX;
-    const phaseSec = snap.phase === "contract" ? plan.contract : plan.relax;
+    if (snapState === "paused") {
+      // 暂停时真正冻结在当前缩放进度，避免继续滑动或重置
+      cancelAnimation(scale);
+      cancelAnimation(ringScale);
+      return;
+    }
+    if (snapState !== "running" || !snapPhase) return;
+
+    const isContract = snapPhase === "contract";
+    const target = isContract ? BREATH_CONTRACT : BREATH_RELAX;
+    const ringTarget = isContract ? 0.9 : 1.18;
+    const isNewPhase = snapPhase !== lastPhase.current;
+    // 新阶段按完整秒数走；暂停恢复时按剩余秒数接着走到终点，避免 9s 动画提前结束或重新拖长
+    const phaseSec = isNewPhase
+      ? (isContract ? plan.contract : plan.relax)
+      : Math.max(0.4, remainingRef.current);
+
     if (reduceMotion) {
       scale.value = target;
+      ringScale.value = ringTarget;
     } else {
-      scale.value = withTiming(target, {
+      // 对称正弦呼吸曲线（sine in-out）：无论 3s 还是 9s，全程均匀推进到最后一秒
+      const cfg = {
         duration: Math.max(400, phaseSec * 1000),
-        easing: Easing.inOut(Easing.ease),
-      });
+        easing: Easing.inOut(Easing.sin),
+      };
+      scale.value = withTiming(target, cfg);
+      ringScale.value = withTiming(ringTarget, cfg);
     }
 
-    // Haptic + beep on phase change (independent toggles).
-    const key = snap.phase;
-    if (key !== lastPhase.current) {
-      lastPhase.current = key;
+    if (isNewPhase) {
+      lastPhase.current = snapPhase;
       if (hapticsOn) {
-        if (key === "contract") {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-        } else {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-        }
+        Haptics.impactAsync(
+          snapPhase === "contract"
+            ? Haptics.ImpactFeedbackStyle.Medium
+            : Haptics.ImpactFeedbackStyle.Light,
+        ).catch(() => {});
       }
       if (soundOn) {
-        const s = key === "contract" ? soundHi.current : soundLo.current;
-        if (s) {
-          s.replayAsync().catch(() => {});
-        } else {
-          // 音频尚未加载完成：记下阶段，加载后补播。
-          pendingBeep.current = key;
-        }
+        const s = snapPhase === "contract" ? soundHi.current : soundLo.current;
+        if (s) s.replayAsync().catch(() => {});
+        else pendingBeep.current = snapPhase;
       }
     }
-  }, [snap, scale, plan.contract, plan.relax, hapticsOn, soundOn, reduceMotion]);
+  }, [snapStage, snapState, snapPhase, scale, ringScale, plan.contract, plan.relax, hapticsOn, soundOn, reduceMotion]);
 
-  // Animated style MUST be created unconditionally (rules of hooks) — even before
-  // the first snapshot arrives. It reads the shared value, so it's a no-op until
-  // a phase effect drives it.
   const breathStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
+  }));
+
+  const ringStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: ringScale.value }],
   }));
 
   if (!snap) {
@@ -199,26 +213,24 @@ export function Metronome({
   }
 
   const stage = snap.stage;
+  const isPaused = snap.state === "paused";
+  const isContract = snap.phase === "contract";
+  const phaseColor = isContract ? colors.accent : colors.relax;
+  const phaseSoft = isContract ? colors.accentSoft : colors.relaxSoft;
+  const todayCompleted = completedCountOfDay(today);
 
   return (
     <View style={[styles.overlay, { backgroundColor: colors.paper }]}>
-      {/* Top-right close (only meaningful once not running-prep) */}
+      {/* Top context bar — 展示当前方案，不再放置重复退出 × */}
       <View style={styles.topBar}>
-        <IconButton
-          colors={colors}
-          hitSlop={12}
-          onPress={() => {
-            metro.endEarly();
-            handleClose();
-          }}
-        >
-          <Text style={{ color: colors.text3, fontSize: fs.lg, fontWeight: "500" }}>×</Text>
-        </IconButton>
+        <Text style={{ color: colors.text2, fontSize: fs.sm, fontWeight: "600" }}>
+          {plan.name} · {formatPlanDuration(plan)}
+        </Text>
       </View>
 
       {stage === "prep" && (
         <View style={styles.center}>
-          <Text style={[styles.eyebrow, { color: colors.text3 }]}>准备</Text>
+          <Text style={[styles.eyebrow, { color: colors.text2 }]}>准备</Text>
           <Text
             style={{
               color: colors.accent,
@@ -229,69 +241,120 @@ export function Metronome({
           >
             {snap.prepN}
           </Text>
-          <Text style={[styles.hint, { color: colors.text2, marginTop: sp.s5 }]}>
-            找个舒服的姿势，跟着节拍
+          <Text style={[styles.hint, { color: colors.text2, marginTop: sp.s4 }]}>
+            跟着节拍
           </Text>
         </View>
       )}
 
       {stage === "breath" && (
         <View style={styles.center}>
+          {isPaused ? (
+            <View style={[styles.pausedBadge, { backgroundColor: colors.paperSoft, borderColor: colors.ruleStrong }]}>
+              <Text style={{ color: colors.text, fontSize: fs.sm, fontWeight: "700" }}>
+                已暂停
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.pausedBadgePlaceholder} />
+          )}
+
           <View style={styles.breathWrap}>
+            <Animated.View
+              style={[
+                styles.breathRing,
+                {
+                  borderColor: phaseColor,
+                  backgroundColor: phaseSoft,
+                  opacity: isPaused ? 0.25 : 0.45,
+                },
+                ringStyle,
+              ]}
+            />
             <Animated.View
               style={[
                 styles.breathBlob,
                 {
-                  backgroundColor:
-                    snap.phase === "contract" ? colors.accent : colors.accentSoft,
+                  backgroundColor: phaseColor,
+                  opacity: isPaused ? 0.45 : 1,
                 },
                 breathStyle,
               ]}
             />
           </View>
+
           <Text
             style={{
-              color: colors.text,
+              color: isPaused ? colors.text2 : colors.text,
               fontSize: fs.x2l,
               fontWeight: "700",
               letterSpacing: 4,
-              marginTop: sp.s6,
+              marginTop: sp.s5,
             }}
           >
-            {snap.phase === "contract" ? "收 · 紧" : "放 · 松"}
+            {isContract ? "收 · 紧" : "放 · 松"}
           </Text>
-          <Text style={{ color: colors.accent, fontSize: 56, fontWeight: "700", marginTop: sp.s3 }}>
-            {snap.remaining}
-          </Text>
-          <Text style={[styles.hint, { color: colors.text2, marginTop: sp.s4 }]}>
-            {snap.setIdx + 1} / {snap.sets} 组 · {snap.startedReps} / {snap.totalReps} 次
+
+          <View style={styles.secRow}>
+            <Text style={{ color: isPaused ? colors.text2 : phaseColor, fontSize: 56, fontWeight: "700" }}>
+              {snap.remaining}
+            </Text>
+            <Text style={{ color: colors.text3, fontSize: fs.md, fontWeight: "600", marginLeft: sp.s1 }}>
+              秒
+            </Text>
+          </View>
+
+          <Text style={[styles.hint, { color: colors.text2, marginTop: sp.s3 }]}>
+            {snap.sets > 1
+              ? `第 ${snap.setIdx + 1}/${snap.sets} 组 · ${snap.startedReps}/${snap.totalReps} 次`
+              : `${snap.startedReps} / ${snap.totalReps} 次`}
           </Text>
         </View>
       )}
 
       {stage === "done" && (
         <View style={styles.center}>
-          <Text style={{ color: colors.success, fontSize: fs.x2l, fontWeight: "700" }}>完成</Text>
-          <Text style={[styles.hint, { color: colors.text2, marginTop: sp.s4 }]}>
+          <Text style={{ color: colors.text, fontSize: fs.x2l, fontWeight: "700" }}>
+            今天，提了。
+          </Text>
+          <Text style={[styles.hint, { color: colors.text2, marginTop: sp.s3 }]}>
             {snap.doneSub}
+          </Text>
+          <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: sp.s4 }}>
+            今日 {todayCompleted} / {goal} 组
           </Text>
         </View>
       )}
 
-      {/* Controls */}
+      {/* Controls — 区分主次权重，防止误触 */}
       <View style={[styles.controls, { borderTopColor: colors.rule }]}>
         {stage === "breath" && (
           <>
             <Pressable
-              style={[styles.ctrlBtn, { borderColor: colors.ruleStrong }]}
+              style={({ pressed }) => [
+                styles.ctrlBtn,
+                isPaused
+                  ? { backgroundColor: colors.accentBtn, borderColor: colors.accentBtn }
+                  : { backgroundColor: colors.paperSoft, borderColor: colors.ruleStrong },
+                { opacity: pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] },
+              ]}
               onPress={() => metro.togglePause()}
             >
-              <Text style={{ color: colors.text, fontSize: fs.base, fontWeight: "600" }}>
-                {snap.state === "paused" ? "继续" : "暂停"}
+              <Text
+                style={{
+                  color: isPaused ? colors.onAccentBtn : colors.text,
+                  fontSize: fs.base,
+                  fontWeight: "700",
+                }}
+              >
+                {isPaused ? "继续训练" : "暂停"}
               </Text>
             </Pressable>
             <Pressable
-              style={[styles.ctrlBtn, { borderColor: colors.ruleStrong }]}
+              style={({ pressed }) => [
+                styles.ctrlBtnGhost,
+                { opacity: pressed ? 0.65 : 1 },
+              ]}
               onPress={() => {
                 metro.endEarly();
                 handleClose();
@@ -303,25 +366,44 @@ export function Metronome({
         )}
         {stage === "prep" && (
           <Pressable
-            style={[styles.ctrlBtn, { borderColor: colors.ruleStrong }]}
+            style={({ pressed }) => [
+              styles.ctrlBtn,
+              { borderColor: colors.ruleStrong, opacity: pressed ? 0.75 : 1 },
+            ]}
             onPress={() => {
               metro.endEarly();
               handleClose();
             }}
           >
-            <Text style={{ color: colors.text3, fontSize: fs.base, fontWeight: "600" }}>取消</Text>
+            <Text style={{ color: colors.text2, fontSize: fs.base, fontWeight: "600" }}>取消</Text>
           </Pressable>
         )}
         {stage === "done" && (
           <>
             <Pressable
-              style={[styles.ctrlBtn, { borderColor: colors.ruleStrong }]}
+              style={({ pressed }) => [
+                styles.ctrlBtn,
+                { borderColor: colors.ruleStrong, opacity: pressed ? 0.8 : 1 },
+              ]}
               onPress={() => openShare({ type: "daily" })}
             >
               <Text style={{ color: colors.text, fontSize: fs.base, fontWeight: "600" }}>分享这次</Text>
             </Pressable>
-            <Pressable style={[styles.ctrlBtn, { backgroundColor: colors.accent }]} onPress={handleClose}>
-              <Text style={{ color: "#FFFFFF", fontSize: fs.base, fontWeight: "600" }}>好的</Text>
+            <Pressable
+              style={({ pressed }) => [
+                styles.ctrlBtn,
+                {
+                  backgroundColor: colors.accentBtn,
+                  borderColor: colors.accentBtn,
+                  opacity: pressed ? 0.88 : 1,
+                  transform: [{ scale: pressed ? 0.98 : 1 }],
+                },
+              ]}
+              onPress={() => metro.close(true)}
+            >
+              <Text style={{ color: colors.onAccentBtn, fontSize: fs.base, fontWeight: "700" }}>
+                返回今日
+              </Text>
             </Pressable>
           </>
         )}
@@ -338,7 +420,8 @@ const styles = StyleSheet.create({
   },
   topBar: {
     flexDirection: "row",
-    justifyContent: "flex-end",
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: sp.gutter,
     paddingTop: sp.s8,
   },
@@ -347,17 +430,60 @@ const styles = StyleSheet.create({
     fontSize: fs.sm,
     fontWeight: "600",
   },
-  hint: { fontSize: fs.base },
-  breathWrap: { width: 240, height: 240, alignItems: "center", justifyContent: "center" },
-  breathBlob: {
-    width: 200,
-    height: 200,
+  hint: { fontSize: fs.base, textAlign: "center" },
+  prepMeta: {
+    marginTop: sp.s5,
+    paddingHorizontal: sp.s4,
+    paddingVertical: sp.s2,
     borderRadius: rd.pill,
+    borderWidth: 1,
+  },
+  pausedBadge: {
+    paddingHorizontal: sp.s4,
+    paddingVertical: sp.s2,
+    borderRadius: rd.pill,
+    borderWidth: 1,
+    marginBottom: sp.s4,
+  },
+  pausedBadgePlaceholder: {
+    height: 36,
+    marginBottom: sp.s4,
+  },
+  breathWrap: { width: 240, height: 240, alignItems: "center", justifyContent: "center" },
+  breathRing: {
+    position: "absolute",
+    width: 210,
+    height: 210,
+    borderRadius: rd.pill,
+    borderWidth: 2,
+  },
+  breathBlob: {
+    width: 176,
+    height: 176,
+    borderRadius: rd.pill,
+  },
+  secRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    marginTop: sp.s2,
+  },
+  doneBadge: {
+    paddingHorizontal: sp.s4,
+    paddingVertical: sp.s1,
+    borderRadius: rd.pill,
+  },
+  doneSummary: {
+    marginTop: sp.s5,
+    paddingHorizontal: sp.s5,
+    paddingVertical: sp.s3,
+    borderRadius: rd.md,
+    borderWidth: 1,
   },
   controls: {
     flexDirection: "row",
     justifyContent: "center",
-    gap: sp.s3,
+    alignItems: "center",
+    gap: sp.s4,
     paddingHorizontal: sp.gutter,
     paddingBottom: sp.s8,
     paddingTop: sp.s4,
@@ -370,6 +496,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
-    minWidth: 120,
+    minWidth: 132,
+  },
+  ctrlBtnGhost: {
+    paddingVertical: sp.s3,
+    paddingHorizontal: sp.s5,
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 88,
   },
 });

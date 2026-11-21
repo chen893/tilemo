@@ -1,0 +1,51 @@
+<view class="overlay" wx:if="{{visible}}">
+  <view class="topbar">
+    <text class="plan-summary">{{planSummary}}</text>
+  </view>
+
+  <view class="stage" wx:if="{{stage === 'prep'}}">
+    <view class="eyebrow">准备</view>
+    <view class="prep-num num">{{prepN}}</view>
+    <view class="hint prep-hint">跟着节拍</view>
+  </view>
+
+  <view class="stage" wx:elif="{{stage === 'breath'}}">
+    <view class="pause-pill {{paused ? 'is-show' : ''}}">{{pauseLabel}}</view>
+    <view class="blob-wrap">
+      <view
+        class="blob-ring {{phase === 'contract' ? 'is-contract' : 'is-relax'}} {{paused ? 'is-frozen' : ''}}"
+        style="animation-duration: {{phaseSec}}s;"
+      ></view>
+      <view
+        class="blob {{phase === 'contract' ? 'is-contract' : 'is-relax'}} {{paused ? 'is-frozen' : ''}}"
+        style="animation-duration: {{phaseSec}}s;"
+      ></view>
+    </view>
+    <view class="phase-text {{paused ? 'is-dim' : ''}}">{{phaseText}}</view>
+    <view class="count-row">
+      <text class="count num {{phase === 'contract' ? 'is-contract' : 'is-relax'}} {{paused ? 'is-dim' : ''}}">{{remaining}}</text>
+      <text class="count-unit">秒</text>
+    </view>
+    <view class="hint">{{progressText}}</view>
+  </view>
+
+  <view class="stage" wx:else>
+    <view class="done-title">今天，提了。</view>
+    <view class="hint">{{doneSub}}</view>
+    <view class="done-summary" wx:if="{{doneSummary}}">{{doneSummary}}</view>
+  </view>
+
+  <view class="controls">
+    <block wx:if="{{stage === 'breath'}}">
+      <view class="ctrl {{paused ? 'is-primary' : 'is-soft'}}" bindtap="onTogglePause">{{paused ? '继续训练' : '暂停'}}</view>
+      <view class="ctrl is-weak" bindtap="onEnd">结束</view>
+    </block>
+    <block wx:elif="{{stage === 'prep'}}">
+      <view class="ctrl" bindtap="onEnd">取消</view>
+    </block>
+    <block wx:else>
+      <view class="ctrl" bindtap="onShare">分享这次</view>
+      <view class="ctrl is-primary" bindtap="onDoneOk">返回今日</view>
+    </block>
+  </view>
+</view>

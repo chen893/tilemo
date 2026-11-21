@@ -175,7 +175,7 @@ export class Metro {
     this.doneSub = finished ? `完成了 ${total} 次收紧，做得好。` : `做了 ${this.startedReps} 次，也算数。`;
     this.stage = "done";
     this.emit();
-    this.timer = setTimeout(() => this.close(true), 1800);
+    // 停留展示完成回执，等待用户主动点击「好的」或「分享这次」再调用 close(true)。
   }
 
   togglePause(): void {

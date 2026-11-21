@@ -1,0 +1,131 @@
+.section-label.is-first {
+  margin-top: 0;
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  border: 2rpx solid var(--rule-strong);
+  border-radius: 46rpx;
+  overflow: hidden;
+}
+
+.step {
+  padding: 16rpx 32rpx;
+  text-align: center;
+  font-size: 44rpx;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.step.is-off {
+  color: var(--text-3);
+  opacity: 0.4;
+}
+
+.step-value {
+  min-width: 56rpx;
+  text-align: center;
+  font-size: 56rpx;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 默认方案 2×2 等宽网格，消灭 3+1 落单 */
+.plan-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.plan-chip {
+  width: 48%;
+  margin-bottom: 18rpx;
+  padding: 24rpx 16rpx;
+  border-radius: 46rpx;
+  border: 2rpx solid var(--rule);
+  background: var(--paper-deep);
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.plan-chip.is-on {
+  background: var(--accent-btn);
+  border-color: var(--accent-btn);
+  color: var(--on-accent-btn);
+}
+
+.plan-hint {
+  margin-top: 6rpx;
+  font-size: 24rpx;
+  color: var(--text-3);
+}
+
+/* 外观分段控制器去掉冗余外层卡片 */
+.theme-seg {
+  background: var(--card);
+  border-color: var(--rule);
+}
+
+/* 自绘开关 */
+.sw {
+  position: relative;
+  width: 96rpx;
+  height: 56rpx;
+  border-radius: 28rpx;
+  border: 2rpx solid var(--rule-strong);
+  background: var(--paper-deep);
+  box-sizing: border-box;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.sw.is-on {
+  background: var(--accent-btn);
+  border-color: var(--accent-btn);
+}
+
+.sw-knob {
+  position: absolute;
+  top: 3rpx;
+  left: 3rpx;
+  width: 46rpx;
+  height: 46rpx;
+  border-radius: 50%;
+  background: #ffffff;
+  transition: transform 0.2s ease;
+}
+
+.sw.is-on .sw-knob {
+  transform: translateX(40rpx);
+}
+
+.data-divider {
+  margin: 32rpx 0 0;
+}
+
+.card-hint {
+  margin-top: 16rpx;
+  font-size: 26rpx;
+  line-height: 40rpx;
+  color: var(--text-3);
+}
+
+.row-action.danger {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.about {
+  margin-top: 56rpx;
+  padding-bottom: 24rpx;
+}
+
+.about-line {
+  font-size: 24rpx;
+  color: var(--text-3);
+  line-height: 1.7;
+}

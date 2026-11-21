@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import type { Plan } from "@tilemo/data";
-import { levelOfDay, pad2, QUOTES, todayKey, ymd } from "@tilemo/core";
+import { completedCountOfDay, formatPlanDuration, levelOfDay, pad2, QUOTES, todayKey, ymd } from "@tilemo/core";
 import { useDataStore } from "../data";
 
 const WD = ["日", "一", "二", "三", "四", "五", "六"];
@@ -15,7 +15,7 @@ export function HomeView({ onStart }: { onStart: (p: Plan) => void }) {
 
   const now = new Date();
   const today = store?.getDay(todayKey()) ?? null;
-  const done = today?.sessions?.length ?? 0;
+  const done = completedCountOfDay(today);
   const goal = settings?.dailyGoalGroups ?? 3;
   const isDone = done >= goal && done > 0;
 
@@ -51,10 +51,22 @@ export function HomeView({ onStart }: { onStart: (p: Plan) => void }) {
         日课 · {now.getMonth() + 1}.{pad2(now.getDate())} 周{WD[now.getDay()]}
       </div>
 
-      {settings?.dailyQuote && <p className="home-quote">{quote}</p>}
+      {settings?.dailyQuote && (
+        <p className="home-quote">
+          {isDone ? "今日目标已达成，想加练随时再来一组。" : quote}
+        </p>
+      )}
 
       <h2 className={"home-question" + (isDone ? " is-settled" : " is-tense")}>
-        今天，<span className="accent">提了</span>么？
+        {isDone ? (
+          <>
+            今天，<span className="accent">提了</span>。
+          </>
+        ) : (
+          <>
+            今天，<span className="accent">提了</span>么？
+          </>
+        )}
       </h2>
 
       <div className={"home-progress" + (isDone ? " is-done" : "")}>
@@ -71,8 +83,14 @@ export function HomeView({ onStart }: { onStart: (p: Plan) => void }) {
         disabled={!defaultPlan}
         onClick={() => defaultPlan && onStart(defaultPlan)}
       >
-        {isDone ? "今天，提了。再来一组" : "开始一组训练"}
+        {isDone ? "再练一组" : "开始训练"}
       </button>
+
+      {defaultPlan && (
+        <p style={{ textAlign: "center", fontSize: "var(--t-xs)", color: "var(--text-3)", marginTop: "var(--s-3)" }}>
+          {defaultPlan.name} · {formatPlanDuration(defaultPlan)}
+        </p>
+      )}
 
       {(streak?.current ?? 0) > 0 && (
         <div className="streak-block is-show">
@@ -118,7 +136,7 @@ export function HomeView({ onStart }: { onStart: (p: Plan) => void }) {
               data-level={d.level}
               title={`${d.lbl} ${d.dd}`}
             >
-              {d.level > 0 && <span className="blob" />}
+              <span className="blob" />
               <span className="lbl">{d.lbl}</span>
               <span className="dd">{d.dd}</span>
             </div>

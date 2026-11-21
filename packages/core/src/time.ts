@@ -17,3 +17,36 @@ export function todayKey(): string {
 export function clamp(v: number, a: number, b: number): number {
   return Math.max(a, Math.min(b, v));
 }
+
+export function planDurationSec(plan: {
+  contract: number;
+  relax: number;
+  reps: number;
+  sets: number;
+}): number {
+  return Math.max(0, (plan.contract + plan.relax) * plan.reps * plan.sets);
+}
+
+/** 自然语言时长：小于 60 秒用「秒」，满 1 分钟用「X 分钟」或「X 分 Y 秒」。 */
+export function formatDuration(sec: number): string {
+  const s = Math.max(1, Math.round(sec));
+  if (s < 60) return `${s} 秒`;
+  const m = Math.floor(s / 60);
+  const rem = s % 60;
+  return rem === 0 ? `${m} 分钟` : `${m} 分 ${rem} 秒`;
+}
+
+export function formatPlanDuration(plan: {
+  contract: number;
+  relax: number;
+  reps: number;
+  sets: number;
+}): string {
+  return `约 ${formatDuration(planDurationSec(plan))}`;
+}
+
+export function formatClock(ts: number): string {
+  if (!ts || ts <= 0) return "";
+  const d = new Date(ts);
+  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}

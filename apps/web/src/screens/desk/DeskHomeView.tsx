@@ -4,7 +4,19 @@
 import { useMemo } from "react";
 import type { Plan } from "@tilemo/data";
 import type { Session } from "@tilemo/data";
-import { dayMeetsGoal, heatLevel, levelOfDay, pad2, QUOTES, todayKey, ymd } from "@tilemo/core";
+import {
+  completedCountOfDay,
+  dayMeetsGoal,
+  formatClock,
+  formatDuration,
+  formatPlanDuration,
+  heatLevel,
+  levelOfDay,
+  pad2,
+  QUOTES,
+  todayKey,
+  ymd,
+} from "@tilemo/core";
 import { useDataStore } from "../../data";
 
 const WD = ["日", "一", "二", "三", "四", "五", "六"];
@@ -19,7 +31,7 @@ export function DeskHomeView({ onStart }: { onStart: (p: Plan) => void }) {
   const tStr = todayKey();
   const today = store?.getDay(tStr) ?? null;
   const sessions: Session[] = today?.sessions ?? [];
-  const done = sessions.length;
+  const done = completedCountOfDay(today);
   const goal = settings?.dailyGoalGroups ?? 3;
   const isDone = done >= goal && done > 0;
 
@@ -82,7 +94,9 @@ export function DeskHomeView({ onStart }: { onStart: (p: Plan) => void }) {
           ? "渐入状态——本周已过半。"
           : cadence.metDays >= 1
             ? "起步了——把每一次小坚持攒起来。"
-            : "今天，开始第一组吧。";
+            : cadence.totalSets > 0
+              ? `本周已练 ${cadence.totalSets} 组——单日满 ${goal} 组即计入达标天。`
+              : "今天，开始第一组吧。";
 
   const planName = (id: string) => plans.find((p) => p.id === id)?.name ?? "方案";
 
@@ -129,11 +143,12 @@ export function DeskHomeView({ onStart }: { onStart: (p: Plan) => void }) {
           disabled={!defaultPlan}
           onClick={() => defaultPlan && onStart(defaultPlan)}
         >
-          {isDone ? "再来一组" : "开始一组训练"}
+          {isDone ? "再练一组" : "开始训练"}
           <span className="arrow">→</span>
         </button>
 
         <p className="desk-today-note">
+          {defaultPlan ? `当前方案：${defaultPlan.name}（${formatPlanDuration(defaultPlan)}） · ` : ""}
           {isDone
             ? "今天的量够了——肌肉记得这份坚持。"
             : done > 0
@@ -143,17 +158,20 @@ export function DeskHomeView({ onStart }: { onStart: (p: Plan) => void }) {
 
         {/* 今日 sessions 列表（桌面独有） */}
         <div className="desk-sessions-card">
-          <div className="desk-sessions-head">今日训练 · {done} 组</div>
+          <div className="desk-sessions-head">今日训练 · 完成 {done} 组</div>
           {sessions.length === 0 ? (
             <div className="desk-sessions-empty">完成第一组，开启今天的小坚持。</div>
           ) : (
             sessions.map((s, i) => {
-              const durMin = Math.max(1, Math.round(s.durationSec / 60));
+              const clock = formatClock(s.ts);
               return (
                 <div className="desk-session-row" key={i}>
                   <div>
                     <div className="plan">{planName(s.planId)}</div>
-                    <div className="meta">{s.completedReps} 次 · {durMin} 分钟</div>
+                    <div className="meta">
+                      {s.completedReps} 次 · {formatDuration(s.durationSec)}
+                      {clock ? ` · ${clock}` : ""}
+                    </div>
                   </div>
                   <span className={"tag" + (s.finished ? "" : " is-partial")}>
                     {s.finished ? "完成" : "部分"}
@@ -178,7 +196,7 @@ export function DeskHomeView({ onStart }: { onStart: (p: Plan) => void }) {
               最长 <b>{streak?.longest}</b> 天
             </div>
           ) : (
-            <div className="desk-streak-longest">即将开启连续打卡</div>
+            <div className="desk-streak-longest">每日满 {goal} 组即计入连续打卡</div>
           )}
         </div>
 
@@ -192,7 +210,7 @@ export function DeskHomeView({ onStart }: { onStart: (p: Plan) => void }) {
                 data-level={d.level}
                 title={`${d.lbl} ${d.dd} · ${d.n} 组`}
               >
-                {d.level > 0 && <div className="blob" />}
+                <div className="blob" />
                 <div className="lbl">{d.lbl}</div>
                 <div className="dd">{d.dd}</div>
               </div>

@@ -29,6 +29,8 @@ export interface CardData {
   streakDays: number;
   goalDone: number;
   goalTotal: number;
+  /** 今日卡片：本次（或今日最近一次）完成的收紧次数，streak=0 时作 C 位焦点。 */
+  sessionReps?: number;
 
   /** 回顾卡：近 N 天热力等级（0–3），末尾=今天。 */
   heat?: number[];

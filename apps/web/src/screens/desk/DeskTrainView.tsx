@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import type { Plan } from "@tilemo/data";
+import { formatDuration, formatPlanDuration, planDurationSec } from "@tilemo/core";
 import { useDataStore } from "../../data";
 
 export function DeskTrainView({ onStart }: { onStart: (p: Plan) => void }) {
@@ -14,15 +15,13 @@ export function DeskTrainView({ onStart }: { onStart: (p: Plan) => void }) {
 
   if (!selected) return null;
 
-  // 预计耗时：(contract + relax) * reps * sets（秒 → 分钟）
-  const estSec = (selected.contract + selected.relax) * selected.reps * selected.sets;
-  const estMin = Math.max(1, Math.round(estSec / 60));
+  const estSec = planDurationSec(selected);
 
   return (
     <div className="desk-train">
       {/* 左：方案列表 */}
       <ul className="desk-plan-list">
-        {plans.map((p, i) => {
+        {plans.map((p) => {
           const isSelected = p.id === selected.id;
           const isDefault = p.id === settings?.defaultPlanId;
           return (
@@ -33,7 +32,7 @@ export function DeskTrainView({ onStart }: { onStart: (p: Plan) => void }) {
               >
                 <div className="desk-plan-card-top">
                   <h3 className="desk-plan-card-name">{p.name}</h3>
-                  <span className="desk-plan-card-index">{pad2idx(i + 1)} / {pad2idx(plans.length)}</span>
+                  <span className="desk-plan-card-index">{formatPlanDuration(p)}</span>
                 </div>
                 {isDefault && <span className="desk-plan-default-tag">默认方案</span>}
                 <p className="desk-plan-card-desc">{p.desc}</p>
@@ -66,11 +65,11 @@ export function DeskTrainView({ onStart }: { onStart: (p: Plan) => void }) {
         <h3 className="name">{selected.name}</h3>
         <p className="desc">{selected.desc}</p>
 
-        <div className="desk-set-note">预计耗时 <b>{estMin}</b> 分钟（{(selected.contract + selected.relax) * selected.reps * selected.sets}秒）</div>
+        <div className="desk-set-note">预计耗时 <b>{formatDuration(estSec)}</b></div>
 
         <div className="desk-breath-tip">
-          <div className="h">呼吸提示</div>
-          <p>收紧时吸气，放松时呼气，跟着节拍走——不用刻意，身体会自己找到节奏。</p>
+          <div className="h">呼吸与动作要领</div>
+          <p>呼气时轻轻向上收紧，保持腹部与臀部自然放松；吸气时完全放松，不必屏气，跟着节拍走即可。</p>
         </div>
 
         <button className="desk-cta" onClick={() => onStart(selected)}>

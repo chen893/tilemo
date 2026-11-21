@@ -14,6 +14,7 @@ import { DEFAULT_PLANS, DEFAULT_SETTINGS } from "./defaults";
 const K_SETTINGS = "tgm:settings";
 const K_PLANS = "tgm:plans";
 const K_STREAK = "tgm:streak";
+const K_LOG_INDEX = "tgm:logIndex";
 const K_LOG_PREFIX = "tgm:log:";
 
 const DEFAULT_STREAK: Streak = { current: 0, longest: 0, lastCheckedDate: null };
@@ -95,6 +96,26 @@ export class Store {
     this.adapter.setItem(K_LOG_PREFIX + key, JSON.stringify(data));
     // 缓存隔离副本，断开与调用方持有的对象引用，避免外部后续改动污染缓存。
     this.dayCache.set(key, cloneDay(data));
+    this.addToLogIndex(key);
+  }
+
+  private getLogIndex(): string[] {
+    const raw = this.adapter.getItem(K_LOG_INDEX);
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === "string") : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private addToLogIndex(dayKey: string): void {
+    const idx = this.getLogIndex();
+    if (!idx.includes(dayKey)) {
+      idx.push(dayKey);
+      this.adapter.setItem(K_LOG_INDEX, JSON.stringify(idx));
+    }
   }
 
   getStreak(): Streak {
@@ -112,7 +133,26 @@ export class Store {
   }
 
   allLogKeys(): string[] {
-    return this.adapter.getAllKeys().filter((k) => k.startsWith(K_LOG_PREFIX));
+    const set = new Set<string>();
+    for (const k of this.adapter.getAllKeys()) {
+      if (k.startsWith(K_LOG_PREFIX)) set.add(k);
+    }
+    for (const dayKey of this.getLogIndex()) {
+      const full = K_LOG_PREFIX + dayKey;
+      if (this.adapter.getItem(full)) set.add(full);
+    }
+    return Array.from(set);
+  }
+
+  clearAll(): void {
+    const keys = new Set<string>(this.adapter.getAllKeys().filter((k) => k.startsWith("tgm:")));
+    for (const dayKey of this.getLogIndex()) keys.add(K_LOG_PREFIX + dayKey);
+    keys.add(K_SETTINGS);
+    keys.add(K_PLANS);
+    keys.add(K_STREAK);
+    keys.add(K_LOG_INDEX);
+    for (const k of keys) this.adapter.removeItem(k);
+    this.dayCache.clear();
   }
 
   /** 全部 day 条目（day key 无前缀 + entry），复用 getDay 缓存。 */

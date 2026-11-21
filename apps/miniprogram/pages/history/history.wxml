@@ -1,0 +1,72 @@
+<view class="page {{themeClass}}">
+  <view class="screen">
+    <view class="stats">
+      <view class="stat">
+        <view class="stat-num">{{streakCurrent}}</view>
+        <view class="stat-label">连续天</view>
+      </view>
+      <view class="stat">
+        <view class="stat-num">{{totalDays}}</view>
+        <view class="stat-label">训练天</view>
+      </view>
+      <view class="stat">
+        <view class="stat-num">{{totalSessions}}</view>
+        <view class="stat-label">完成组数</view>
+      </view>
+    </view>
+
+    <view class="month-bar">
+      <view class="month-nav" bindtap="onPrevMonth">‹</view>
+      <view class="month-label">{{cursorLabel}}</view>
+      <view class="month-nav" bindtap="onNextMonth">›</view>
+    </view>
+
+    <view class="dow-row">
+      <text class="dow" wx:for="{{dow}}" wx:key="*this">{{item}}</text>
+    </view>
+
+    <view class="grid">
+      <view class="cal-cell" wx:for="{{cells}}" wx:key="idx">
+        <view
+          wx:if="{{!item.empty}}"
+          class="cal-box {{item.isToday ? 'is-today' : ''}} {{item.selected ? 'is-sel' : ''}} {{item.isFuture ? 'is-future' : ''}} lv-{{item.level}}"
+          bindtap="onTapDay"
+          data-key="{{item.key}}"
+          data-future="{{item.isFuture}}"
+        >
+          <text class="cal-day">{{item.day}}</text>
+          <text class="cal-cnt" wx:if="{{item.cntLabel}}">{{item.cntLabel}}</text>
+          <view class="today-dot" wx:elif="{{item.isToday}}"></view>
+        </view>
+      </view>
+    </view>
+
+    <view class="detail" wx:if="{{detail}}">
+      <view class="detail-head">
+        <text class="detail-date">{{detail.label}}</text>
+        <text class="detail-count">{{detail.summaryText}}</text>
+      </view>
+
+      <block wx:if="{{detail.sessions.length > 0}}">
+        <view class="session" wx:for="{{detail.sessions}}" wx:key="idx">
+          <view class="session-main">
+            <view class="session-title">{{item.planName}} · {{item.reps}} 次</view>
+            <view class="session-sub">{{item.subText}}</view>
+          </view>
+          <text class="session-state {{item.finished ? 'is-done' : ''}}">{{item.finished ? '完成' : '部分'}}</text>
+        </view>
+      </block>
+
+      <block wx:else>
+        <view class="empty-row" wx:if="{{showGoTrain}}">
+          <text class="empty-text is-inline">今天还没留下足迹。</text>
+          <view class="go-btn" bindtap="onGoTrain">去训练 →</view>
+        </view>
+        <text class="empty-text" wx:else>这一天没有记录。安静的一天。</text>
+      </block>
+    </view>
+  </view>
+
+  <player id="player" bind:close="onPlayerClose" />
+  <share-card id="shareCard" />
+</view>

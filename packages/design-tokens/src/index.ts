@@ -16,6 +16,11 @@ export interface ColorSet {
   accent: string;
   accentHot: string;
   accentSoft: string;
+  accentBtn: string;
+  onAccentBtn: string;
+  relax: string;
+  relaxSoft: string;
+  danger: string;
   success: string;
   text: string;
   text2: string;
@@ -36,6 +41,11 @@ const light: ColorSet = {
   accent: "#E85A4F",
   accentHot: "#D63A2E",
   accentSoft: "#F4B4A8",
+  accentBtn: "#C8402E",
+  onAccentBtn: "#FFFFFF",
+  relax: "#6C8B6A",
+  relaxSoft: "#DCE6D8",
+  danger: "#C83328",
   success: "#C8402E",
   text: "#2B2320",
   text2: "#5C4F47",
@@ -45,7 +55,7 @@ const light: ColorSet = {
   heat0: "transparent",
   heat1: "#F0DCC9",
   heat2: "#E8B59A",
-  heat3: "#E85A4F",
+  heat3: "#C8402E",
 };
 
 const dark: ColorSet = {
@@ -56,12 +66,17 @@ const dark: ColorSet = {
   accent: "#FF6B5E",
   accentHot: "#FF8270",
   accentSoft: "#8A4538",
+  accentBtn: "#FF6B5E",
+  onAccentBtn: "#1F1814",
+  relax: "#8FB08A",
+  relaxSoft: "#2F3E2E",
+  danger: "#FF7B70",
   success: "#F26B5F",
   text: "#F2E8DC",
-  text2: "#C4B5A6",
-  text3: "#A09080",
-  rule: "rgba(242,232,220,0.14)",
-  ruleStrong: "rgba(242,232,220,0.30)",
+  text2: "#D0C2B4",
+  text3: "#B5A595",
+  rule: "rgba(242,232,220,0.16)",
+  ruleStrong: "rgba(242,232,220,0.32)",
   heat0: "transparent",
   heat1: "#3D2E24",
   heat2: "#6B4234",
@@ -131,6 +146,11 @@ function colorDecls(c: ColorSet): string {
     `--accent:${c.accent}`,
     `--accent-hot:${c.accentHot}`,
     `--accent-soft:${c.accentSoft}`,
+    `--accent-btn:${c.accentBtn}`,
+    `--on-accent-btn:${c.onAccentBtn}`,
+    `--relax:${c.relax}`,
+    `--relax-soft:${c.relaxSoft}`,
+    `--danger:${c.danger}`,
     `--success:${c.success}`,
     `--text:${c.text}`,
     `--text-2:${c.text2}`,

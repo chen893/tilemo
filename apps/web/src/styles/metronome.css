@@ -122,14 +122,18 @@
   width: 100%; height: 100%;
   overflow: visible;
 }
-/* 主形：肺叶/身体状的有机 blob path */
+/* 主形：肺叶/身体状的有机 blob path
+   用 animation 而不是 transition：元素随 stage 挂载，挂载时已带 is-contract，
+   transition 找不到旧值 → 第一段收紧是静止的。keyframes 一挂载就从 0% 跑。 */
 .breath-shape {
   fill: var(--accent-soft);
   stroke: var(--accent);
   stroke-width: 2;
-  transition: fill var(--dur-breath) var(--ease-breath),
-              stroke var(--dur-breath) var(--ease-breath),
-              transform var(--dur-breath) var(--ease-breath);
+  animation-duration: var(--dur-breath, 3s);
+  /* 对称正弦呼吸：保证 3s / 8s / 9s 全程均匀收缩与舒展，不在前段提前停滞 */
+  animation-timing-function: cubic-bezier(0.37, 0, 0.63, 1);
+  animation-fill-mode: forwards;
+  transition: fill 320ms linear, stroke 320ms linear;
   transform-origin: 50% 50%;
   transform-box: fill-box;
 }
@@ -137,33 +141,60 @@
 .breath-inner {
   fill: var(--accent);
   opacity: 0.25;
-  transition: transform var(--dur-breath) var(--ease-breath),
-              opacity var(--dur-breath) var(--ease-breath);
+  animation-duration: var(--dur-breath, 3s);
+  animation-timing-function: cubic-bezier(0.37, 0, 0.63, 1);
+  animation-fill-mode: forwards;
+  transition: fill 320ms linear, opacity 320ms linear;
   transform-origin: 50% 50%;
   transform-box: fill-box;
 }
 
-/* 收紧 phase：形向内收紧 + 升温（accent-hot 加重） */
+/* 收紧 phase：形向内收紧 + 升温（高对比暖朱底衬亮色数字） */
 .metronome.is-contract .breath-shape {
-  fill: var(--accent);
+  fill: var(--accent-btn);
   stroke: var(--accent-hot);
-  transform: scale(0.82);
+  animation-name: breath-contract;
 }
 .metronome.is-contract .breath-inner {
   fill: var(--accent-hot);
-  opacity: 0.55;
-  transform: scale(0.7);
+  opacity: 0.42;
+  animation-name: breath-inner-contract;
 }
-/* 放松 phase：形舒展扩大 + 柔和（accent-soft 降温） */
+/* 放松 phase：鼠尾草绿舒展扩大 + 柔和降温（双通道辨识） */
 .metronome.is-relax .breath-shape {
-  fill: var(--accent-soft);
-  stroke: var(--accent);
-  transform: scale(1.05);
+  fill: var(--relax-soft);
+  stroke: var(--relax);
+  animation-name: breath-relax;
 }
 .metronome.is-relax .breath-inner {
-  fill: var(--accent);
-  opacity: 0.18;
-  transform: scale(1.0);
+  fill: var(--relax);
+  opacity: 0.22;
+  animation-name: breath-inner-relax;
+}
+.metronome.is-paused .breath-shape,
+.metronome.is-paused .breath-inner {
+  animation-play-state: paused;
+  fill: var(--paper-deep);
+  stroke: var(--rule-strong);
+  opacity: 0.85;
+}
+
+/* 交接点对齐：收紧终点 = 放松起点，切换时不跳变 */
+@keyframes breath-contract {
+  from { transform: scale(1.05); }
+  to { transform: scale(0.82); }
+}
+@keyframes breath-relax {
+  from { transform: scale(0.82); }
+  to { transform: scale(1.05); }
+}
+@keyframes breath-inner-contract {
+  from { transform: scale(1); }
+  to { transform: scale(0.7); }
+}
+@keyframes breath-inner-relax {
+  from { transform: scale(0.7); }
+  to { transform: scale(1); }
 }
 
 .breath-core {
@@ -185,8 +216,50 @@
   color: var(--text);
   transition: color var(--dur) var(--ease);
 }
-.metronome.is-contract .breath-count { color: var(--accent-hot); }
-.metronome.is-relax .breath-count { color: var(--text); }
+.metronome.is-contract .breath-count { color: var(--on-accent-btn); }
+.metronome.is-relax .breath-count { color: var(--relax); }
+.metronome.is-paused .breath-count { color: var(--text); }
+.breath-unit {
+  font-size: 0.28em;
+  font-weight: 700;
+  color: var(--text-2);
+  margin-left: 6px;
+}
+.metronome.is-contract .breath-unit { color: var(--on-accent-btn); opacity: 0.85; }
+.metronome.is-relax .breath-unit { color: var(--relax); opacity: 0.85; }
+.metronome.is-paused .breath-unit { color: var(--text-2); opacity: 1; }
+.pause-banner {
+  min-height: 36px;
+  margin-bottom: var(--s-4);
+  padding: 6px 18px;
+  border-radius: var(--blob-pill);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  color: transparent;
+}
+.pause-banner.is-show {
+  background: var(--paper-soft);
+  border: 1px solid var(--rule-strong);
+  color: var(--text);
+}
+.prep-meta {
+  margin-top: var(--s-5);
+  padding: 8px 18px;
+  border-radius: var(--blob-pill);
+  background: var(--paper-soft);
+  border: 1px solid var(--rule);
+  font-size: var(--t-xs);
+  color: var(--text-2);
+}
+.done-summary {
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  background: var(--paper-soft);
+  border: 1px solid var(--rule);
+  font-size: var(--t-sm);
+  color: var(--text-2);
+}
+.done-summary strong { color: var(--text); }
 .breath-phase {
   font-size: var(--t-md);
   font-weight: 800;
@@ -198,12 +271,16 @@
   transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
 }
 .metronome.is-contract .breath-phase {
-  background: var(--accent-hot);
-  color: #fff;
+  background: var(--paper);
+  color: var(--accent-btn);
 }
 .metronome.is-relax .breath-phase {
+  background: var(--relax);
+  color: var(--on-accent-btn);
+}
+.metronome.is-paused .breath-phase {
   background: var(--paper-soft);
-  color: var(--text-2);
+  color: var(--text);
 }
 
 /* —— 准备态 —— */
@@ -252,10 +329,10 @@
   animation: done-bloom 1.6s var(--ease-droop);
 }
 @keyframes done-bloom {
-  0%   { transform: scale(0.4); border-radius: 50%; opacity: 0; }
-  40%  { transform: scale(1.15); border-radius: var(--blob-2); opacity: 1; }
-  70%  { transform: scale(0.95); }
-  100% { transform: scale(1); border-radius: var(--blob-1); }
+  0%   { transform: scale(0.4); opacity: 0; }
+  45%  { transform: scale(1.12); opacity: 1; }
+  75%  { transform: scale(0.96); }
+  100% { transform: scale(1); }
 }
 .done-blob svg { width: 44px; height: 44px; }
 .done .title {
@@ -276,6 +353,9 @@
 }
 
 .metronome-bottom {
+  width: 100%;
+  max-width: 480px;
+  margin-inline: auto;
   padding: var(--s-5) var(--gutter) calc(var(--s-5) + env(safe-area-inset-bottom));
   display: flex;
   gap: var(--s-3);
@@ -294,14 +374,27 @@
 }
 .mbtn:active { transform: scale(0.97); }
 .mbtn-primary {
-  background: var(--accent);
-  color: #fff;
+  background: var(--accent-btn);
+  color: var(--on-accent-btn);
 }
-.mbtn-primary:hover { background: var(--accent-hot); }
+.mbtn-primary:hover { filter: brightness(0.94); }
+.mbtn-soft {
+  background: var(--paper-soft);
+  color: var(--text);
+  border: 1px solid var(--rule-strong);
+}
+.mbtn-soft:hover { background: var(--paper-deep); }
 .mbtn-ghost {
   background: var(--paper-soft);
   color: var(--text);
 }
 .mbtn-ghost:hover { background: var(--paper-deep); }
+.mbtn-weak {
+  flex: 0 0 auto;
+  min-width: 96px;
+  background: transparent;
+  color: var(--text-3);
+}
+.mbtn-weak:hover { color: var(--text); }
 .mbtn svg { width: 16px; height: 16px; }
 

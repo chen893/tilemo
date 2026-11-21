@@ -1,0 +1,129 @@
+.guide-link {
+  margin-top: 8rpx;
+  padding: 20rpx 0;
+  text-align: center;
+  font-size: 26rpx;
+  color: var(--text-3);
+}
+
+.guide-box {
+  margin-bottom: 32rpx;
+  padding: 28rpx 32rpx;
+  border-radius: 28rpx;
+  border: 2rpx solid var(--rule);
+  background: var(--paper-soft);
+}
+
+.guide-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 12rpx;
+}
+
+.guide-line {
+  font-size: 26rpx;
+  line-height: 40rpx;
+  color: var(--text-2);
+}
+
+.plan {
+  border-radius: 36rpx;
+  border: 2rpx solid var(--rule);
+  background: var(--paper-soft);
+  padding: 40rpx;
+  margin-bottom: 28rpx;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+
+.plan.is-default {
+  border-color: var(--accent);
+}
+
+.plan:active {
+  opacity: 0.92;
+  transform: scale(0.985);
+}
+
+.plan-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.plan-name-wrap {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.plan-name {
+  font-size: 42rpx;
+  font-weight: 700;
+  color: var(--text);
+  margin-right: 16rpx;
+}
+
+.plan-dur {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.tag {
+  padding: 4rpx 16rpx;
+  border: 2rpx solid var(--accent);
+  border-radius: 40rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.plan-desc {
+  margin-top: 16rpx;
+  font-size: 28rpx;
+  line-height: 42rpx;
+  color: var(--text-2);
+}
+
+/* 单行 4 等分指标栏，消灭 3+1 孤儿折行 */
+.metrics {
+  display: flex;
+  margin-top: 28rpx;
+  padding: 20rpx 12rpx;
+  border-radius: 20rpx;
+  background: var(--paper-deep);
+}
+
+.metric {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.metric-label {
+  font-size: 22rpx;
+  color: var(--text-2);
+}
+
+.metric-value {
+  margin-top: 6rpx;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.plan-foot {
+  margin-top: 24rpx;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.plan-go {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--accent);
+}

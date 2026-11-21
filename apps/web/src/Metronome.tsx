@@ -1,15 +1,23 @@
-// @tilemo/web — 节拍器 overlay。mirror mobile Metronome.tsx：
+// @tilemo/web — 节拍器 overlay。
 // core.Metro 状态机 + subscribe(snapshot) + WebAudio/navigator.vibrate 反馈。
-// 呼吸形由 CSS class（.is-contract/.is-relax）驱动，替代 mobile 的 reanimated。
+// 双通道视觉编码：收紧（暖红向心） vs 放松（鼠尾草绿舒展）；
+// 暂停态中央明确标注「已暂停」，完成页停留至用户主动操作。
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Metro, type MetroSnapshot, recordSession } from "@tilemo/core";
+import {
+  Metro,
+  type MetroSnapshot,
+  completedCountOfDay,
+  formatPlanDuration,
+  recordSession,
+  todayKey,
+} from "@tilemo/core";
 import { detectStreakMilestone, type MilestoneCopy } from "@tilemo/share-card";
 import type { Plan } from "@tilemo/data";
 import { useDataStore } from "./data";
 import { useOpenShare } from "./share/ShareContext";
 
-export function Metronome({ plan, onClose }: { plan: Plan; onClose: () => void }) {
+export function Metronome({ plan, onClose }: { plan: Plan; onClose: (goHome?: boolean) => void }) {
   const store = useDataStore((s) => s.store);
   const refresh = useDataStore((s) => s.refresh);
   const settings = useDataStore((s) => s.settings);
@@ -19,27 +27,25 @@ export function Metronome({ plan, onClose }: { plan: Plan; onClose: () => void }
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
   const lastPhaseRef = useRef("");
+  const lastRepsRef = useRef(0);
   const audioRef = useRef<AudioContext | null>(null);
   const milestoneRef = useRef<MilestoneCopy | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const openShare = useOpenShare();
-  // openShare 是 ShareContext 里的 useCallback([store, settings])，settings 在每次
-  // refresh() 后引用都换 → openShare 引用随之换。若把 openShare 放进 metro 的 useMemo
-  // 依赖，refresh() 会让 metro 被重建并重跑 metro.open(plan)，用户看到的现象就是
-  // 「done 后突然回到准备中、又开始了一组」。用 ref 间接，metro 只依赖真正稳定的
-  // (store, refresh) —— 详见 web/mobile Metronome 注释。
   const openShareRef = useRef(openShare);
   openShareRef.current = openShare;
 
-  const handleClose = () => {
+  const handleClose = (goHome = false) => {
     if (closedRef.current) return;
     closedRef.current = true;
-    onCloseRef.current();
+    onCloseRef.current(goHome);
   };
 
   const metro = useMemo(
     () =>
       new Metro({
         onRecord: (p, reps, dur, finished) => {
+          lastRepsRef.current = reps;
           if (store) {
             const prev = store.getStreak().current;
             recordSession(store, p, reps, dur, finished);
@@ -50,13 +56,12 @@ export function Metronome({ plan, onClose }: { plan: Plan; onClose: () => void }
             }
           }
         },
-        // 完成且跨 streak 里程碑 → 延迟弹成就卡（晚于 CTA 庆祝）
         onAfterClose: (completion) => {
-          handleClose();
+          handleClose(completion);
           if (completion && milestoneRef.current) {
             const m = milestoneRef.current;
             milestoneRef.current = null;
-            setTimeout(() => openShareRef.current({ type: "milestone", milestone: m }), 900);
+            setTimeout(() => openShareRef.current({ type: "milestone", milestone: m }), 400);
           }
         },
       }),
@@ -70,8 +75,6 @@ export function Metronome({ plan, onClose }: { plan: Plan; onClose: () => void }
     return () => {
       unsub();
       metro.dispose();
-      // 关闭 WebAudio 上下文：浏览器对并发 AudioContext 数有上限（~6），
-      // 每次开节拍器新建却不 close，反复进出训练后提示音会静默失效。
       if (audioRef.current) {
         audioRef.current.close().catch(() => {});
         audioRef.current = null;
@@ -80,13 +83,32 @@ export function Metronome({ plan, onClose }: { plan: Plan; onClose: () => void }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plan.id, metro]);
 
-  // phase 边沿 → 反馈（WebAudio + vibrate）+ 呼吸形时长绑定本拍秒数
+  // 键盘控制（Space 暂停/继续、Esc 退出或返回今日）与初始焦点管理
+  useEffect(() => {
+    rootRef.current?.focus();
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (document.querySelector(".share-overlay.is-open")) return;
+      if (e.key === "Escape") {
+        e.preventDefault();
+        if (snap?.stage === "done") metro.close(true);
+        else metro.endEarly();
+      } else if (e.key === " " || e.code === "Space") {
+        if (snap?.stage === "breath") {
+          e.preventDefault();
+          metro.togglePause();
+        }
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [metro, snap?.stage]);
+
   useEffect(() => {
     if (!snap || snap.stage !== "breath") {
       lastPhaseRef.current = "";
       return;
     }
-    if (snap.phase !== lastPhaseRef.current) {
+    if (snap.state === "running" && snap.phase !== lastPhaseRef.current) {
       lastPhaseRef.current = snap.phase;
       feedback(snap.phase);
     }
@@ -105,8 +127,10 @@ export function Metronome({ plan, onClose }: { plan: Plan; onClose: () => void }
     if (settings?.sound) {
       try {
         if (!audioRef.current) {
-          const AC = (window as unknown as { AudioContext?: typeof AudioContext; webkitAudioContext?: typeof AudioContext })
-            .AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+          const AC =
+            (window as unknown as { AudioContext?: typeof AudioContext; webkitAudioContext?: typeof AudioContext })
+              .AudioContext ||
+            (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
           if (AC) audioRef.current = new AC();
         }
         const ac = audioRef.current;
@@ -131,36 +155,43 @@ export function Metronome({ plan, onClose }: { plan: Plan; onClose: () => void }
 
   if (!snap) return null;
   const stage = snap.stage;
+  const isPaused = snap.state === "paused";
+  const phaseSec = snap.phase === "contract" ? plan.contract : plan.relax;
+  const phaseStyle = { animationDuration: `${phaseSec}s` };
   const rootClass =
     "metronome is-open" +
-    (stage === "breath" ? (snap.phase === "contract" ? " is-contract" : " is-relax") : "");
+    (stage === "breath" ? (snap.phase === "contract" ? " is-contract" : " is-relax") : "") +
+    (isPaused ? " is-paused" : "");
+
+  const todayDone = completedCountOfDay(store?.getDay(todayKey()) ?? null);
+  const goal = settings?.dailyGoalGroups ?? 3;
 
   return (
-    <div className={rootClass} id="metronome" role="dialog" aria-modal="true">
+    <div
+      ref={rootRef}
+      tabIndex={-1}
+      className={rootClass}
+      id="metronome"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${plan.name} 训练节拍器`}
+    >
       <div className="metronome-top">
         <div className="progress-text">
-          <span className="num">{stage === "breath" ? snap.setIdx + 1 : stage === "done" ? snap.sets : 0}</span>
-          <span className="sep">/</span>
-          <span className="num">{snap.sets}</span>
-          组 ·
-          <span className="num">{snap.startedReps}</span>
-          <span className="sep">/</span>
-          <span className="num">{snap.totalReps}</span>
-          次
+          {plan.name} · {formatPlanDuration(plan)}
         </div>
-        <button
-          className="metronome-close"
-          aria-label="关闭"
-          onClick={() => {
-            // 与 mobile 对齐：✕ 在进行中也走 endEarly，记录已完成的部分次数，避免误触丢失进度。
-            if (stage === "breath" && snap.startedReps > 0) {
-              metro.endEarly();
-            }
-            handleClose();
-          }}
-        >
-          ✕
-        </button>
+        {stage === "breath" && (
+          <div className="progress-text">
+            {snap.sets > 1 && (
+              <>
+                第 <span className="num">{snap.setIdx + 1}</span>/<span className="num">{snap.sets}</span> 组 ·{" "}
+              </>
+            )}
+            <span className="num">{snap.startedReps}</span>
+            <span className="sep">/</span>
+            <span className="num">{snap.totalReps}</span> 次
+          </div>
+        )}
       </div>
 
       <div className="metronome-stage">
@@ -171,24 +202,34 @@ export function Metronome({ plan, onClose }: { plan: Plan; onClose: () => void }
           </div>
         )}
         {stage === "breath" && (
-          <div className="breath-organism">
-            <svg className="breath-svg" viewBox="0 0 200 200" aria-hidden="true">
-              <path
-                className="breath-shape"
-                d="M100 18 C150 18 182 50 182 100 C182 150 150 182 100 182 C50 182 18 150 18 100 C18 50 50 18 100 18 Z"
-              />
-              <path
-                className="breath-inner"
-                d="M100 50 C130 50 150 70 150 100 C150 130 130 150 100 150 C70 150 50 130 50 100 C50 70 70 50 100 50 Z"
-              />
-            </svg>
-            <div className="breath-core">
-              <div className="breath-count">{snap.remaining}</div>
-              <div className="breath-phase">
-                {snap.phase === "contract" ? "收 · 紧" : "放 · 松"}
+          <>
+            <div className={"pause-banner" + (isPaused ? " is-show" : "")} aria-live="polite">
+              {isPaused ? "已暂停" : ""}
+            </div>
+            <div className="breath-organism">
+              <svg className="breath-svg" viewBox="0 0 200 200" aria-hidden="true">
+                <path
+                  className="breath-shape"
+                  style={phaseStyle}
+                  d="M100 18 C150 18 182 50 182 100 C182 150 150 182 100 182 C50 182 18 150 18 100 C18 50 50 18 100 18 Z"
+                />
+                <path
+                  className="breath-inner"
+                  style={phaseStyle}
+                  d="M100 50 C130 50 150 70 150 100 C150 130 130 150 100 150 C70 150 50 130 50 100 C50 70 70 50 100 50 Z"
+                />
+              </svg>
+              <div className="breath-core">
+                <div className="breath-count">
+                  {snap.remaining}
+                  <span className="breath-unit">秒</span>
+                </div>
+                <div className="breath-phase">
+                  {snap.phase === "contract" ? "收 · 紧" : "放 · 松"}
+                </div>
               </div>
             </div>
-          </div>
+          </>
         )}
         {stage === "done" && (
           <div className="done">
@@ -201,6 +242,10 @@ export function Metronome({ plan, onClose }: { plan: Plan; onClose: () => void }
               今天，<span className="em">提了</span>。
             </h2>
             <p className="sub">{snap.doneSub}</p>
+            <div className="done-summary">
+              今日进度：<strong>{todayDone} / {goal} 组</strong>
+              {todayDone >= goal ? "（已达标）" : ""}
+            </div>
           </div>
         )}
       </div>
@@ -213,21 +258,33 @@ export function Metronome({ plan, onClose }: { plan: Plan; onClose: () => void }
         )}
         {stage === "breath" && (
           <>
-            <button className="mbtn mbtn-ghost" id="metro-end" onClick={() => metro.endEarly()}>
-              结束
+            <button
+              className={"mbtn " + (isPaused ? "mbtn-primary" : "mbtn-soft")}
+              id="metro-pause"
+              onClick={() => metro.togglePause()}
+            >
+              {isPaused ? "继续训练" : "暂停"}
             </button>
-            <button className="mbtn mbtn-primary" id="metro-pause" onClick={() => metro.togglePause()}>
-              {snap.state === "paused" ? "继续" : "暂停"}
+            <button className="mbtn mbtn-weak" id="metro-end" onClick={() => metro.endEarly()}>
+              结束
             </button>
           </>
         )}
         {stage === "done" && (
           <>
-            <button className="mbtn mbtn-ghost" onClick={() => openShare({ type: "daily" })}>
+            <button
+              className="mbtn mbtn-ghost"
+              onClick={() =>
+                openShare({
+                  type: "daily",
+                  sessionReps: lastRepsRef.current || snap.totalReps,
+                })
+              }
+            >
               分享这次
             </button>
-            <button className="mbtn mbtn-primary" id="metro-close" onClick={handleClose}>
-              好的
+            <button className="mbtn mbtn-primary" id="metro-close" onClick={() => metro.close(true)}>
+              返回今日
             </button>
           </>
         )}

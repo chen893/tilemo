@@ -1,0 +1,46 @@
+<view class="page {{themeClass}}">
+  <view class="screen">
+    <view
+      class="plan {{item.id === defaultPlanId ? 'is-default' : ''}}"
+      wx:for="{{plans}}"
+      wx:key="id"
+      bindtap="onPick"
+      data-id="{{item.id}}"
+    >
+      <view class="plan-top">
+        <view class="plan-name-wrap">
+          <text class="plan-name">{{item.name}}</text>
+          <view class="tag" wx:if="{{item.id === defaultPlanId}}">默认</view>
+        </view>
+        <text class="plan-dur">{{item.durationLabel}} ›</text>
+      </view>
+      <view class="plan-desc">{{item.desc}}</view>
+      <view class="metrics">
+        <view class="metric">
+          <text class="metric-label">收紧</text>
+          <text class="metric-value">{{item.contract}}秒</text>
+        </view>
+        <view class="metric">
+          <text class="metric-label">放松</text>
+          <text class="metric-value">{{item.relax}}秒</text>
+        </view>
+        <view class="metric">
+          <text class="metric-label">次数</text>
+          <text class="metric-value">{{item.reps}} 次</text>
+        </view>
+        <view class="metric">
+          <text class="metric-label">组数</text>
+          <text class="metric-value">{{item.sets}} 组</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="guide-link" bindtap="onToggleGuide">{{showGuide ? '收起动作要领' : '第一次练？查看动作要领'}}</view>
+    <view class="guide-box" wx:if="{{showGuide}}">
+      <view class="guide-line">呼气时轻轻向上收紧，保持腹部与臀部自然放松；吸气时完全放松，不必屏气，跟着节拍走即可。</view>
+    </view>
+  </view>
+
+  <player id="player" bind:close="onPlayerClose" />
+  <share-card id="shareCard" />
+</view>

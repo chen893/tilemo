@@ -32,7 +32,15 @@ export interface ShareInit {
 const PREVIEW_W = 340; // 预览宽度；view-shot 按设备像素出图（≈ @2x/@3x），分享清晰。
 
 function titleFor(t?: CardType): string {
-  return t === "milestone" ? "里程碑" : t === "review" ? "回顾" : "今日";
+  return t === "milestone" ? "里程碑" : t === "review" ? "回顾" : "今日战报";
+}
+
+function subFor(t?: CardType): string {
+  return t === "milestone"
+    ? "值得记下来的坚持节点"
+    : t === "review"
+      ? "最近一段时间的打卡热力"
+      : "保存或转发这次训练记录";
 }
 
 export function ShareSheet({ init, onClose }: { init: ShareInit | null; onClose: () => void }) {
@@ -86,9 +94,14 @@ export function ShareSheet({ init, onClose }: { init: ShareInit | null; onClose:
       <View style={styles.overlay}>
         <View style={[styles.panel, { backgroundColor: colors.paper }]}>
           <View style={styles.head}>
-            <Text style={{ color: colors.text, fontSize: fs.base, fontWeight: "600" }}>
-              {titleFor(init?.type)}
-            </Text>
+            <View>
+              <Text style={{ color: colors.text, fontSize: fs.base, fontWeight: "700" }}>
+                {titleFor(init?.type)}
+              </Text>
+              <Text style={{ color: colors.text3, fontSize: fs.xs, marginTop: 2 }}>
+                {subFor(init?.type)}
+              </Text>
+            </View>
             <IconButton colors={colors} onPress={onClose}>
               <Text style={{ color: colors.text2, fontSize: 20, lineHeight: 20 }}>×</Text>
             </IconButton>
@@ -101,7 +114,19 @@ export function ShareSheet({ init, onClose }: { init: ShareInit | null; onClose:
                   <ShareCardView data={data} width={PREVIEW_W} />
                 </View>
               </View>
-            ) : null}
+            ) : (
+              <View
+                style={{
+                  height: 360,
+                  borderRadius: rd.md,
+                  backgroundColor: colors.paperSoft,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text style={{ color: colors.text3, fontSize: fs.sm }}>正在生成分享卡片…</Text>
+              </View>
+            )}
           </ScrollView>
 
           <View style={styles.actions}>

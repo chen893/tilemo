@@ -1,7 +1,7 @@
 // @tilemo/web — 设置视图（移动壳）。镜像 mobile SettingsScreen，复用 core 计算。
 
-import { useRef, useState } from "react";
-import { clamp } from "@tilemo/core";
+import { useMemo, useRef, useState } from "react";
+import { aggregateStats, clamp } from "@tilemo/core";
 import type { Plan, Settings as SettingsT, ThemeSetting } from "@tilemo/data";
 import { GITHUB_URL, RELEASE_URL } from "@tilemo/share-card";
 import { useDataStore } from "../data";
@@ -20,6 +20,8 @@ export function SettingsView() {
 
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<number | null>(null);
+  const stats = useMemo(() => (store ? aggregateStats(store) : null), [store, settings]);
+  const hasLogs = (stats?.totalSessions ?? 0) > 0;
 
   const update = (patch: Partial<SettingsT>) => {
     if (!store || !settings) return;
@@ -107,6 +109,9 @@ export function SettingsView() {
             />
           ))}
         </div>
+        <p style={{ color: "var(--text-3)", fontSize: "var(--t-xs)", marginTop: "var(--s-1)" }}>
+          用于今日页一键开练
+        </p>
       </Group>
 
       {/* 体验 */}
@@ -150,12 +155,35 @@ export function SettingsView() {
 
       {/* 数据 */}
       <Group title="数据">
-        <button className="export-btn" onClick={exportData}>
+        <button className="export-btn" disabled={!hasLogs} onClick={exportData}>
           导出我的数据
         </button>
         <p style={{ color: "var(--text-3)", fontSize: "var(--t-sm)", marginTop: "var(--s-2)" }}>
-          全部数据仅存于本设备，导出生成 tgm-data.json。
+          {hasLogs
+            ? `已记录 ${stats?.totalDays ?? 0} 天、完成 ${stats?.completedSessions ?? 0} 组，全部数据仅存于本设备，可导出备份文件自行保存。`
+            : "本机还没有训练记录，完成一次训练后即可导出备份。"}
         </p>
+        <div className="settings-card" style={{ marginTop: "var(--s-3)" }}>
+          <div className="setting-row">
+            <div>
+              <div className="lbl">清空记录与设置</div>
+              <div className="desc">删除后无法恢复，建议先导出备份</div>
+            </div>
+            <button
+              className="danger-btn"
+              onClick={() => {
+                if (!store) return;
+                if (window.confirm("训练记录、连续天数与偏好设置都会被清除且无法恢复，确定清空吗？")) {
+                  store.clearAll();
+                  refresh();
+                  showToast("已清空");
+                }
+              }}
+            >
+              清空
+            </button>
+          </div>
+        </div>
       </Group>
 
       {/* 关于 */}

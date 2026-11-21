@@ -556,10 +556,13 @@
     background: var(--paper-deep);
     position: relative;
     transition: background-color var(--dur-fast) var(--ease);
-    animation: blob-morph 12s var(--ease-breath) infinite;
   }
-  .desk-week-dot:nth-child(odd) .blob { animation-delay: -3s; border-radius: var(--blob-2); }
-  .desk-week-dot:nth-child(3n) .blob { animation-delay: -6s; border-radius: var(--blob-3); }
+  .desk-week-dot:nth-child(odd) .blob { border-radius: var(--blob-2); }
+  .desk-week-dot:nth-child(3n) .blob { border-radius: var(--blob-3); }
+  .desk-week-dot[data-level="0"] .blob {
+    background: var(--paper);
+    border: 1px dashed var(--rule-strong);
+  }
   .desk-week-dot[data-level="1"] .blob { background: var(--heat-1); }
   .desk-week-dot[data-level="2"] .blob { background: var(--heat-2); }
   .desk-week-dot[data-level="3"] .blob { background: var(--heat-3); }
@@ -895,10 +898,9 @@
   .desk-heat-cell[data-level="3"] { background: var(--heat-3); }
   .desk-heat-cell:hover { transform: scale(1.4); z-index: 2; }
   .desk-heat-cell.is-today {
-    background: var(--accent);
-    outline: 2px solid var(--accent-hot);
+    outline: 2px solid var(--accent);
     outline-offset: 1px;
-    box-shadow: 0 0 0 3px rgba(232,90,79,0.18);
+    box-shadow: 0 0 0 3px rgba(232,90,79,0.16);
     z-index: 3;
   }
   .desk-heat-cell.is-selected {
@@ -918,7 +920,7 @@
     font-weight: 700;
     color: var(--text-3);
   }
-  .desk-heat-months span { text-align: left; }
+  .desk-heat-months span { text-align: left; white-space: nowrap; }
 
   /* 日详情面板（点击热力某天后） */
   .desk-day-detail {
@@ -967,6 +969,12 @@
   .desk-heat-legend .l1 { background: var(--heat-1); }
   .desk-heat-legend .l2 { background: var(--heat-2); }
   .desk-heat-legend .l3 { background: var(--heat-3); }
+  .desk-heat-legend .today-mark { display: inline-flex; align-items: center; gap: 6px; margin-left: 8px; }
+  .desk-heat-legend .today-mark i {
+    background: var(--paper-deep);
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
 
   /* ============== 桌面 设置（分类分栏） ============== */
   .desk-settings {

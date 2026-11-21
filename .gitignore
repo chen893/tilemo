@@ -3,6 +3,7 @@ artifacts/
 
 # deps / build
 node_modules/
+/node_modules.broken-*/
 dist/
 build/
 .turbo/
@@ -17,3 +18,4 @@ android/
 .env
 .env.*
 .DS_Store
+/apps/miniprogram/project.private.config.json

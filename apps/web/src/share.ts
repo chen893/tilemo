@@ -144,50 +144,54 @@ export function renderCard(canvas: HTMLCanvasElement, d: CardData): void {
       text(ctx, `连续 ${d.streakDays} 天`, cx, by + bh + 90, 32, c.text3, { weight: 500, align: "center" });
     }
   } else if (d.type === "review" && d.heat) {
-    // 主标题按内容宽断行（左对齐），避免长标题溢出右 padding。
+    // 主标题按内容宽断行（左对齐），留出左右呼吸边距，避免贴边溢出。
     const hl = wrap(d.headline, ctx, W - pad * 2);
-    let hy = 120;
+    let hy = 128;
     for (const ln of hl) {
-      text(ctx, ln, pad, hy, 64, c.text, { weight: 700 });
-      hy += 76;
+      text(ctx, ln, pad, hy, 54, c.text, { weight: 700 });
+      hy += 68;
     }
+    text(ctx, `近 ${d.heat.length} 天足迹`, pad, hy + 8, 28, c.text3, { weight: 600, spacing: 3 });
     const cols = d.heatCols ?? 6;
     const rows = Math.ceil(d.heat.length / cols);
-    const cell = 110;
+    const cell = 104;
     const gap = 14;
     const gridW = cols * cell + (cols - 1) * gap;
     const startX = (W - gridW) / 2;
-    const startY = 250;
+    const startY = Math.max(264, hy + 44);
     for (let i = 0; i < d.heat.length; i++) {
       const r = Math.floor(i / cols);
       const cc = i % cols;
       const x = startX + cc * (cell + gap);
       const y = startY + r * (cell + gap);
-      // 0 状态：把"今天"(最后一格)点亮成第一格，呼应"从今天开始"
-      const lit = d.streakDays === 0 && i === d.heat.length - 1;
-      roundRect(ctx, x, y, cell, cell, 24);
-      ctx.fillStyle = lit ? c.heat3 : heatColor(d.colors, d.heat[i]);
+      const isToday = i === d.heat.length - 1;
+      const lv = d.heat[i];
+      roundRect(ctx, x, y, cell, cell, 22);
+      ctx.fillStyle = heatColor(d.colors, lv);
       ctx.fill();
-      ctx.lineWidth = lit ? 3 : 2;
-      ctx.strokeStyle = lit ? c.accent : c.rule;
+      ctx.lineWidth = isToday ? 4 : 2;
+      ctx.strokeStyle = isToday ? c.accent : c.rule;
       ctx.stroke();
     }
-    text(ctx, d.streakDays > 0 ? `连续 ${d.streakDays} 天` : "从今天，开始打卡", cx, startY + rows * (cell + gap) + 56, 48, c.accent, {
+    text(ctx, d.streakDays > 0 ? `连续 ${d.streakDays} 天` : "从今天，开始打卡", cx, startY + rows * (cell + gap) + 56, 44, c.accent, {
       weight: 700,
       align: "center",
     });
   } else {
     // daily
     text(ctx, d.headline, pad, 215, 60, c.text, { weight: 700 });
-    // 焦点：连续天数大数字
-    text(ctx, String(d.streakDays), cx, 560, 200, c.accent, { weight: 800, align: "center" });
-    text(ctx, "连续天数", cx, 635, 32, c.text3, { weight: 500, align: "center", spacing: 6 });
+    // 焦点：有连续天数时展示连续天数；连续为 0 时优先展示本次收紧次数，强化完成成就感
+    const showReps = d.streakDays === 0 && (d.sessionReps ?? 0) > 0;
+    const heroNum = showReps ? String(d.sessionReps) : String(d.streakDays);
+    const heroLabel = showReps ? "本次收紧次数" : "连续天数";
+    text(ctx, heroNum, cx, 555, 196, c.accent, { weight: 800, align: "center" });
+    text(ctx, heroLabel, cx, 632, 32, c.text3, { weight: 500, align: "center", spacing: 6 });
     // 今日完成进度
     const goalTotal = Math.max(1, d.goalTotal);
     const ratio = Math.min(1, d.goalDone / goalTotal);
-    text(ctx, `今日  ${d.goalDone} / ${d.goalTotal} 组`, cx, 760, 32, c.text2, { weight: 500, align: "center" });
+    text(ctx, `今日  ${d.goalDone} / ${d.goalTotal} 组`, cx, 755, 32, c.text2, { weight: 500, align: "center" });
     const barX = pad;
-    const barY = 800;
+    const barY = 795;
     const barW = W - pad * 2;
     roundRect(ctx, barX, barY, barW, 14, 7);
     ctx.fillStyle = c.paperDeep;
@@ -202,17 +206,17 @@ export function renderCard(canvas: HTMLCanvasElement, d: CardData): void {
   // 副文案（QUOTES 一句），居中两行；review 卡热力图已占满中部，省略。
   if (d.type !== "review") {
     const subLines = wrap("「" + d.sub + "」", ctx, W - pad * 2);
-    let sy = d.type === "milestone" ? H - 380 : 920;
+    let sy = d.type === "milestone" ? H - 395 : 905;
     for (const ln of subLines.slice(0, 2)) {
       text(ctx, ln, cx, sy, 32, c.text2, { weight: 400, align: "center" });
-      sy += 50;
+      sy += 48;
     }
   }
 
-  // 底部带：左下 QR（加大 + quiet zone）+ 扫码 caption，右下品牌，共用基线
-  drawQr(ctx, d, pad, H - 290, 200);
-  text(ctx, "扫码，和我一起打卡", pad, H - 50, 28, c.text3, { weight: 500 });
-  text(ctx, d.brand, W - pad, H - 160, 44, c.text, { weight: 700, align: "right" });
+  // 底部带：左下 QR（加大 + quiet zone）+ 扫码 caption 留足底部安全距，右下品牌
+  drawQr(ctx, d, pad, H - 320, 184);
+  text(ctx, "扫码，和我一起打卡", pad, H - 72, 26, c.text3, { weight: 500 });
+  text(ctx, d.brand, W - pad, H - 175, 44, c.text, { weight: 700, align: "right" });
 }
 
 // ---------------------------------------------------------------------------
@@ -243,9 +247,10 @@ const CSS = `
 .share-done-btn{display:inline-block;margin-top:18px;padding:10px 22px;border-radius:999px;
   border:1px solid var(--accent);background:transparent;color:var(--accent);font-size:15px;font-weight:600;cursor:pointer;font-family:inherit}
 .share-done-btn:active{opacity:.7}
-.share-fab{position:fixed;top:12px;right:12px;width:38px;height:38px;border-radius:999px;
-  border:1px solid var(--rule-strong);background:var(--paper-soft);color:var(--text2);
-  font-size:18px;line-height:1;cursor:pointer;z-index:50;box-shadow:0 2px 8px rgba(0,0,0,.08);font-family:inherit}
+.share-fab{position:absolute;top:var(--s-4);right:var(--gutter);width:38px;height:38px;border-radius:999px;
+  display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid var(--rule-strong);background:var(--paper-soft);color:var(--text-2);
+  font-size:18px;line-height:1;cursor:pointer;z-index:20;box-shadow:0 2px 8px rgba(0,0,0,.08);font-family:inherit}
 .share-fab:active{opacity:.7}
 `;
 
@@ -285,6 +290,12 @@ function ensureOverlay(): Overlay {
   root.querySelector(".share-close")!.addEventListener("click", () => close());
   root.addEventListener("click", (e) => {
     if (e.target === root) close();
+  });
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && root.classList.contains("is-open")) {
+      e.preventDefault();
+      close();
+    }
   });
   // 监听器只绑一次（避免每次 openShareCard 累积绑定 → 第 N 次点击触发 N 次）
   root.querySelector<HTMLButtonElement>('[data-act="save"]')!.addEventListener("click", () => {

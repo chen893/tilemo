@@ -17,9 +17,9 @@ const WD = ["日", "一", "二", "三", "四", "五", "六"];
 
 const NAV: { id: Tab; label: string; icon: ReactNode }[] = [
   { id: "home", label: "今日", icon: <IconHome /> },
-  { id: "train", label: "训练", icon: <IconDumbbell /> },
+  { id: "train", label: "训练", icon: <IconBreath /> },
   { id: "history", label: "记录", icon: <IconCalendar /> },
-  { id: "settings", label: "设置", icon: <IconCog /> },
+  { id: "settings", label: "设置", icon: <IconSliders /> },
 ];
 
 // header eyebrow/title per tab
@@ -184,41 +184,51 @@ export function DeskShell({
   );
 }
 
-/* —— inline nav icons (stroke=currentColor) —— */
+/* —— 与 App / 小程序 1:1 统一的温润有机图标 —— */
 function IconHome() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="M3 11l9-8 9 8" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M5 10v10h14V10" strokeLinecap="round" strokeLinejoin="round" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" aria-hidden="true">
+      <path d="M3.8 10.6L12 4l8.2 6.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5.6 9.6v9.8h12.8V9.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9.9 19.4v-3.7a2.1 2.1 0 014.2 0v3.7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
-function IconDumbbell() {
+function IconBreath() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="M6 7l-3 3M18 17l3-3M9 9l6 6M3 13l2 2 2-2M21 11l-2-2-2 2" strokeLinecap="round" strokeLinejoin="round" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" aria-hidden="true">
+      <circle cx="12" cy="12" r="8.4" />
+      <path d="M8.5 7.7a5.5 5.5 0 017 0M15.5 16.3a5.5 5.5 0 01-7 0" strokeLinecap="round" strokeWidth="1.5" />
+      <circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none" />
     </svg>
   );
 }
 function IconCalendar() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <rect x="3" y="5" width="18" height="16" rx="2" />
-      <path d="M3 9h18M8 3v4M16 3v4" strokeLinecap="round" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" aria-hidden="true">
+      <rect x="3.8" y="5.4" width="16.4" height="14.4" rx="3" />
+      <path d="M4.2 9.6h15.6M8.4 3.4v2.8M15.6 3.4v2.8" strokeLinecap="round" />
+      <circle cx="8.2" cy="13" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="13" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="15.8" cy="13" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="8.2" cy="16.2" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="16.2" r="1.1" fill="currentColor" stroke="none" />
     </svg>
   );
 }
-function IconCog() {
+function IconSliders() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <circle cx="12" cy="12" r="3.5" />
-      <path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" strokeLinecap="round" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" aria-hidden="true">
+      <path d="M4.2 8.4h2.6M11.6 8.4h8.2" strokeLinecap="round" />
+      <circle cx="9.2" cy="8.4" r="2.4" />
+      <path d="M4.2 15.6h8.2M17.2 15.6h2.6" strokeLinecap="round" />
+      <circle cx="14.8" cy="15.6" r="2.4" />
     </svg>
   );
 }
 function IconLeaf() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" aria-hidden="true">
       <path d="M20 4C9 4 4 9 4 18c0 0 0 2 2 2 9 0 14-5 14-16z" strokeLinejoin="round" />
       <path d="M4 20C8 14 12 10 18 7" strokeLinecap="round" />
     </svg>
@@ -226,9 +236,9 @@ function IconLeaf() {
 }
 function IconShare() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="M12 15V4M12 4l-4 4M12 4l4 4" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M5 12v6a2 2 0 002 2h10a2 2 0 002-2v-6" strokeLinecap="round" strokeLinejoin="round" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" aria-hidden="true">
+      <path d="M12 14.6V4.4M8.4 7.9L12 4.3l3.6 3.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4.8 13v4a2.6 2.6 0 002.6 2.6h9.2a2.6 2.6 0 002.6-2.6v-4" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

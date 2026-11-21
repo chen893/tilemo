@@ -5,9 +5,18 @@
 import type { DayEntry, Plan, Streak, Store } from "@tilemo/data";
 import { todayKey, ymd } from "./time";
 
+export function completedCountOfDay(day: DayEntry | null): number {
+  if (!day || !day.sessions || !day.sessions.length) return 0;
+  let n = 0;
+  for (const s of day.sessions) {
+    if (s.finished !== false) n++;
+  }
+  return n;
+}
+
 export function dayMeetsGoal(day: DayEntry | null): boolean {
   if (!day || !day.sessions || !day.sessions.length) return false;
-  return day.sessions.length >= day.goalGroups;
+  return completedCountOfDay(day) >= day.goalGroups;
 }
 
 /** 0 none / 1 partial / 2 met / 3 over (>= 1.2×). goal defaults to 1. */
@@ -23,7 +32,9 @@ export function heatLevel(sessions: { length: number } | null | undefined, goalG
 
 export function levelOfDay(day: DayEntry | null): number {
   if (!day) return 0;
-  return heatLevel(day.sessions, day.goalGroups);
+  const done = completedCountOfDay(day);
+  if (done === 0 && day.sessions && day.sessions.length > 0) return 1;
+  return heatLevel({ length: done }, day.goalGroups);
 }
 
 /** Walks back consecutive met-goal days. Today doesn't break a streak you
@@ -87,8 +98,10 @@ export function recordSession(
 export interface AggregateStats {
   /** 有 ≥1 session 的天数。 */
   totalDays: number;
-  /** session 总条数。 */
+  /** session 总条数（含部分练习）。 */
   totalSessions: number;
+  /** 完整完成的组数（finished !== false）。 */
+  completedSessions: number;
   /** dayMeetsGoal 的天数。 */
   metDays: number;
   /** 最近一次 session 的 ts（0 表示无）。 */
@@ -101,6 +114,7 @@ export interface AggregateStats {
 export function aggregateStats(store: Store): AggregateStats {
   let totalDays = 0;
   let totalSessions = 0;
+  let completedSessions = 0;
   let metDays = 0;
   let lastTs = 0;
   let keysCount = 0;
@@ -109,10 +123,11 @@ export function aggregateStats(store: Store): AggregateStats {
     const n = entry && entry.sessions ? entry.sessions.length : 0;
     if (n > 0) totalDays++;
     totalSessions += n;
+    completedSessions += completedCountOfDay(entry);
     if (dayMeetsGoal(entry)) metDays++;
     if (entry) {
       for (const s of entry.sessions) if (s.ts > lastTs) lastTs = s.ts;
     }
   }
-  return { totalDays, totalSessions, metDays, lastTs, keysCount };
+  return { totalDays, totalSessions, completedSessions, metDays, lastTs, keysCount };
 }

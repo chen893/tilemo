@@ -1,0 +1,304 @@
+/* 设计令牌与 apps/web、apps/mobile 同源（packages/design-tokens）。
+   浅色为默认，.t-dark 覆盖为深色；主题切换见 lib/theme.js。 */
+
+page {
+  background: #faf3ec;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  --paper: #faf3ec;
+  --paper-soft: #f3e8dc;
+  --paper-deep: #ebddcb;
+  --card: #fffcf8;
+  --ink: #2b2320;
+  --text: #2b2320;
+  --text-2: #5c4f47;
+  --text-3: #6f5f50;
+  --rule: rgba(43, 35, 32, 0.12);
+  --rule-strong: rgba(43, 35, 32, 0.24);
+  --accent: #e85a4f;
+  --accent-hot: #d63a2e;
+  --accent-soft: #f4b4a8;
+  --accent-btn: #c8402e;
+  --on-accent-btn: #ffffff;
+  --relax: #6c8b6a;
+  --relax-soft: #dce6d8;
+  --danger: #c83328;
+  --success: #c8402e;
+  --heat-1: #f0dcc9;
+  --heat-2: #e8b59a;
+  --heat-3: #c8402e;
+  --on-accent: #ffffff;
+
+  min-height: 100vh;
+  box-sizing: border-box;
+  background: var(--paper);
+  color: var(--text);
+}
+
+.page.t-dark {
+  --paper: #1f1814;
+  --paper-soft: #2a201a;
+  --paper-deep: #352821;
+  --card: #2a201a;
+  --ink: #f2e8dc;
+  --text: #f2e8dc;
+  --text-2: #d0c2b4;
+  --text-3: #b5a595;
+  --rule: rgba(242, 232, 220, 0.16);
+  --rule-strong: rgba(242, 232, 220, 0.32);
+  --accent: #ff6b5e;
+  --accent-hot: #ff8270;
+  --accent-soft: #8a4538;
+  --accent-btn: #ff6b5e;
+  --on-accent-btn: #1f1814;
+  --relax: #8fb08a;
+  --relax-soft: #2f3e2e;
+  --danger: #ff7b70;
+  --success: #f26b5f;
+  --heat-1: #3d2e24;
+  --heat-2: #6b4234;
+  --heat-3: #ff6b5e;
+}
+
+.screen {
+  padding: 64rpx 48rpx 96rpx;
+  box-sizing: border-box;
+}
+
+/* ---------- 文本 ---------- */
+.eyebrow {
+  font-size: 22rpx;
+  letter-spacing: 2rpx;
+  color: var(--text-3);
+}
+
+.h1 {
+  font-size: 68rpx;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 2rpx;
+  color: var(--text);
+}
+
+.title {
+  font-size: 48rpx;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.muted {
+  font-size: 26rpx;
+  color: var(--text-3);
+  line-height: 1.55;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.section-label {
+  margin: 48rpx 0 16rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+  letter-spacing: 1rpx;
+  color: var(--text-3);
+}
+
+.danger {
+  color: var(--danger);
+}
+
+/* ---------- 容器 ---------- */
+.card {
+  background: var(--card);
+  border: 2rpx solid var(--rule);
+  border-radius: 36rpx;
+  padding: 48rpx;
+}
+
+.card + .card {
+  margin-top: 24rpx;
+}
+
+.group {
+  padding: 0 32rpx;
+}
+
+.divider {
+  height: 2rpx;
+  background: var(--rule);
+}
+
+/* ---------- 按钮 ---------- */
+.btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 92rpx;
+  border-radius: 46rpx;
+  background: var(--accent-btn);
+  color: var(--on-accent-btn);
+  font-size: 32rpx;
+  font-weight: 700;
+  letter-spacing: 1rpx;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+
+.btn-primary.is-soft {
+  background: var(--paper-deep);
+  color: var(--text);
+}
+
+.btn-deep {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 92rpx;
+  border-radius: 46rpx;
+  background: var(--paper-deep);
+  color: var(--text);
+  font-size: 32rpx;
+  font-weight: 600;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+
+.btn-deep.is-disabled {
+  opacity: 0.45;
+}
+
+.btn-ghost {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 92rpx;
+  border-radius: 46rpx;
+  border: 2rpx solid var(--rule-strong);
+  color: var(--text);
+  font-size: 28rpx;
+  font-weight: 600;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+
+.btn-ghost:active,
+.btn-primary:active,
+.btn-deep:active {
+  opacity: 0.88;
+  transform: scale(0.98);
+}
+
+/* ---------- 行 ---------- */
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 108rpx;
+  padding: 20rpx 0;
+}
+
+.row-main {
+  flex: 1;
+  min-width: 0;
+  padding-right: 20rpx;
+}
+
+.row-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.row-sub {
+  margin-top: 8rpx;
+  font-size: 28rpx;
+  color: var(--text-3);
+  line-height: 1.45;
+}
+
+.row-action {
+  font-size: 28rpx;
+  color: var(--text-2);
+}
+
+/* ---------- 统计 ---------- */
+.stats {
+  display: flex;
+  border-bottom: 2rpx solid var(--rule);
+  padding-bottom: 32rpx;
+}
+
+.stat {
+  flex: 1;
+  text-align: center;
+}
+
+.stat-num {
+  font-size: 56rpx;
+  font-weight: 700;
+  color: var(--success);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-label {
+  margin-top: 8rpx;
+  font-size: 28rpx;
+  color: var(--text-3);
+}
+
+/* ---------- 热力格 ---------- */
+.cell {
+  width: 100%;
+  height: 100%;
+  border-radius: 6rpx;
+  border: 2rpx solid var(--rule);
+  box-sizing: border-box;
+}
+
+.lv-0 {
+  background: transparent;
+}
+
+.lv-1 {
+  background: var(--heat-1);
+}
+
+.lv-2 {
+  background: var(--heat-2);
+}
+
+.lv-3 {
+  background: var(--heat-3);
+}
+
+.is-future {
+  background: transparent;
+  border-color: var(--rule);
+  opacity: 0.45;
+}
+
+/* ---------- 分段控件 ---------- */
+.seg {
+  display: flex;
+  border: 2rpx solid var(--rule-strong);
+  border-radius: 46rpx;
+  padding: 8rpx;
+}
+
+.seg-item {
+  flex: 1;
+  padding: 24rpx 0;
+  text-align: center;
+  border-radius: 38rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.seg-item.is-on {
+  background: var(--accent-btn);
+  color: var(--on-accent-btn);
+  font-weight: 700;
+}

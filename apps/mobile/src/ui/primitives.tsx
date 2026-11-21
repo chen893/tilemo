@@ -101,23 +101,28 @@ type ButtonProps = PressableProps & {
   style?: ViewStyle;
 };
 
-export function Button({ colors, variant = "solid", full, tint, children, style, ...rest }: ButtonProps) {
+export function Button({ colors, variant = "solid", full, tint, children, style, disabled, ...rest }: ButtonProps) {
   const bg =
     variant === "solid"
-      ? colors.accent
+      ? colors.accentBtn
       : variant === "soft"
         ? colors.paperSoft
         : variant === "deep"
           ? colors.paperDeep
           : "transparent";
-  const fg = tint ? colors[tint] : variant === "solid" ? "#FFFFFF" : colors.text;
+  const fg = tint ? colors[tint] : variant === "solid" ? colors.onAccentBtn : colors.text;
   const border = variant === "ghost" ? { borderWidth: 1, borderColor: colors.ruleStrong } : null;
   return (
     <Pressable
       {...rest}
+      disabled={disabled}
       style={({ pressed }) => [
         styles.btn,
-        { backgroundColor: bg, opacity: pressed ? 0.85 : 1 },
+        {
+          backgroundColor: bg,
+          opacity: disabled ? 0.45 : pressed ? 0.9 : 1,
+          transform: [{ scale: pressed && !disabled ? 0.98 : 1 }],
+        },
         full && { width: "100%" },
         border,
         style,
@@ -225,8 +230,8 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   iconBtn: {
-    width: 36,
-    height: 36,
+    width: 40,
+    height: 40,
     borderRadius: rd.pill,
     borderWidth: 1,
     alignItems: "center",

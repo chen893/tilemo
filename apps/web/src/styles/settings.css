@@ -100,14 +100,14 @@
   min-height: 32px;
 }
 .seg button[aria-pressed="true"] {
-  background: var(--accent);
-  color: #fff;
+  background: var(--accent-btn);
+  color: var(--on-accent-btn);
 }
 
-/* —— 默认方案选择（有机胶囊阵列） —— */
+/* —— 默认方案选择（2×2 网格，消灭 3+1 落单） —— */
 .plan-select {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--s-2);
 }
 .plan-select button {
@@ -118,13 +118,26 @@
   font-weight: 700;
   border-radius: var(--blob-pill);
   transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
-  min-height: 36px;
+  min-height: 40px;
 }
 .plan-select button:hover { background: var(--paper-deep); color: var(--text); }
 .plan-select button[aria-pressed="true"] {
-  background: var(--accent);
-  color: #fff;
+  background: var(--accent-btn);
+  color: var(--on-accent-btn);
 }
+.danger-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: var(--blob-pill);
+  border: 1px solid var(--danger);
+  background: transparent;
+  color: var(--danger);
+  font-size: var(--t-sm);
+  font-weight: 700;
+}
+.danger-btn:hover { background: var(--danger); color: #fff; }
+.export-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* —— 按钮体系 ——
    primary（主行动）：暖朱 --accent 实心 + 白/暖纸字

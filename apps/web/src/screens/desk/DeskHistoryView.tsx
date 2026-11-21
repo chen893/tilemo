@@ -3,7 +3,15 @@
 
 import { useMemo, useState } from "react";
 import type { Plan, Session } from "@tilemo/data";
-import { aggregateStats, levelOfDay, ymd } from "@tilemo/core";
+import {
+  aggregateStats,
+  completedCountOfDay,
+  dayMeetsGoal,
+  formatClock,
+  formatDuration,
+  levelOfDay,
+  ymd,
+} from "@tilemo/core";
 import { useDataStore } from "../../data";
 
 const MONTHS = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"];
@@ -101,8 +109,8 @@ export function DeskHistoryView({ onStart }: { onStart: (p: Plan) => void }) {
           <div className="sub">有记录</div>
         </div>
         <div className="desk-stat-cell">
-          <div className="l">总组数</div>
-          <div className="v">{stats?.totalSessions ?? 0}</div>
+          <div className="l">完成组数</div>
+          <div className="v">{stats?.completedSessions ?? 0}</div>
           <div className="sub">累计完成</div>
         </div>
         <div className="desk-stat-cell">
@@ -145,7 +153,8 @@ export function DeskHistoryView({ onStart }: { onStart: (p: Plan) => void }) {
               const isToday = c.key === todayStr;
               const isSelected = c.key === selectedKey;
               return (
-                <div
+                <button
+                  type="button"
                   key={c.key}
                   className={
                     "desk-heat-cell" +
@@ -154,6 +163,8 @@ export function DeskHistoryView({ onStart }: { onStart: (p: Plan) => void }) {
                   }
                   data-level={c.level}
                   data-key={c.key}
+                  aria-label={`${c.key}${isToday ? "（今天）" : ""}，完成 ${c.n} 组`}
+                  aria-pressed={isSelected}
                   title={`${c.key} · ${c.n} 组`}
                 />
               );
@@ -183,7 +194,7 @@ export function DeskHistoryView({ onStart }: { onStart: (p: Plan) => void }) {
         <div className="desk-day-detail-head">
           <div className="d">{fmtDay(selectedKey)}</div>
           <div className="s">
-            {selectedSessions.length} 组 · {selectedDay ? (selectedDay.sessions.length >= selectedDay.goalGroups ? "已达标" : "未达标") : "无记录"}
+            已完成 {completedCountOfDay(selectedDay)} 组 · {selectedDay ? (dayMeetsGoal(selectedDay) ? "已达标" : "未达标") : "未训练"}
           </div>
         </div>
         {selectedKey && (
@@ -203,12 +214,15 @@ export function DeskHistoryView({ onStart }: { onStart: (p: Plan) => void }) {
               )
             ) : (
               selectedSessions.map((s, i) => {
-                const durMin = Math.max(1, Math.round(s.durationSec / 60));
+                const clock = formatClock(s.ts);
                 return (
                   <div className="desk-session-row" key={i}>
                     <div>
                       <div className="plan">{planName(s.planId)}</div>
-                      <div className="meta">{s.completedReps} 次 · {durMin} 分钟</div>
+                      <div className="meta">
+                        {s.completedReps} 次 · {formatDuration(s.durationSec)}
+                        {clock ? ` · ${clock}` : ""}
+                      </div>
                     </div>
                     <span className={"tag" + (s.finished ? "" : " is-partial")}>
                       {s.finished ? "完成" : "部分"}

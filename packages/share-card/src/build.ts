@@ -14,6 +14,7 @@ export interface BuildOpts {
   streakDays: number;
   goalDone: number;
   goalTotal: number;
+  sessionReps?: number;
   /** 回顾卡热力（近 N 天等级 0–3）。 */
   heat?: number[];
   heatCols?: number;
@@ -44,6 +45,7 @@ export function buildCardData(o: BuildOpts): CardData {
     streakDays: o.streakDays,
     goalDone: o.goalDone,
     goalTotal: o.goalTotal,
+    sessionReps: o.sessionReps,
     heat: o.heat,
     heatCols: o.heatCols,
     brand: BRAND,

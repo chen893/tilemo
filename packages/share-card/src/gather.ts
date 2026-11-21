@@ -13,12 +13,15 @@ export interface GatherOpts {
   theme: ThemeMode;
   type: CardType;
   milestone?: MilestoneCopy;
+  sessionReps?: number;
 }
 
 export function gatherCardData(store: Store, settings: Settings, opts: GatherOpts): CardData {
   const s = store.getStreak();
   const today = store.getDay(todayKey());
-  const goalDone = today && today.sessions ? today.sessions.length : 0;
+  const sessions = today?.sessions ?? [];
+  const goalDone = sessions.length;
+  const latestReps = sessions.length > 0 ? sessions[sessions.length - 1].completedReps : undefined;
   let heat: number[] | undefined;
   if (opts.type === "review") {
     heat = [];
@@ -34,6 +37,7 @@ export function gatherCardData(store: Store, settings: Settings, opts: GatherOpt
     streakDays: s.current,
     goalDone,
     goalTotal: settings.dailyGoalGroups,
+    sessionReps: opts.sessionReps ?? latestReps,
     heat,
     heatCols: 6,
     milestone: opts.milestone,

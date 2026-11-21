@@ -41,17 +41,95 @@
 .plan-card:active {
   transform: scale(0.98);
 }
-.plan-card.is-default {
-  background: var(--accent);
-  color: #fff;
+.train-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
 }
-.plan-card.is-default:hover { background: var(--accent-hot); }
+.guide-pill {
+  padding: 6px 14px;
+  border-radius: var(--blob-pill);
+  border: 1px solid var(--rule-strong);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  color: var(--text-2);
+  background: transparent;
+}
+.guide-pill:hover { background: var(--paper-soft); color: var(--text); }
+.guide-box {
+  margin-top: var(--s-4);
+  padding: var(--s-4);
+  border-radius: var(--radius-md);
+  background: var(--paper-soft);
+  border: 1px solid var(--rule);
+  font-size: var(--t-sm);
+  color: var(--text-2);
+  line-height: 1.6;
+}
+.guide-box strong { display: block; color: var(--text); margin-bottom: var(--s-2); }
+.guide-box p { margin: 4px 0; }
+.plan-card.is-default {
+  background: var(--accent-btn);
+  color: var(--on-accent-btn);
+}
+.plan-card.is-default:hover { filter: brightness(0.95); }
 .plan-card-top {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: var(--s-3);
   margin-bottom: var(--s-2);
+}
+.plan-card-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+.plan-card-dur {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-sm);
+  font-weight: 700;
+  opacity: 0.85;
+}
+.plan-card-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-2);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.16);
+}
+.plan-card:not(.is-default) .plan-card-metrics {
+  background: var(--paper);
+}
+.plan-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.plan-metric .k {
+  font-size: var(--t-xs);
+  opacity: 0.78;
+}
+.plan-metric .v {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-sm);
+  font-weight: 800;
+}
+.plan-card-foot {
+  margin-top: var(--s-3);
+  text-align: right;
+  font-size: var(--t-sm);
+  font-weight: 700;
+  color: var(--accent);
+}
+.plan-card.is-default .plan-card-foot {
+  color: var(--on-accent-btn);
 }
 .plan-card-name {
   font-size: clamp(22px, 6vw, 30px);

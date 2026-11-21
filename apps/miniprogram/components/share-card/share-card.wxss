@@ -1,0 +1,99 @@
+/* 居中弹窗，与移动端 ShareSheet 的 Modal 布局一致 */
+.mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 120;
+  background: rgba(20, 16, 14, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48rpx;
+  box-sizing: border-box;
+}
+
+.panel {
+  width: 100%;
+  max-width: 660rpx;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  border-radius: 36rpx;
+  padding: 32rpx;
+  box-sizing: border-box;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+
+.head-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.head-close {
+  width: 64rpx;
+  height: 64rpx;
+  line-height: 58rpx;
+  text-align: center;
+  font-size: 36rpx;
+  color: var(--text-2);
+  border: 2rpx solid var(--rule-strong);
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.preview {
+  flex: 1;
+  max-height: 68vh;
+}
+
+.card-canvas {
+  display: block;
+  width: 540rpx;
+  height: 675rpx;
+  margin: 0 auto;
+  border-radius: 16rpx;
+  background: var(--paper-soft);
+}
+
+.actions {
+  padding-top: 28rpx;
+}
+
+.act {
+  width: 100%;
+  height: 92rpx;
+  line-height: 92rpx;
+  margin: 0;
+  padding: 0;
+  border-radius: 46rpx;
+  font-size: 32rpx;
+  font-weight: 700;
+  border: 2rpx solid transparent;
+  box-sizing: border-box;
+}
+
+.act::after {
+  border: none;
+}
+
+.act.is-primary {
+  background: var(--accent-btn);
+  color: var(--on-accent-btn);
+}
+
+.act.is-ghost {
+  margin-top: 24rpx;
+  background: transparent;
+  border-color: var(--rule-strong);
+  color: var(--text);
+}

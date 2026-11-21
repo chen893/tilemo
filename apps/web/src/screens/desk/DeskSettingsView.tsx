@@ -251,7 +251,7 @@ export function DeskSettingsView() {
         {/* data */}
         <div className={"desk-set-panel" + (cat === "data" ? " is-active" : "")}>
           <h3 className="desk-set-panel-head">数据</h3>
-          <p className="desk-set-panel-sub">导出你的全部记录为 JSON；所有数据仅存于本设备。</p>
+          <p className="desk-set-panel-sub">导出你的全部备份文件；所有数据仅存于本设备。</p>
 
           <div className="settings-card">
             <div className="setting-row">
@@ -259,8 +259,31 @@ export function DeskSettingsView() {
                 <div className="lbl">导出我的数据</div>
                 <div className="desc">含设置、方案、全部日志与连续天数</div>
               </div>
-              <button className="desk-cta" style={{ padding: "10px 20px", fontSize: "var(--t-sm)" }} onClick={exportData}>
+              <button
+                className="desk-cta"
+                disabled={(stats?.totalSessions ?? 0) === 0}
+                style={{ padding: "10px 20px", fontSize: "var(--t-sm)" }}
+                onClick={exportData}
+              >
                 导出我的数据
+              </button>
+            </div>
+            <div className="setting-row">
+              <div>
+                <div className="lbl">清空记录与设置</div>
+                <div className="desc">删除后无法恢复，建议先导出备份</div>
+              </div>
+              <button
+                className="danger-btn"
+                onClick={() => {
+                  if (!store) return;
+                  if (window.confirm("训练记录、连续天数与偏好设置都会被清除且无法恢复，确定清空吗？")) {
+                    store.clearAll();
+                    refresh();
+                  }
+                }}
+              >
+                清空
               </button>
             </div>
           </div>
@@ -271,8 +294,8 @@ export function DeskSettingsView() {
               <span className="vv">{stats?.totalDays ?? 0} 天</span>
             </div>
             <div className="row">
-              <span className="k">累计组数</span>
-              <span className="vv">{stats?.totalSessions ?? 0} 组</span>
+              <span className="k">完成组数</span>
+              <span className="vv">{stats?.completedSessions ?? 0} 组</span>
             </div>
             <div className="row">
               <span className="k">最近一次</span>

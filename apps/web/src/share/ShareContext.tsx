@@ -9,6 +9,7 @@ import { useDataStore } from "../data";
 export interface ShareInit {
   type: CardType;
   milestone?: MilestoneCopy;
+  sessionReps?: number;
 }
 
 const Ctx = createContext<(init: ShareInit) => void>(() => {});
@@ -29,6 +30,7 @@ export function ShareProvider({ children }: { children: ReactNode }) {
           theme: currentTheme(),
           type: init.type,
           milestone: init.milestone,
+          sessionReps: init.sessionReps,
         }),
       );
     },

@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "今天，提了么",
+  "usingComponents": {
+    "player": "/components/player/player",
+    "share-card": "/components/share-card/share-card"
+  }
+}

@@ -15,6 +15,11 @@
   --accent:       #E85A4F;  /* 单一鲜活暖朱（coral/朱陶），全站强调 */
   --accent-hot:   #D63A2E;  /* 收紧时升温加重 */
   --accent-soft:  #F4B4A8;  /* 放松态柔和 */
+  --accent-btn:   #C8402E;  /* 主按钮高对比暖朱（与白字 5.3:1 ≥ AA） */
+  --on-accent-btn:#FFFFFF;  /* 主按钮文字色 */
+  --relax:        #4F7A65;  /* 放松阶段：温润鼠尾草绿（双通道辨识，≥4.5:1） */
+  --relax-soft:   #DCE9E1;  /* 放松阶段柔和底 */
+  --danger:       #B83227;  /* 危险操作警示红（≥5.9:1） */
   --success:      #C8402E;  /* 暖朱阶·最深饱和档（达成/连续成就，统一暖朱单色） */
 
   /* 文本秩序（浅色，全部 ≥4.5:1 on paper） */
@@ -34,6 +39,7 @@
   --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px;
   --s-5: 24px; --s-6: 32px; --s-7: 48px; --s-8: 64px;
   --gutter: clamp(20px, 6vw, 48px);
+  --webnav-gutter: clamp(32px, 5vw, 96px);
 
   /* —— 字号 —— */
   --t-xs:   12px;
@@ -88,6 +94,11 @@
   --accent:       #FF6B5E;   /* 深色下提亮保对比 */
   --accent-hot:   #FF8270;
   --accent-soft:  #8A4538;
+  --accent-btn:   #FF6B5E;   /* 深色下主按钮提亮暖朱 */
+  --on-accent-btn:#1F1814;   /* 深墨字（与 #FF6B5E 对比度 6.2:1 ≥ AA） */
+  --relax:        #7BB598;   /* 深色下提亮鼠尾草绿 */
+  --relax-soft:   #26382F;   /* 深色下鼠尾草绿柔和底 */
+  --danger:       #FF7B72;   /* 深色下警示红 */
   --success:      #F26B5F;   /* 暖朱阶·深色提亮档（统一暖朱单色） */
 
   --text:         #F2E8DC;   /* 13.1:1 */

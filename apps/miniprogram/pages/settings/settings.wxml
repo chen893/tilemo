@@ -1,0 +1,100 @@
+<view class="page {{themeClass}}">
+  <view class="screen">
+    <view class="section-label is-first">每日目标</view>
+    <view class="card group">
+      <view class="row">
+        <view class="row-main">
+          <view class="row-title">每天几组</view>
+          <view class="row-sub">连续达标即计入连续天数</view>
+        </view>
+        <view class="stepper">
+          <view class="step {{goal <= 1 ? 'is-off' : ''}}" bindtap="onGoalMinus">−</view>
+          <view class="step-value">{{goal}}</view>
+          <view class="step {{goal >= 8 ? 'is-off' : ''}}" bindtap="onGoalPlus">+</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-label">默认方案</view>
+    <view class="card">
+      <view class="plan-grid">
+        <view
+          class="plan-chip {{item.active ? 'is-on' : ''}}"
+          wx:for="{{plans}}"
+          wx:key="id"
+          bindtap="onPickPlan"
+          data-id="{{item.id}}"
+        >{{item.name}}</view>
+      </view>
+      <view class="plan-hint">用于今日页一键开练</view>
+    </view>
+
+    <view class="section-label">体验</view>
+    <view class="card group">
+      <view class="row" bindtap="onToggleSound">
+        <view class="row-main">
+          <view class="row-title">声音</view>
+          <view class="row-sub">收 / 放 切换时播放轻提示音</view>
+        </view>
+        <view class="sw {{sound ? 'is-on' : ''}}"><view class="sw-knob"></view></view>
+      </view>
+      <view class="divider"></view>
+      <view class="row" bindtap="onToggleHaptics">
+        <view class="row-main">
+          <view class="row-title">触感反馈</view>
+          <view class="row-sub">阶段切换时轻震一下</view>
+        </view>
+        <view class="sw {{haptics ? 'is-on' : ''}}"><view class="sw-knob"></view></view>
+      </view>
+      <view class="divider"></view>
+      <view class="row" bindtap="onToggleQuote">
+        <view class="row-main">
+          <view class="row-title">每日一句</view>
+          <view class="row-sub">首页显示一句鼓励</view>
+        </view>
+        <view class="sw {{dailyQuote ? 'is-on' : ''}}"><view class="sw-knob"></view></view>
+      </view>
+    </view>
+
+    <view class="section-label">外观</view>
+    <view class="seg theme-seg">
+      <view
+        class="seg-item {{themeValue === item.v ? 'is-on' : ''}}"
+        wx:for="{{themeOpts}}"
+        wx:key="v"
+        bindtap="onPickTheme"
+        data-v="{{item.v}}"
+      >{{item.label}}</view>
+    </view>
+
+    <view class="section-label">数据</view>
+    <view class="card">
+      <view class="btn-deep {{hasLogs ? '' : 'is-disabled'}}" bindtap="onExport">导出我的数据</view>
+      <view class="card-hint">{{storageHint}}</view>
+      <view class="divider data-divider"></view>
+      <view class="row" bindtap="onClear">
+        <view class="row-main">
+          <view class="row-title">清空记录与设置</view>
+          <view class="row-sub">删除后无法恢复，建议先导出备份</view>
+        </view>
+        <view class="row-action danger">清空</view>
+      </view>
+    </view>
+
+    <view class="section-label">开源</view>
+    <view class="card group">
+      <view class="row" bindtap="onGithub">
+        <view class="row-main">
+          <view class="row-title">GitHub · 欢迎 Star</view>
+          <view class="row-sub">{{github}}</view>
+        </view>
+        <view class="row-action">复制</view>
+      </view>
+    </view>
+
+    <view class="about">
+      <view class="about-line">提了么 {{version}}</view>
+      <view class="about-line">数据保存在本机，只有你打开小程序时才会读取。</view>
+    </view>
+  </view>
+</view>
