@@ -10,7 +10,7 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "lint": "turbo run lint",
-    "check:miniprogram": "node tools/miniprogram-check/smoke.js && node tools/miniprogram-check/probe.js"
+    "check:miniprogram": "node tools/miniprogram-check/smoke.js && node tools/miniprogram-check/probe.js && node tools/miniprogram-check/player-canvas.js"
   },
   "devDependencies": {
     "@resvg/resvg-js": "^2.6.2",
