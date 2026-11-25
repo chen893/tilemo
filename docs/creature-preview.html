@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>提了么 · 科学提肛 × 抽象小熊猫 SVG 动画实验室</title>
+  <style>
+    :root {
+      --paper: #FAF3EC;
+      --paper-soft: #F3E8DC;
+      --paper-deep: #EBDDCB;
+      --ink: #2B2320;
+      --accent: #E85A4F;
+      --accent-hot: #D63A2E;
+      --accent-soft: #F4B4A8;
+      --accent-btn: #C8402E;
+      --on-accent-btn: #FFFFFF;
+      --relax: #4F7A65;
+      --relax-soft: #DCE9E1;
+      --text: #2B2320;
+      --text-2: #5C4F47;
+      --text-3: #6F5F50;
+      --rule: rgba(43, 35, 32, 0.12);
+      --rule-strong: rgba(43, 35, 32, 0.22);
+      --font: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Source Han Sans SC", system-ui, sans-serif;
+      --font-num: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", system-ui, sans-serif;
+      color-scheme: light;
+    }
+
+    [data-theme="dark"] {
+      --paper: #1F1814;
+      --paper-soft: #2A201A;
+      --paper-deep: #352821;
+      --ink: #F2E8DC;
+      --accent: #FF6B5E;
+      --accent-hot: #FF8270;
+      --accent-soft: #8A4538;
+      --accent-btn: #FF6B5E;
+      --on-accent-btn: #1F1814;
+      --relax: #7BB598;
+      --relax-soft: #26382F;
+      --text: #F2E8DC;
+      --text-2: #C4B5A6;
+      --text-3: #A09080;
+      --rule: rgba(242, 232, 220, 0.14);
+      --rule-strong: rgba(242, 232, 220, 0.28);
+      color-scheme: dark;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: var(--paper);
+      color: var(--text);
+      font-family: var(--font);
+      -webkit-font-smoothing: antialiased;
+      transition: background-color 280ms ease, color 280ms ease;
+    }
+
+    body {
+      background-image:
+        radial-gradient(120% 80% at 100% 0%, var(--paper-soft) 0%, transparent 55%),
+        radial-gradient(100% 60% at 0% 100%, var(--paper-soft) 0%, transparent 60%);
+    }
+
+    .app {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 24px clamp(16px, 4vw, 36px) 40px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(300px, 390px);
+      gap: 28px;
+      align-items: start;
+      min-height: 100vh;
+    }
+
+    @media (max-width: 880px) {
+      .app { grid-template-columns: 1fr; gap: 20px; }
+    }
+
+    /* —— 左侧舞台 —— */
+    .stage-card {
+      position: relative;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 28px 30px 29px 27px;
+      min-height: min(640px, 86vh);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 18px 50px rgba(43, 35, 32, 0.06);
+      transition: background-color 320ms ease, border-color 320ms ease;
+    }
+
+    [data-theme="dark"] .stage-card {
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    .stage-ambient {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .stage-ambient::before {
+      content: "";
+      position: absolute;
+      top: -12%;
+      right: -10%;
+      width: 340px;
+      height: 340px;
+      border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%;
+      background: var(--accent-soft);
+      filter: blur(56px);
+      opacity: 0.28;
+      transition: background-color 480ms ease, opacity 480ms ease;
+    }
+
+    .stage-card[data-phase="relax"] .stage-ambient::before {
+      background: var(--relax-soft);
+      opacity: 0.48;
+    }
+
+    .stage-top {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px 10px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-3);
+      letter-spacing: 0.05em;
+    }
+
+    .stage-top .num {
+      color: var(--text);
+      font-size: 16px;
+      font-weight: 800;
+      font-family: var(--font-num);
+    }
+
+    .stage-center {
+      position: relative;
+      z-index: 2;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 24px 16px;
+      text-align: center;
+    }
+
+    /* 视口高度约束：确保 375x667 小屏手机纵向不溢出 */
+    .creature-wrap {
+      width: min(74vw, 42vh, 340px);
+      height: min(74vw, 42vh, 340px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .stage-card.is-closeup .creature-wrap {
+      width: min(86vw, 62vh, 430px);
+      height: min(86vw, 62vh, 430px);
+    }
+
+    .creature-svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      user-select: none;
+    }
+
+    .metronome-readout {
+      margin-top: 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      transition: opacity 240ms ease;
+    }
+
+    .stage-card.is-closeup .metronome-readout {
+      opacity: 0;
+      pointer-events: none;
+      height: 0;
+      overflow: hidden;
+      margin: 0;
+    }
+
+    .readout-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 14px;
+    }
+
+    .phase-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      background: var(--paper-soft);
+      color: var(--text);
+      transition: background-color 280ms ease, color 280ms ease;
+    }
+
+    .stage-card[data-phase="contract"] .phase-pill {
+      background: var(--accent-btn);
+      color: var(--on-accent-btn);
+    }
+
+    .stage-card[data-phase="relax"] .phase-pill {
+      background: var(--relax);
+      color: #fff;
+    }
+
+    [data-theme="dark"] .stage-card[data-phase="relax"] .phase-pill {
+      color: #1F1814;
+    }
+
+    .stage-card[data-phase="done"] .phase-pill {
+      background: var(--accent-btn);
+      color: var(--on-accent-btn);
+    }
+
+    .countdown-num {
+      font-family: var(--font-num);
+      font-variant-numeric: tabular-nums;
+      font-size: 54px;
+      font-weight: 800;
+      line-height: 0.9;
+      letter-spacing: -0.04em;
+      color: var(--text);
+      transition: color 280ms ease;
+    }
+
+    .stage-card[data-phase="contract"] .countdown-num { color: var(--accent-btn); }
+    .stage-card[data-phase="relax"] .countdown-num { color: var(--relax); }
+
+    .countdown-unit {
+      font-size: 16px;
+      font-weight: 700;
+      margin-left: 4px;
+      opacity: 0.72;
+    }
+
+    .breath-cue {
+      font-size: 14px;
+      color: var(--text-2);
+      min-height: 22px;
+      max-width: 24em;
+    }
+
+    .piston-meter {
+      width: min(270px, 78%);
+      margin-top: 2px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .piston-track {
+      height: 5px;
+      border-radius: 999px;
+      background: var(--paper-deep);
+      overflow: hidden;
+    }
+
+    .piston-fill {
+      height: 100%;
+      width: 100%;
+      transform-origin: 0 50%;
+      transform: scaleX(0);
+      border-radius: 999px;
+      background: var(--accent);
+      transition: background-color 280ms ease;
+    }
+
+    .stage-card[data-phase="relax"] .piston-fill { background: var(--relax); }
+
+    .piston-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-3);
+    }
+
+    .stage-bottom {
+      position: relative;
+      z-index: 2;
+      padding: 10px 24px 24px;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .btn {
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      padding: 12px 24px;
+      border-radius: 999px;
+      transition: transform 140ms ease, background-color 200ms ease, color 200ms ease;
+    }
+    .btn:active { transform: scale(0.96); }
+    .btn-primary {
+      background: var(--accent-btn);
+      color: var(--on-accent-btn);
+      min-width: 140px;
+    }
+    .btn-soft {
+      background: var(--paper-soft);
+      color: var(--text);
+      border: 1px solid var(--rule-strong);
+    }
+    .btn-soft:hover { background: var(--paper-deep); }
+
+    /* —— 右侧控制面板 —— */
+    .panel { display: flex; flex-direction: column; gap: 16px; }
+    .panel-header { padding: 4px 2px; }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--text-3);
+      margin-bottom: 6px;
+    }
+
+    .seed-dot {
+      width: 10px;
+      height: 10px;
+      background: var(--accent);
+      border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%;
+      display: inline-block;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 21px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .panel-desc {
+      margin: 6px 0 0;
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--text-2);
+    }
+
+    .card {
+      background: var(--paper-soft);
+      border: 1px solid var(--rule);
+      border-radius: 22px 24px 23px 21px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .card-title {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: var(--text-3);
+      text-transform: uppercase;
+      margin: 0;
+    }
+
+    .chip-group { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .chip {
+      border: 1px solid var(--rule-strong);
+      background: var(--paper);
+      color: var(--text-2);
+      border-radius: 999px;
+      padding: 7px 13px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 160ms ease;
+    }
+
+    .chip:hover { border-color: var(--accent); color: var(--text); }
+    .chip.is-active {
+      background: var(--accent-btn);
+      border-color: var(--accent-btn);
+      color: var(--on-accent-btn);
+    }
+    .chip.is-relax.is-active {
+      background: var(--relax);
+      border-color: var(--relax);
+      color: #fff;
+    }
+    [data-theme="dark"] .chip.is-relax.is-active { color: #1F1814; }
+
+    .slider-row { display: flex; flex-direction: column; gap: 6px; }
+    .slider-head {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .slider-val {
+      font-family: var(--font-num);
+      color: var(--text-3);
+      font-weight: 700;
+    }
+    input[type="range"] { width: 100%; accent-color: var(--accent-btn); cursor: pointer; }
+    .toggle-row { display: flex; gap: 8px; }
+    .toggle-row .chip { flex: 1; text-align: center; }
+
+    .note-list {
+      margin: 0;
+      padding-left: 18px;
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: var(--text-2);
+    }
+    .note-list li + li { margin-top: 5px; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- 左侧：沉浸式节拍器舞台 -->
+    <section class="stage-card" id="stageCard" data-phase="contract">
+      <div class="stage-ambient"></div>
+
+      <div class="stage-top">
+        <div id="planLabel">入门温和 · 3秒呼气提 / 3秒吸气放</div>
+        <div id="repLabel">第 <span class="num" id="repNum">1</span> / <span class="num" id="repTotal">6</span> 次</div>
+      </div>
+
+      <div class="stage-center">
+        <div class="creature-wrap">
+          <!-- 科学提肛 × 抽象小熊猫（已修复深色可见性、肩带裁切、吊床几何贴合与阻尼过渡） -->
+          <svg class="creature-svg" id="pandaSvg" viewBox="0 0 280 280" aria-hidden="true">
+            <defs>
+              <radialGradient id="auraGrad" cx="50%" cy="55%" r="50%">
+                <stop offset="0%" id="auraStop0" stop-color="#E85A4F" stop-opacity="0.18" />
+                <stop offset="70%" id="auraStop1" stop-color="#E85A4F" stop-opacity="0.05" />
+                <stop offset="100%" id="auraStop2" stop-color="#E85A4F" stop-opacity="0" />
+              </radialGradient>
+              <radialGradient id="xrayGlow" cx="50%" cy="62%" r="50%">
+                <stop offset="0%" id="xrayStop0" stop-color="#E85A4F" stop-opacity="0.24" />
+                <stop offset="100%" id="xrayStop1" stop-color="#E85A4F" stop-opacity="0" />
+              </radialGradient>
+              <radialGradient id="blushGrad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#E85A4F" stop-opacity="0.42" />
+                <stop offset="100%" stop-color="#E85A4F" stop-opacity="0" />
+              </radialGradient>
+              <!-- 躯干裁切路径：保证黑肩带永不穿帮或压坏外描边 -->
+              <clipPath id="torsoClip">
+                <path id="torsoClipPath" d="" />
+              </clipPath>
+            </defs>
+
+            <!-- 1. 柔和背景氛围光晕 -->
+            <circle id="bgAura" cx="140" cy="156" r="106" fill="url(#auraGrad)" />
+
+            <!-- 2. 稳固坐垫与地面投影 -->
+            <ellipse id="groundShadow" cx="140" cy="238" rx="76" ry="12" fill="#2B2320" opacity="0.12" />
+            <path id="cushionPath"
+              d="M 74 232 Q 140 245 206 232 Q 214 224 202 221 Q 140 230 78 221 Q 66 224 74 232 Z"
+              fill="#EBDDCB" stroke="#2B2320" stroke-width="3.2" stroke-linejoin="round" opacity="0.92" />
+
+            <!-- 3. 小熊猫本体组 -->
+            <g id="pandaRoot">
+              <!-- 3.1 盘坐双腿（外轮廓与毛色均随深浅主题切换，暗色不隐身） -->
+              <g id="legsGroup">
+                <path id="legL"
+                  d="M 102 204 C 76 202, 66 218, 82 226 C 98 233, 126 230, 134 222"
+                  fill="#2B2320" stroke="#2B2320" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" />
+                <path id="legR"
+                  d="M 178 204 C 204 202, 214 218, 198 226 C 182 233, 154 230, 146 222"
+                  fill="#2B2320" stroke="#2B2320" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" />
+                <ellipse cx="122" cy="222" rx="6" ry="4" fill="#FFFDF9" opacity="0.24" />
+                <ellipse cx="158" cy="222" rx="6" ry="4" fill="#FFFDF9" opacity="0.24" />
+              </g>
+
+              <!-- 3.2 躯干（采用 填充+裁切肩带+顶层独立描边，彻底零穿帮） -->
+              <g id="torsoGroup">
+                <g clip-path="url(#torsoClip)">
+                  <path id="torsoFillPath" d="" fill="#FFFDF9" />
+                  <path id="shoulderBand" d="" fill="#2B2320" />
+                </g>
+
+                <!-- 3.3 科学透视小窗：膈肌–盆底肌「活塞联动 + 吊床轻提」 -->
+                <g id="xrayGroup" opacity="0.92">
+                  <ellipse id="xrayAura" cx="140" cy="186" rx="34" ry="36" fill="url(#xrayGlow)" />
+
+                  <!-- 上方：膈肌柔弧线 -->
+                  <path id="diaphragmArc" d="" fill="none" stroke="#6F5F50" stroke-width="2.2" stroke-dasharray="4 4" stroke-linecap="round" opacity="0.65" />
+
+                  <!-- 内部微细上提引导线（带平滑正弦淡入淡出包络，零跳帧） -->
+                  <g id="liftGuides" opacity="0">
+                    <path id="guideL" d="" fill="none" stroke="#E85A4F" stroke-width="2" stroke-linecap="round" />
+                    <path id="guideR" d="" fill="none" stroke="#E85A4F" stroke-width="2" stroke-linecap="round" />
+                  </g>
+
+                  <!-- 下方：盆底肌吊床弧线 -->
+                  <path id="hammockFill" d="" fill="#E85A4F" opacity="0.14" />
+                  <path id="hammockArc" d="" fill="none" stroke="#E85A4F" stroke-width="4.2" stroke-linecap="round" />
+
+                  <!-- 吊床承托的品牌暖朱小种子（底端精确锚定在吊床真实中点上方 2.5px） -->
+                  <g id="seedGroup">
+                    <path id="seedBody"
+                      d="M 140 192 C 147 192, 150 197, 149 203 C 148 209, 144 212, 139 212 C 134 212, 131 208, 131 202 C 131 196, 135 192, 140 192 Z"
+                      fill="#E85A4F" />
+                    <circle cx="137.5" cy="197.5" r="2.1" fill="#FFFDF9" opacity="0.68" />
+                  </g>
+                </g>
+
+                <!-- 躯干顶层独立外描边 -->
+                <path id="torsoStrokePath" d="" fill="none" stroke="#2B2320" stroke-width="4.8" stroke-linejoin="round" />
+              </g>
+
+              <!-- 3.4 两只小黑手（双层描边：底层暗色轮廓防深色模式融化 + 内层黑毛） -->
+              <g id="armsGroup">
+                <path id="armLOutline" d="" fill="none" stroke="transparent" stroke-width="13.5" stroke-linecap="round" stroke-linejoin="round" />
+                <path id="armROutline" d="" fill="none" stroke="transparent" stroke-width="13.5" stroke-linecap="round" stroke-linejoin="round" />
+                <path id="armL" d="" fill="none" stroke="#2B2320" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+                <path id="armR" d="" fill="none" stroke="#2B2320" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+              </g>
+
+              <!-- 3.5 抽象手绘熊猫头 -->
+              <g id="headGroup">
+                <!-- 双耳（带次级微动与深色模式可见描边） -->
+                <g id="earLGroup">
+                  <ellipse id="earL" cx="101" cy="54" rx="14" ry="13" transform="rotate(-18 101 54)" fill="#2B2320" stroke="#2B2320" stroke-width="2.2" />
+                </g>
+                <g id="earRGroup">
+                  <ellipse id="earR" cx="179" cy="53" rx="14.5" ry="13" transform="rotate(16 179 53)" fill="#2B2320" stroke="#2B2320" stroke-width="2.2" />
+                </g>
+
+                <!-- 脑袋轮廓 -->
+                <path id="headPath"
+                  d="M 140 44 C 171 43, 191 62, 190 88 C 189 111, 169 124, 140 124 C 110 124, 91 111, 90 87 C 89 62, 110 45, 140 44 Z"
+                  fill="#FFFDF9" stroke="#2B2320" stroke-width="4.8" stroke-linejoin="round" />
+
+                <!-- 淡雅腮红 -->
+                <ellipse id="blushL" cx="108" cy="100" rx="11.5" ry="7" fill="url(#blushGrad)" opacity="0.22" />
+                <ellipse id="blushR" cx="172" cy="100" rx="11.5" ry="7" fill="url(#blushGrad)" opacity="0.22" />
+
+                <!-- 招牌斜椭圆黑眼圈 -->
+                <ellipse id="patchL" cx="120" cy="86" rx="12.5" ry="15" transform="rotate(16 120 86)" fill="#2B2320" />
+                <ellipse id="patchR" cx="160" cy="86" rx="12.5" ry="15" transform="rotate(-16 160 86)" fill="#2B2320" />
+
+                <!-- 睁眼形态 -->
+                <g id="openEyes">
+                  <ellipse id="scleraL" cx="121" cy="85" rx="5.3" ry="5.6" fill="#FFFDF9" />
+                  <circle id="pupilL" cx="122" cy="85.5" r="2.5" fill="#2B2320" />
+                  <ellipse id="scleraR" cx="159" cy="85" rx="5.3" ry="5.6" fill="#FFFDF9" />
+                  <circle id="pupilR" cx="158" cy="85.5" r="2.5" fill="#2B2320" />
+                </g>
+
+                <!-- 线条眼 -->
+                <g id="lineEyes" opacity="0">
+                  <path id="lineEyeL" d="" fill="none" stroke="#FFFDF9" stroke-width="3.1" stroke-linecap="round" />
+                  <path id="lineEyeR" d="" fill="none" stroke="#FFFDF9" stroke-width="3.1" stroke-linecap="round" />
+                </g>
+
+                <!-- 小黑鼻子 -->
+                <ellipse id="nose" cx="140" cy="95" rx="4.2" ry="2.8" fill="#2B2320" />
+
+                <!-- 嘴巴 -->
+                <path id="mouthPath" d="" fill="none" stroke="#2B2320" stroke-width="3.1" stroke-linecap="round" stroke-linejoin="round" />
+              </g>
+            </g>
+
+            <!-- 4. 呼吸气流（严格收在脸颊轮廓外侧 x≤84 / x≥196，绝不横穿脸颊！） -->
+            <g id="exhaleFlow" opacity="0">
+              <path id="exhale1" d="M 196 102 Q 214 98 228 94 T 254 90" fill="none" stroke="#E85A4F" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="22 14" />
+              <path id="exhale2" d="M 196 110 Q 214 111 228 108 T 248 106" fill="none" stroke="#E85A4F" stroke-width="2" stroke-linecap="round" stroke-dasharray="16 16" opacity="0.65" />
+            </g>
+
+            <g id="inhaleFlow" opacity="0">
+              <path id="inhale1" d="M 252 90 Q 228 95 212 96 T 194 96" fill="none" stroke="#4F7A65" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="20 14" />
+              <path id="inhale2" d="M 28 90 Q 52 95 68 96 T 86 96" fill="none" stroke="#4F7A65" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="20 14" />
+            </g>
+
+            <!-- 5. 暂停省略号（随主题变色，深色清晰可见） -->
+            <g id="pauseBubble" opacity="0">
+              <circle id="pauseD1" cx="204" cy="58" r="3.4" fill="#6F5F50" />
+              <circle id="pauseD2" cx="216" cy="52" r="3.4" fill="#6F5F50" />
+              <circle id="pauseD3" cx="228" cy="46" r="3.4" fill="#6F5F50" />
+            </g>
+
+            <!-- 6. 完成态庆祝暖光点 -->
+            <g id="confettiGroup" opacity="0">
+              <path d="M 68 58 L 68 70 M 62 64 L 74 64" stroke="#E85A4F" stroke-width="3" stroke-linecap="round" />
+              <path d="M 214 54 L 214 66 M 208 60 L 220 60" stroke="#4F7A65" stroke-width="3" stroke-linecap="round" />
+              <circle cx="56" cy="108" r="4.5" fill="#E85A4F" />
+              <circle cx="224" cy="104" r="4" fill="#F4B4A8" />
+              <circle cx="140" cy="22" r="4.5" fill="#E85A4F" />
+            </g>
+          </svg>
+        </div>
+
+        <div class="metronome-readout" aria-live="polite">
+          <div class="readout-row">
+            <span class="phase-pill" id="phasePill">↑ 呼气 · 上提</span>
+            <div class="countdown-num">
+              <span id="countdownVal">3</span><span class="countdown-unit" id="countdownUnit">秒</span>
+            </div>
+          </div>
+          <div class="breath-cue" id="breathCue">像轻吹蜡烛一样呼气，盆底向内向上轻轻吸起</div>
+          <div class="piston-meter">
+            <div class="piston-track"><div class="piston-fill" id="pistonFill"></div></div>
+            <div class="piston-label">
+              <span id="curveStage">呼气启动上提</span>
+              <span id="curvePct">0%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stage-bottom">
+        <button class="btn btn-primary" id="playToggleBtn">暂停演示</button>
+        <button class="btn btn-soft" id="restartBtn">从准备开始</button>
+      </div>
+    </section>
+
+    <!-- 右侧：实时调校面板 -->
+    <aside class="panel">
+      <div class="panel-header">
+        <div class="eyebrow"><span class="seed-dot"></span>复审修复版 · 科学提肛 × 抽象小熊猫</div>
+        <h1 class="panel-title">表面淡定摸鱼，内部暗中上提</h1>
+        <p class="panel-desc">
+          已按审核报告逐项修复：<strong>深色模式立体轮廓</strong>、<strong>肩带对称与裁切</strong>、<strong>吊床与种子零穿透贴合</strong>、<strong>长保持/快肌分态科学呼吸</strong>、<strong>全状态阻尼过渡</strong>与 <strong>减弱动效适配</strong>。
+        </p>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">科学训练方案（快肌 / 标准 / 长保持）</h2>
+        <div class="chip-group" id="planChips">
+          <button class="chip" data-plan="quick">快肌 1s / 1s</button>
+          <button class="chip is-active" data-plan="beginner">入门 3s / 3s</button>
+          <button class="chip" data-plan="standard">标准 5s / 5s</button>
+          <button class="chip" data-plan="endurance">耐力 8s / 6s</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">单态细看（锁定某个状态）</h2>
+        <div class="chip-group" id="stateChips">
+          <button class="chip" data-lock="prep">准备 3-2-1</button>
+          <button class="chip" data-lock="contract">↑ 呼气 · 上提</button>
+          <button class="chip is-relax" data-lock="relax">↓ 吸气 · 放下</button>
+          <button class="chip" data-lock="paused">暂停等待</button>
+          <button class="chip" data-lock="done">完成庆祝</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">视觉表达微调</h2>
+
+        <div class="slider-row">
+          <div class="slider-head">
+            <span>内部吊床透视显眼度</span>
+            <span class="slider-val" id="xrayVal">92%</span>
+          </div>
+          <input type="range" id="xraySlider" min="35" max="100" value="92" />
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-head">
+            <span>呼气 / 吸气气流提示</span>
+            <span class="slider-val" id="breathVal">85%</span>
+          </div>
+          <input type="range" id="breathSlider" min="0" max="100" value="85" />
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-head">
+            <span>抽象表情生动度</span>
+            <span class="slider-val" id="exprVal">80%</span>
+          </div>
+          <input type="range" id="exprSlider" min="0" max="100" value="80" />
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">环境、视图与无障碍</h2>
+        <div class="toggle-row">
+          <button class="chip is-active" id="themeLightBtn">暖纸浅色</button>
+          <button class="chip" id="themeDarkBtn">暖夜深色</button>
+        </div>
+        <div class="toggle-row">
+          <button class="chip is-active" id="viewMetroBtn">节拍器实景</button>
+          <button class="chip" id="viewCloseupBtn">纯小熊猫特写</button>
+        </div>
+        <div class="toggle-row">
+          <button class="chip" id="reduceMotionBtn">减弱动效：关</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">本次审核修复清单</h2>
+        <ul class="note-list">
+          <li><strong>深色模式</strong>：暖炭黑毛皮 + 暖棕外描边，双耳/盘腿/双臂/暂停点全部清晰立体。</li>
+          <li><strong>几何精度</strong>：肩带左右对称 + <code>clipPath</code> 裁切；种子严格坐于吊床顶点上方 2.5px 零穿透。</li>
+          <li><strong>三套呼吸逻辑</strong>：快肌（≤1.5s）关闭强气流防头晕；长保持（≥5s）前 2s 呼气启动、随后转浅自然呼吸。</li>
+          <li><strong>零跳变与低开销</strong>：全参数阻尼平滑过渡 + 文本变化才更新 DOM（零 <code>innerHTML</code>）。</li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    (() => {
+      const PLANS = {
+        quick:     { name: "快肌唤醒", contract: 1, relax: 1, reps: 10 },
+        beginner:  { name: "入门温和", contract: 3, relax: 3, reps: 6 },
+        standard:  { name: "日常标准", contract: 5, relax: 5, reps: 6 },
+        endurance: { name: "深层耐力", contract: 8, relax: 6, reps: 4 },
+      };
+
+      // 深浅双主题：深色模式使用暖炭黑(#3D322C) + 暖棕描边(#6D5A4E)，彻底解决暗底隐身
+      const PALETTES = {
+        light: {
+          lineInk: "#2B2320",
+          blackFur: "#2B2320",
+          furEdge: "#2B2320",
+          armOutline: "transparent",
+          fur: "#FFFDF9",
+          cushion: "#EBDDCB",
+          accent: "#E85A4F",
+          relax: "#4F7A65",
+          neutral: "#8D7B6C",
+          pauseDot: "#6F5F50",
+          shadow: "#2B2320",
+        },
+        dark: {
+          lineInk: "#241B17",
+          blackFur: "#3D322C",
+          furEdge: "#766357",
+          armOutline: "#766357",
+          fur: "#F5ECE2",
+          cushion: "#3A2C24",
+          accent: "#FF6B5E",
+          relax: "#7BB598",
+          neutral: "#A09080",
+          pauseDot: "#C4B5A6",
+          shadow: "#000000",
+        },
+      };
+
+      const lerp = (a, b, t) => a + (b - a) * t;
+      const damp = (cur, target, speed, dt) => lerp(cur, target, 1 - Math.exp(-speed * dt));
+      const clamp01 = (v) => Math.max(0, Math.min(1, v));
+      const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+      const easeInOutSine = (t) => -(Math.cos(Math.PI * t) - 1) / 2;
+
+      function hexToRgb(hex) {
+        const n = parseInt(hex.slice(1), 16);
+        return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+      }
+      function lerpColor(h1, h2, t) {
+        const a = hexToRgb(h1), b = hexToRgb(h2);
+        return `rgb(${Math.round(lerp(a[0], b[0], t))}, ${Math.round(lerp(a[1], b[1], t))}, ${Math.round(lerp(a[2], b[2], t))})`;
+      }
+
+      // 科学上提曲线：末端保持 1.0，与放松起点无缝对齐（零倒跳）
+      function liftCurve(u, isQuick) {
+        const riseEnd = isQuick ? 0.35 : 0.24;
+        if (u < riseEnd) return easeOutCubic(u / riseEnd);
+        return 1.0;
+      }
+
+      // 科学放松曲线：从 1.0 顺滑沉降至 0.0（Complete Drop）
+      function dropCurve(u, isQuick) {
+        const dropEnd = isQuick ? 0.45 : 0.36;
+        if (u < dropEnd) return easeInOutSine(u / dropEnd);
+        return 1.0;
+      }
+
+      const el = {
+        stageCard: document.getElementById("stageCard"),
+        planLabel: document.getElementById("planLabel"),
+        repLabel: document.getElementById("repLabel"),
+        repNum: document.getElementById("repNum"),
+        repTotal: document.getElementById("repTotal"),
+        phasePill: document.getElementById("phasePill"),
+        countdownVal: document.getElementById("countdownVal"),
+        countdownUnit: document.getElementById("countdownUnit"),
+        breathCue: document.getElementById("breathCue"),
+        pistonFill: document.getElementById("pistonFill"),
+        curveStage: document.getElementById("curveStage"),
+        curvePct: document.getElementById("curvePct"),
+        playToggleBtn: document.getElementById("playToggleBtn"),
+        restartBtn: document.getElementById("restartBtn"),
+        reduceMotionBtn: document.getElementById("reduceMotionBtn"),
+
+        bgAura: document.getElementById("bgAura"),
+        auraStop0: document.getElementById("auraStop0"),
+        auraStop1: document.getElementById("auraStop1"),
+        auraStop2: document.getElementById("auraStop2"),
+        groundShadow: document.getElementById("groundShadow"),
+        cushionPath: document.getElementById("cushionPath"),
+
+        legL: document.getElementById("legL"),
+        legR: document.getElementById("legR"),
+        torsoClipPath: document.getElementById("torsoClipPath"),
+        torsoFillPath: document.getElementById("torsoFillPath"),
+        torsoStrokePath: document.getElementById("torsoStrokePath"),
+        shoulderBand: document.getElementById("shoulderBand"),
+
+        xrayGroup: document.getElementById("xrayGroup"),
+        xrayStop0: document.getElementById("xrayStop0"),
+        xrayStop1: document.getElementById("xrayStop1"),
+        diaphragmArc: document.getElementById("diaphragmArc"),
+        liftGuides: document.getElementById("liftGuides"),
+        guideL: document.getElementById("guideL"),
+        guideR: document.getElementById("guideR"),
+        hammockFill: document.getElementById("hammockFill"),
+        hammockArc: document.getElementById("hammockArc"),
+        seedGroup: document.getElementById("seedGroup"),
+        seedBody: document.getElementById("seedBody"),
+
+        armLOutline: document.getElementById("armLOutline"),
+        armROutline: document.getElementById("armROutline"),
+        armL: document.getElementById("armL"),
+        armR: document.getElementById("armR"),
+
+        headGroup: document.getElementById("headGroup"),
+        earLGroup: document.getElementById("earLGroup"),
+        earRGroup: document.getElementById("earRGroup"),
+        earL: document.getElementById("earL"),
+        earR: document.getElementById("earR"),
+        headPath: document.getElementById("headPath"),
+        blushL: document.getElementById("blushL"),
+        blushR: document.getElementById("blushR"),
+        patchL: document.getElementById("patchL"),
+        patchR: document.getElementById("patchR"),
+        openEyes: document.getElementById("openEyes"),
+        scleraL: document.getElementById("scleraL"),
+        scleraR: document.getElementById("scleraR"),
+        pupilL: document.getElementById("pupilL"),
+        pupilR: document.getElementById("pupilR"),
+        lineEyes: document.getElementById("lineEyes"),
+        lineEyeL: document.getElementById("lineEyeL"),
+        lineEyeR: document.getElementById("lineEyeR"),
+        nose: document.getElementById("nose"),
+        mouthPath: document.getElementById("mouthPath"),
+
+        exhaleFlow: document.getElementById("exhaleFlow"),
+        exhale1: document.getElementById("exhale1"),
+        exhale2: document.getElementById("exhale2"),
+        inhaleFlow: document.getElementById("inhaleFlow"),
+        inhale1: document.getElementById("inhale1"),
+        inhale2: document.getElementById("inhale2"),
+        pauseBubble: document.getElementById("pauseBubble"),
+        pauseD1: document.getElementById("pauseD1"),
+        pauseD2: document.getElementById("pauseD2"),
+        pauseD3: document.getElementById("pauseD3"),
+        confettiGroup: document.getElementById("confettiGroup"),
+      };
+
+      const mqReduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+      const config = {
+        planKey: "beginner",
+        lockState: null,
+        running: true,
+        theme: "light",
+        xrayOp: 0.92,
+        breathOp: 0.85,
+        expr: 0.80,
+        reducedMotion: mqReduce.matches,
+      };
+
+      mqReduce.addEventListener?.("change", (e) => {
+        config.reducedMotion = e.matches;
+        syncReducedMotionBtn();
+      });
+
+      const sim = {
+        stage: "contract",
+        rep: 1,
+        elapsed: 0,
+        duration: 3,
+        blinkTimer: 2.3,
+        blinkProgress: 0,
+        lastTs: performance.now(),
+        clock: 0,
+      };
+
+      // 渲染层阻尼平滑状态（彻底消除阶段交接与暂停/完成的硬跳变）
+      const disp = {
+        lift: 0.15,
+        chest: 0,
+        headY: 0,
+        headRot: 0,
+        earTilt: 0,
+        armCheer: 0,
+        exhaleOp: 0,
+        inhaleOp: 0,
+        blushOp: 0.2,
+        guideOp: 0,
+        colorT: 1,      // 0 = relax绿, 1 = contract暖朱
+        auraR: 104,
+        mouthBlow: 0,   // 0 = 常规嘴型, 1 = 吹蜡烛小圆嘴
+      };
+
+      // 低频 DOM 文本缓存（避免 60fps 写 DOM / 严禁 innerHTML）
+      const lastUI = {
+        stage: "",
+        rep: -1,
+        pill: "",
+        val: "",
+        unit: "",
+        cue: "",
+        curveStage: "",
+        pct: -1,
+      };
+
+      function updateTextUI(stage, remaining, cueText, stageText, pct, isQuick) {
+        if (lastUI.stage !== stage) {
+          lastUI.stage = stage;
+          el.stageCard.dataset.phase = stage;
+          el.repLabel.style.visibility = (stage === "contract" || stage === "relax") ? "visible" : "hidden";
+        }
+        if (lastUI.rep !== sim.rep) {
+          lastUI.rep = sim.rep;
+          el.repNum.textContent = String(sim.rep);
+        }
+
+        // 色觉障碍双通道：胶囊增加 ↑ / ↓ 方向符号编码
+        const pillMap = {
+          prep: "准 · 备",
+          contract: isQuick ? "↑ 快收 · 上提" : "↑ 呼气 · 上提",
+          relax: isQuick ? "↓ 快放 · 沉降" : "↓ 吸气 · 放下",
+          paused: "已暂停",
+          done: "✓ 今天提了",
+        };
+        const pill = pillMap[stage] || "";
+        if (lastUI.pill !== pill) {
+          lastUI.pill = pill;
+          el.phasePill.textContent = pill;
+        }
+
+        const valStr = stage === "done" ? "✓" : (stage === "paused" ? "—" : String(remaining));
+        const unitStr = (stage === "done" || stage === "paused") ? "" : "秒";
+        if (lastUI.val !== valStr) {
+          lastUI.val = valStr;
+          el.countdownVal.textContent = valStr;
+        }
+        if (lastUI.unit !== unitStr) {
+          lastUI.unit = unitStr;
+          el.countdownUnit.textContent = unitStr;
+        }
+        if (lastUI.cue !== cueText) {
+          lastUI.cue = cueText;
+          el.breathCue.textContent = cueText;
+        }
+        if (lastUI.curveStage !== stageText) {
+          lastUI.curveStage = stageText;
+          el.curveStage.textContent = stageText;
+        }
+
+        const pctInt = Math.round(clamp01(pct) * 100);
+        if (lastUI.pct !== pctInt) {
+          lastUI.pct = pctInt;
+          el.curvePct.textContent = `${pctInt}%`;
+        }
+        // 使用 GPU transform: scaleX，不触发布局重排
+        el.pistonFill.style.transform = `scaleX(${clamp01(pct).toFixed(3)})`;
+      }
+
+      function startPlan(key, fromPrep = true) {
+        config.planKey = key;
+        config.lockState = null;
+        config.running = true;
+        const p = PLANS[key];
+        sim.rep = 1;
+        sim.elapsed = 0;
+        sim.stage = fromPrep ? "prep" : "contract";
+        sim.duration = fromPrep ? 3 : p.contract;
+        const isQuick = p.contract <= 1.5;
+        el.planLabel.textContent = isQuick
+          ? `${p.name} · ${p.contract}秒快提 / ${p.relax}秒快放`
+          : `${p.name} · ${p.contract}秒呼气提 / ${p.relax}秒吸气放`;
+        el.repTotal.textContent = String(p.reps);
+        syncButtons();
+      }
+
+      function setLockState(state) {
+        config.lockState = state;
+        config.running = state !== "paused";
+        sim.elapsed = 0;
+        const p = PLANS[config.planKey];
+        if (state === "prep") { sim.stage = "prep"; sim.duration = 3; }
+        else if (state === "contract") { sim.stage = "contract"; sim.duration = p.contract; }
+        else if (state === "relax") { sim.stage = "relax"; sim.duration = p.relax; }
+        else if (state === "done") { sim.stage = "done"; sim.duration = 4; }
+        else if (state === "paused") { sim.stage = "paused"; sim.duration = 3; }
+        syncButtons();
+      }
+
+      function syncButtons() {
+        document.querySelectorAll("#planChips .chip").forEach((b) => {
+          b.classList.toggle("is-active", !config.lockState && b.dataset.plan === config.planKey);
+        });
+        document.querySelectorAll("#stateChips .chip").forEach((b) => {
+          b.classList.toggle("is-active", config.lockState === b.dataset.lock);
+        });
+        el.playToggleBtn.textContent = config.running ? "暂停演示" : "继续演示";
+      }
+
+      function syncReducedMotionBtn() {
+        el.reduceMotionBtn.classList.toggle("is-active", config.reducedMotion);
+        el.reduceMotionBtn.textContent = config.reducedMotion ? "减弱动效：开" : "减弱动效：关";
+      }
+
+      function renderFrame(dt) {
+        const pal = PALETTES[config.theme];
+        const p = PLANS[config.planKey];
+        const reduce = config.reducedMotion;
+        sim.clock += dt;
+
+        // 自主自然眨眼（减弱动效时关闭）
+        let blinkClose = 0;
+        if (!reduce) {
+          sim.blinkTimer -= dt;
+          if (sim.blinkTimer <= 0) {
+            sim.blinkProgress = 0.16;
+            sim.blinkTimer = 2.5 + Math.random() * 2.8;
+          }
+          if (sim.blinkProgress > 0) {
+            sim.blinkProgress = Math.max(0, sim.blinkProgress - dt);
+            blinkClose = Math.sin((1 - sim.blinkProgress / 0.16) * Math.PI);
+          }
+        }
+
+        // 状态机推进
+        const activeStage = config.lockState || (config.running ? sim.stage : "paused");
+        if (config.running && activeStage !== "paused") {
+          sim.elapsed += dt;
+          if (sim.elapsed >= sim.duration) {
+            if (config.lockState) {
+              sim.elapsed = sim.elapsed % sim.duration;
+            } else {
+              sim.elapsed = 0;
+              if (sim.stage === "prep") { sim.stage = "contract"; sim.duration = p.contract; }
+              else if (sim.stage === "contract") { sim.stage = "relax"; sim.duration = p.relax; }
+              else if (sim.stage === "relax") {
+                if (sim.rep < p.reps) { sim.rep += 1; sim.stage = "contract"; sim.duration = p.contract; }
+                else { sim.stage = "done"; sim.duration = 4.2; }
+              } else if (sim.stage === "done") {
+                sim.rep = 1; sim.stage = "prep"; sim.duration = 3;
+              }
+            }
+          }
+        }
+
+        const stage = config.lockState || (config.running ? sim.stage : "paused");
+        const u = clamp01(sim.elapsed / Math.max(0.01, sim.duration));
+        const remaining = Math.max(1, Math.ceil(sim.duration - sim.elapsed));
+        const isQuick = p.contract <= 1.5;
+        const isLongHold = sim.duration >= 4.5;
+        const expr = config.expr;
+        const idleBreath = reduce ? 0 : Math.sin(sim.clock * 2.0);
+
+        // 目标状态（后续统一经过 damp 阻尼平滑，彻底消除硬跳变）
+        let targetLift = disp.lift;
+        let targetChest = idleBreath * 0.22;
+        let targetHeadY = 0;
+        let targetHeadRot = 0;
+        let targetEarTilt = 0;
+        let targetArmCheer = 0;
+        let targetExhale = 0;
+        let targetInhale = 0;
+        let targetBlush = 0.20;
+        let targetGuide = 0;
+        let targetColorT = disp.colorT;
+        let targetAuraR = 104;
+        let targetMouthBlow = 0;
+
+        let pauseOp = 0;
+        let confettiOp = 0;
+        let useLineEyes = false;
+        let lineEyeL = "";
+        let lineEyeR = "";
+        let eyeScaleY = 1 - blinkClose * 0.88;
+        let pupilOffsetX = 0;
+        let pupilOffsetY = 0;
+        let baseMouthD = "M 133 105 Q 140 109 147 105";
+
+        if (stage === "prep") {
+          targetLift = 0.08;
+          targetChest = reduce ? 0.3 : Math.sin(u * Math.PI) * 0.65;
+          targetColorT = 0;
+          targetInhale = reduce ? 0 : Math.sin(u * Math.PI) * 0.55 * config.breathOp;
+          targetHeadY = -targetChest * 1.1;
+          baseMouthD = "M 134 105 Q 140 108 146 105";
+          updateTextUI("prep", remaining, "坐稳放松肩膀和屁股，先轻轻吸一口气", "吸气预备 · 全身放松", u, isQuick);
+        } else if (stage === "contract") {
+          const f = liftCurve(u, isQuick);
+          targetLift = clamp01(f);
+          targetColorT = 1;
+          targetAuraR = lerp(110, 92, targetLift);
+          targetGuide = targetLift * 0.82;
+          targetHeadY = -targetLift * 1.1;
+          targetEarTilt = -2.2 * targetLift;
+          targetBlush = lerp(0.18, 0.40, targetLift) * (0.4 + expr * 0.6);
+
+          // 三套科学呼吸逻辑：快肌 / 标准 / 长保持
+          if (isQuick) {
+            // 快肌（≤1.5s）：不强推呼气，保持自然呼吸防过度换气
+            targetChest = idleBreath * 0.15;
+            targetExhale = 0;
+            targetMouthBlow = 0;
+            baseMouthD = "M 134 106 Q 140 107.5 146 106";
+            updateTextUI("contract", remaining, "保持自然呼吸，盆底干脆向上一提", "快肌 · 干脆轻提", targetLift, true);
+          } else if (isLongHold) {
+            // 长保持（≥5s）：前 2.0s 呼气启动上提，随后转为浅而平稳的自主呼吸！
+            const exhalePhase = sim.elapsed < 2.0;
+            if (exhalePhase) {
+              const eu = clamp01(sim.elapsed / 2.0);
+              targetChest = -easeOutCubic(eu) * 0.62;
+              targetExhale = reduce ? 0 : Math.sin(eu * Math.PI) * 0.85 * config.breathOp;
+              targetMouthBlow = Math.sin(eu * Math.PI);
+              updateTextUI("contract", remaining, "先轻吹气启动上提，臀腿和肩膀保持松弛", "前 2 秒呼气启动上提", targetLift, false);
+            } else {
+              // 保持期：浅而平稳的自然呼吸（绝不硬吹 8 秒！）
+              targetChest = reduce ? 0 : Math.sin((sim.elapsed - 2.0) * 2.2) * 0.28;
+              targetExhale = 0;
+              targetMouthBlow = 0;
+              baseMouthD = "M 133 106 Q 140 108 147 106";
+              updateTextUI("contract", remaining, "稳住内部提拉感，恢复浅而平稳的自然呼吸", "高位稳住 · 自然呼吸", targetLift, false);
+            }
+          } else {
+            // 标准（2~4s）：单次平稳呼气上提（sin 包络保证首尾完美归零）
+            targetChest = -targetLift * 0.62;
+            targetExhale = reduce ? 0 : Math.sin(u * Math.PI) * 0.85 * config.breathOp;
+            targetMouthBlow = Math.sin(u * Math.PI);
+            const subStage = u < 0.24 ? "呼气 · 盆底向内向上轻提" : "稳住提拉 · 不憋气不夹臀";
+            const cue = u < 0.24
+              ? "像轻吹蜡烛一样呼气，盆底向内向上轻轻吸起"
+              : "稳住内部提拉感，屁股、大腿和肩膀保持松弛";
+            updateTextUI("contract", remaining, cue, subStage, targetLift, false);
+          }
+
+          if (expr > 0.2) {
+            useLineEyes = targetLift > 0.35;
+            lineEyeL = "M 114 86 Q 120 82 126 86";
+            lineEyeR = "M 154 86 Q 160 82 166 86";
+          } else {
+            eyeScaleY = 0.8 - blinkClose * 0.72;
+          }
+        } else if (stage === "relax") {
+          const d = dropCurve(u, isQuick);
+          targetLift = clamp01(1 - d);
+          targetColorT = 0;
+          targetAuraR = lerp(94, 114, d);
+          targetHeadY = d * 1.4;
+          targetEarTilt = 1.4 * d;
+          targetBlush = lerp(0.32, 0.14, d) * expr;
+
+          if (isQuick) {
+            targetChest = idleBreath * 0.15;
+            targetInhale = 0;
+            updateTextUI("relax", remaining, "立刻彻底放软，准备下一次轻提", "快肌 · 彻底放下", targetLift, true);
+          } else {
+            targetChest = d * 0.72;
+            targetInhale = (reduce || u >= 0.72) ? 0 : Math.sin((u / 0.72) * Math.PI) * 0.82 * config.breathOp;
+            const subStage = u < 0.36 ? "吸气 · 盆底彻底向下沉降" : "完全松弛 · 避免过紧疲劳";
+            const cue = u < 0.36
+              ? "鼻吸气，感受内部吊床彻底松开、向下沉落"
+              : "完全放软歇口气，彻底放松和收紧一样重要";
+            updateTextUI("relax", remaining, cue, subStage, targetLift, false);
+          }
+
+          if (u < 0.55 && expr > 0.2) {
+            useLineEyes = true;
+            lineEyeL = "M 114 85 Q 120 90 126 85";
+            lineEyeR = "M 154 85 Q 160 90 166 85";
+          } else {
+            eyeScaleY = 0.78 - blinkClose * 0.72;
+            pupilOffsetY = 0.8;
+          }
+          baseMouthD = "M 131 104 Q 140 111 149 104";
+        } else if (stage === "paused") {
+          // 暂停态冻结当前 lift，绝不瞬间掉底！
+          targetLift = disp.lift;
+          targetChest = 0;
+          targetHeadRot = reduce ? 0 : Math.sin(sim.clock * 1.3) * 2.4;
+          pupilOffsetX = reduce ? 0 : Math.sin(sim.clock * 1.0) * 1.8;
+          pauseOp = reduce ? 0.75 : (0.5 + Math.sin(sim.clock * 3) * 0.3);
+          targetAuraR = 96;
+          baseMouthD = "M 135 106 L 145 106";
+          updateTextUI("paused", remaining, "已定格当前进度，随时可以继续", "暂停中", disp.lift, isQuick);
+        } else if (stage === "done") {
+          const bounce = reduce ? 0 : Math.abs(Math.sin(sim.clock * 3.8));
+          targetLift = 0.35 + bounce * 0.22;
+          targetColorT = 1;
+          targetAuraR = 112 + bounce * 6;
+          targetHeadRot = reduce ? 0 : Math.sin(sim.clock * 5.2) * 3.8;
+          targetHeadY = -bounce * 3.5;
+          targetEarTilt = reduce ? 0 : Math.sin(sim.clock * 10) * 4;
+          targetArmCheer = 1;
+          confettiOp = 0.95;
+
+          targetBlush = 0.50 * expr;
+          useLineEyes = true;
+          lineEyeL = "M 114 88 Q 120 80 126 88";
+          lineEyeR = "M 154 88 Q 160 80 166 88";
+          baseMouthD = "M 129 102 Q 140 115 151 102";
+          updateTextUI("done", 0, "漂亮！外松内提，今天这组非常标准", "本组已完成", 1, isQuick);
+        }
+
+        // ============================================================
+        // 统一阻尼平滑（快肌响应更快，常规更温润，绝无硬跳变）
+        // ============================================================
+        const k = isQuick ? 18 : 10;
+        disp.lift = damp(disp.lift, targetLift, k, dt);
+        disp.chest = damp(disp.chest, targetChest, 8, dt);
+        disp.headY = damp(disp.headY, targetHeadY, 9, dt);
+        disp.headRot = damp(disp.headRot, targetHeadRot, 9, dt);
+        disp.earTilt = damp(disp.earTilt, targetEarTilt, 10, dt);
+        disp.armCheer = damp(disp.armCheer, targetArmCheer, 7.5, dt);
+        disp.exhaleOp = damp(disp.exhaleOp, targetExhale, 10, dt);
+        disp.inhaleOp = damp(disp.inhaleOp, targetInhale, 10, dt);
+        disp.blushOp = damp(disp.blushOp, targetBlush, 8, dt);
+        disp.guideOp = damp(disp.guideOp, targetGuide, 9, dt);
+        disp.colorT = damp(disp.colorT, targetColorT, 8, dt);
+        disp.auraR = damp(disp.auraR, targetAuraR, 6, dt);
+        disp.mouthBlow = damp(disp.mouthBlow, targetMouthBlow, 12, dt);
+
+        const lift = disp.lift;
+        const pistonColor = stage === "paused"
+          ? pal.neutral
+          : lerpColor(pal.relax, pal.accent, clamp01(disp.colorT));
+
+        // ============================================================
+        // 写入 SVG 几何与主题色
+        // ============================================================
+        // 1. 躯干路径（同步到 fill、clipPath 和顶层 stroke，肩带左右严格对称！）
+        const ribW = 46 + disp.chest * 2.8;
+        const hipW = 54;
+        const torsoD = [
+          "M 105 118",
+          "Q 140 113 175 118",
+          `C ${(140 + ribW + 6).toFixed(1)} 136, ${(140 + hipW + 2).toFixed(1)} 180, ${(140 + hipW - 4).toFixed(1)} 214`,
+          "Q 140 227 90 214",
+          `C ${(140 - hipW - 2).toFixed(1)} 180, ${(140 - ribW - 6).toFixed(1)} 136, 105 118`,
+          "Z",
+        ].join(" ");
+        el.torsoClipPath.setAttribute("d", torsoD);
+        el.torsoFillPath.setAttribute("d", torsoD);
+        el.torsoStrokePath.setAttribute("d", torsoD);
+        el.torsoFillPath.setAttribute("fill", pal.fur);
+        el.torsoStrokePath.setAttribute("stroke", pal.furEdge);
+
+        // 对称肩带（clipPath 内部，永不压穿外描边）
+        const bandD = [
+          "M 100 116",
+          "Q 140 111 180 116",
+          `L ${(140 + ribW + 4).toFixed(1)} 141`,
+          "Q 140 148 " + `${(140 - ribW - 4).toFixed(1)} 141`,
+          "Z",
+        ].join(" ");
+        el.shoulderBand.setAttribute("d", bandD);
+        el.shoulderBand.setAttribute("fill", pal.blackFur);
+
+        // 2. 科学透视：膈肌弧线 + 盆底吊床 + 严格贴合的暖朱小种子
+        el.xrayGroup.setAttribute("opacity", config.xrayOp.toFixed(2));
+        el.xrayStop0.setAttribute("stop-color", pistonColor);
+        el.xrayStop1.setAttribute("stop-color", pistonColor);
+
+        const diaBaseY = lerp(164, 155, lift);
+        const diaArchY = lerp(161, 146, lift);
+        el.diaphragmArc.setAttribute("d", `M 109 ${diaBaseY.toFixed(1)} Q 140 ${diaArchY.toFixed(1)} 171 ${diaBaseY.toFixed(1)}`);
+
+        // 二次贝塞尔曲线在 t=0.5 处的真实中点 y = 0.5 * (hamEndY + hamMidY)
+        const hamW = lerp(33, 24, lift);
+        const hamEndY = lerp(206, 198, lift);
+        const hamMidY = lerp(218, 182, lift);
+        const hamActualMidY = 0.5 * (hamEndY + hamMidY);
+        const hamD = `M ${(140 - hamW).toFixed(1)} ${hamEndY.toFixed(1)} Q 140 ${hamMidY.toFixed(1)} ${(140 + hamW).toFixed(1)} ${hamEndY.toFixed(1)}`;
+        el.hammockArc.setAttribute("d", hamD);
+        el.hammockArc.setAttribute("stroke", pistonColor);
+
+        const hamFillD = `${hamD} Q 140 220 ${(140 - hamW).toFixed(1)} ${hamEndY.toFixed(1)} Z`;
+        el.hammockFill.setAttribute("d", hamFillD);
+        el.hammockFill.setAttribute("fill", pistonColor);
+        el.hammockFill.setAttribute("opacity", (0.10 + lift * 0.14).toFixed(2));
+
+        // 种子底端原本在 y=212，精确锚定到 hamActualMidY - 2.5，彻底杜绝穿破或劈开！
+        const microFloat = (!reduce && lift > 0.75) ? Math.sin(sim.clock * 3.6) * 0.5 : 0;
+        const seedDy = (hamActualMidY - 2.5) - 212 + microFloat;
+        const seedScale = lerp(1.0, 0.94, lift);
+        el.seedGroup.setAttribute(
+          "transform",
+          `translate(0, ${seedDy.toFixed(2)}) translate(140 212) scale(${seedScale.toFixed(3)}) translate(-140 -212)`
+        );
+        el.seedBody.setAttribute("fill", pistonColor);
+
+        // 内部上提引导箭头：带正弦透明度包络，平滑淡入淡出零跳帧
+        if (reduce) {
+          el.liftGuides.setAttribute("opacity", (disp.guideOp * 0.5 * config.xrayOp).toFixed(2));
+          el.guideL.setAttribute("d", "M 122 200 L 122 189 M 118.5 193 L 122 189 L 125.5 193");
+          el.guideR.setAttribute("d", "M 158 200 L 158 189 M 154.5 193 L 158 189 L 161.5 193");
+        } else {
+          const gPhase = (sim.clock * 1.1) % 1;
+          const gEnv = Math.sin(gPhase * Math.PI);
+          const gShift = gPhase * 10;
+          el.liftGuides.setAttribute("opacity", (disp.guideOp * gEnv * config.xrayOp).toFixed(2));
+          el.guideL.setAttribute("d", `M 122 ${(204 - gShift).toFixed(1)} L 122 ${(193 - gShift).toFixed(1)} M 118.5 ${(197 - gShift).toFixed(1)} L 122 ${(193 - gShift).toFixed(1)} L 125.5 ${(197 - gShift).toFixed(1)}`);
+          el.guideR.setAttribute("d", `M 158 ${(204 - gShift).toFixed(1)} L 158 ${(193 - gShift).toFixed(1)} M 154.5 ${(197 - gShift).toFixed(1)} L 158 ${(193 - gShift).toFixed(1)} L 161.5 ${(197 - gShift).toFixed(1)}`);
+        }
+        el.guideL.setAttribute("stroke", pal.accent);
+        el.guideR.setAttribute("stroke", pal.accent);
+
+        // 3. 盘腿与双臂（深色模式下暖炭黑 + 暖棕描边，抬手欢呼通过 disp.armCheer 平滑插值！）
+        el.legL.setAttribute("fill", pal.blackFur);
+        el.legL.setAttribute("stroke", pal.furEdge);
+        el.legR.setAttribute("fill", pal.blackFur);
+        el.legR.setAttribute("stroke", pal.furEdge);
+
+        const c = disp.armCheer;
+        const wave = (!reduce && c > 0.6) ? Math.sin(sim.clock * 10) * 6 * c : 0;
+        const armLD = `M 102 132 Q ${lerp(80, 74, c).toFixed(1)} ${lerp(162, 114, c).toFixed(1)} ${lerp(94, 68, c).toFixed(1)} ${(lerp(202, 84, c) + wave).toFixed(1)}`;
+        const armRD = `M 178 132 Q ${lerp(200, 206, c).toFixed(1)} ${lerp(162, 114, c).toFixed(1)} ${lerp(186, 212, c).toFixed(1)} ${(lerp(202, 84, c) - wave).toFixed(1)}`;
+        el.armLOutline.setAttribute("d", armLD);
+        el.armROutline.setAttribute("d", armRD);
+        el.armLOutline.setAttribute("stroke", pal.armOutline);
+        el.armROutline.setAttribute("stroke", pal.armOutline);
+        el.armL.setAttribute("d", armLD);
+        el.armR.setAttribute("d", armRD);
+        el.armL.setAttribute("stroke", pal.blackFur);
+        el.armR.setAttribute("stroke", pal.blackFur);
+
+        // 4. 头部、双耳微动与表情
+        el.headGroup.setAttribute(
+          "transform",
+          `translate(0, ${(disp.headY + idleBreath * 0.55).toFixed(2)}) rotate(${disp.headRot.toFixed(2)} 140 90)`
+        );
+        el.earLGroup.setAttribute("transform", `rotate(${disp.earTilt.toFixed(2)} 108 62)`);
+        el.earRGroup.setAttribute("transform", `rotate(${(-disp.earTilt).toFixed(2)} 172 62)`);
+        el.earL.setAttribute("fill", pal.blackFur);
+        el.earL.setAttribute("stroke", pal.furEdge);
+        el.earR.setAttribute("fill", pal.blackFur);
+        el.earR.setAttribute("stroke", pal.furEdge);
+
+        el.headPath.setAttribute("fill", pal.fur);
+        el.headPath.setAttribute("stroke", pal.furEdge);
+        el.patchL.setAttribute("fill", pal.blackFur);
+        el.patchR.setAttribute("fill", pal.blackFur);
+        el.nose.setAttribute("fill", pal.lineInk);
+        el.mouthPath.setAttribute("stroke", pal.lineInk);
+        el.pupilL.setAttribute("fill", pal.lineInk);
+        el.pupilR.setAttribute("fill", pal.lineInk);
+        el.blushL.setAttribute("opacity", disp.blushOp.toFixed(2));
+        el.blushR.setAttribute("opacity", disp.blushOp.toFixed(2));
+
+        if (useLineEyes) {
+          el.openEyes.setAttribute("opacity", "0");
+          el.lineEyes.setAttribute("opacity", "1");
+          el.lineEyeL.setAttribute("d", lineEyeL);
+          el.lineEyeR.setAttribute("d", lineEyeR);
+        } else {
+          el.openEyes.setAttribute("opacity", "1");
+          el.lineEyes.setAttribute("opacity", "0");
+          const ry = Math.max(0.7, 5.6 * eyeScaleY);
+          el.scleraL.setAttribute("ry", ry.toFixed(2));
+          el.scleraR.setAttribute("ry", ry.toFixed(2));
+          el.pupilL.setAttribute("cx", (122 + pupilOffsetX).toFixed(1));
+          el.pupilL.setAttribute("cy", (85.5 + pupilOffsetY).toFixed(1));
+          el.pupilR.setAttribute("cx", (158 + pupilOffsetX).toFixed(1));
+          el.pupilR.setAttribute("cy", (85.5 + pupilOffsetY).toFixed(1));
+          el.pupilL.setAttribute("opacity", eyeScaleY > 0.3 ? "1" : "0");
+          el.pupilR.setAttribute("opacity", eyeScaleY > 0.3 ? "1" : "0");
+        }
+
+        // 嘴巴：吹蜡烛小圆嘴随 disp.mouthBlow 平滑显隐
+        if (disp.mouthBlow > 0.35) {
+          const oSize = 2.4 + disp.mouthBlow * 1.1;
+          el.mouthPath.setAttribute(
+            "d",
+            `M ${(140 - oSize).toFixed(1)} 106 A ${oSize.toFixed(1)} ${(oSize * 0.92).toFixed(1)} 0 1 0 ${(140 + oSize).toFixed(1)} 106 A ${oSize.toFixed(1)} ${(oSize * 0.92).toFixed(1)} 0 1 0 ${(140 - oSize).toFixed(1)} 106`
+          );
+        } else {
+          el.mouthPath.setAttribute("d", baseMouthD);
+        }
+
+        // 5. 脸颊外侧的呼气 / 吸气流动气流
+        const flowSpeed = reduce ? 0 : sim.clock * 42;
+        el.exhaleFlow.setAttribute("opacity", disp.exhaleOp.toFixed(2));
+        el.exhale1.setAttribute("stroke", pal.accent);
+        el.exhale2.setAttribute("stroke", pal.accent);
+        el.exhale1.setAttribute("stroke-dashoffset", (-flowSpeed).toFixed(1));
+        el.exhale2.setAttribute("stroke-dashoffset", (-flowSpeed * 0.85).toFixed(1));
+
+        el.inhaleFlow.setAttribute("opacity", disp.inhaleOp.toFixed(2));
+        el.inhale1.setAttribute("stroke", pal.relax);
+        el.inhale2.setAttribute("stroke", pal.relax);
+        el.inhale1.setAttribute("stroke-dashoffset", (-flowSpeed * 0.9).toFixed(1));
+        el.inhale2.setAttribute("stroke-dashoffset", (-flowSpeed * 0.9).toFixed(1));
+
+        // 6. 坐垫、光晕、暂停点与庆祝
+        el.cushionPath.setAttribute("fill", pal.cushion);
+        el.cushionPath.setAttribute("stroke", pal.furEdge);
+        el.bgAura.setAttribute("r", disp.auraR.toFixed(1));
+        el.auraStop0.setAttribute("stop-color", pistonColor);
+        el.auraStop1.setAttribute("stop-color", pistonColor);
+        el.auraStop2.setAttribute("stop-color", pistonColor);
+        el.groundShadow.setAttribute("fill", pal.shadow);
+
+        el.pauseBubble.setAttribute("opacity", pauseOp.toFixed(2));
+        el.pauseD1.setAttribute("fill", pal.pauseDot);
+        el.pauseD2.setAttribute("fill", pal.pauseDot);
+        el.pauseD3.setAttribute("fill", pal.pauseDot);
+
+        el.confettiGroup.setAttribute("opacity", confettiOp.toFixed(2));
+        if (confettiOp > 0.01 && !reduce) {
+          el.confettiGroup.setAttribute("transform", `translate(0, ${(Math.sin(sim.clock * 4) * 5).toFixed(1)})`);
+        } else {
+          el.confettiGroup.setAttribute("transform", "translate(0, 0)");
+        }
+      }
+
+      function loop(ts) {
+        const dt = Math.min(0.05, Math.max(0.001, (ts - sim.lastTs) / 1000));
+        sim.lastTs = ts;
+        renderFrame(dt);
+        requestAnimationFrame(loop);
+      }
+
+      // 事件绑定
+      document.querySelectorAll("#planChips .chip").forEach((btn) => {
+        btn.addEventListener("click", () => startPlan(btn.dataset.plan, false));
+      });
+      document.querySelectorAll("#stateChips .chip").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          if (config.lockState === btn.dataset.lock) startPlan(config.planKey, false);
+          else setLockState(btn.dataset.lock);
+        });
+      });
+      el.playToggleBtn.addEventListener("click", () => {
+        if (config.lockState === "paused") { startPlan(config.planKey, false); return; }
+        config.running = !config.running;
+        syncButtons();
+      });
+      el.restartBtn.addEventListener("click", () => startPlan(config.planKey, true));
+
+      const xraySlider = document.getElementById("xraySlider");
+      const xrayVal = document.getElementById("xrayVal");
+      xraySlider.addEventListener("input", () => {
+        config.xrayOp = Number(xraySlider.value) / 100;
+        xrayVal.textContent = `${xraySlider.value}%`;
+      });
+
+      const breathSlider = document.getElementById("breathSlider");
+      const breathVal = document.getElementById("breathVal");
+      breathSlider.addEventListener("input", () => {
+        config.breathOp = Number(breathSlider.value) / 100;
+        breathVal.textContent = `${breathSlider.value}%`;
+      });
+
+      const exprSlider = document.getElementById("exprSlider");
+      const exprVal = document.getElementById("exprVal");
+      exprSlider.addEventListener("input", () => {
+        config.expr = Number(exprSlider.value) / 100;
+        exprVal.textContent = `${exprSlider.value}%`;
+      });
+
+      const themeLightBtn = document.getElementById("themeLightBtn");
+      const themeDarkBtn = document.getElementById("themeDarkBtn");
+      function setTheme(t) {
+        config.theme = t;
+        document.documentElement.dataset.theme = t === "dark" ? "dark" : "";
+        themeLightBtn.classList.toggle("is-active", t === "light");
+        themeDarkBtn.classList.toggle("is-active", t === "dark");
+      }
+      themeLightBtn.addEventListener("click", () => setTheme("light"));
+      themeDarkBtn.addEventListener("click", () => setTheme("dark"));
+
+      const viewMetroBtn = document.getElementById("viewMetroBtn");
+      const viewCloseupBtn = document.getElementById("viewCloseupBtn");
+      viewMetroBtn.addEventListener("click", () => {
+        el.stageCard.classList.remove("is-closeup");
+        viewMetroBtn.classList.add("is-active");
+        viewCloseupBtn.classList.remove("is-active");
+      });
+      viewCloseupBtn.addEventListener("click", () => {
+        el.stageCard.classList.add("is-closeup");
+        viewCloseupBtn.classList.add("is-active");
+        viewMetroBtn.classList.remove("is-active");
+      });
+
+      el.reduceMotionBtn.addEventListener("click", () => {
+        config.reducedMotion = !config.reducedMotion;
+        syncReducedMotionBtn();
+      });
+
+      syncReducedMotionBtn();
+      startPlan("beginner", false);
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>

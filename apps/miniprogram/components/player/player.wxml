@@ -3,36 +3,35 @@
     <text class="plan-summary">{{planSummary}}</text>
   </view>
 
-  <view class="stage" wx:if="{{stage === 'prep'}}">
-    <view class="eyebrow">准备</view>
-    <view class="prep-num num">{{prepN}}</view>
-    <view class="hint prep-hint">跟着节拍</view>
-  </view>
-
-  <view class="stage" wx:elif="{{stage === 'breath'}}">
-    <view class="pause-pill {{paused ? 'is-show' : ''}}">{{pauseLabel}}</view>
-    <view class="blob-wrap">
-      <view
-        class="blob-ring {{phase === 'contract' ? 'is-contract' : 'is-relax'}} {{paused ? 'is-frozen' : ''}}"
-        style="animation-duration: {{phaseSec}}s;"
-      ></view>
-      <view
-        class="blob {{phase === 'contract' ? 'is-contract' : 'is-relax'}} {{paused ? 'is-frozen' : ''}}"
-        style="animation-duration: {{phaseSec}}s;"
-      ></view>
+  <view class="stage">
+    <!-- 小熊猫 Canvas 2D 舞台全程保持挂载，确保 prep / breath / done 无缝阻尼过渡 -->
+    <view class="panda-wrap {{stage === 'done' ? 'is-done' : ''}}">
+      <canvas type="2d" id="pandaCanvas" class="panda-canvas"></canvas>
     </view>
-    <view class="phase-text {{paused ? 'is-dim' : ''}}">{{phaseText}}</view>
-    <view class="count-row">
-      <text class="count num {{phase === 'contract' ? 'is-contract' : 'is-relax'}} {{paused ? 'is-dim' : ''}}">{{remaining}}</text>
-      <text class="count-unit">秒</text>
-    </view>
-    <view class="hint">{{progressText}}</view>
-  </view>
 
-  <view class="stage" wx:else>
-    <view class="done-title">今天，提了。</view>
-    <view class="hint">{{doneSub}}</view>
-    <view class="done-summary" wx:if="{{doneSummary}}">{{doneSummary}}</view>
+    <block wx:if="{{stage === 'prep'}}">
+      <view class="phase-pill">{{phaseText}}</view>
+      <view class="prep-num num">{{prepN}}</view>
+      <view class="hint prep-hint">{{cueText}}</view>
+    </block>
+
+    <block wx:elif="{{stage === 'breath'}}">
+      <view class="readout-row">
+        <view class="phase-pill {{paused ? 'is-paused' : (phase === 'contract' ? 'is-contract' : 'is-relax')}}">{{phaseText}}</view>
+        <view class="count-row">
+          <text class="count num {{phase === 'contract' ? 'is-contract' : 'is-relax'}} {{paused ? 'is-dim' : ''}}">{{paused ? '—' : remaining}}</text>
+          <text class="count-unit" wx:if="{{!paused}}">秒</text>
+        </view>
+      </view>
+      <view class="cue-text">{{cueText}}</view>
+      <view class="hint">{{progressText}}</view>
+    </block>
+
+    <block wx:else>
+      <view class="done-title">今天，提了。</view>
+      <view class="hint">{{doneSub}}</view>
+      <view class="done-summary" wx:if="{{doneSummary}}">{{doneSummary}}</view>
+    </block>
   </view>
 
   <view class="controls">

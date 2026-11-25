@@ -5,6 +5,8 @@
 var core = require("../../lib/core");
 var appStore = require("../../utils/app-store");
 var audio = require("../../lib/audio");
+var themeUtil = require("../../lib/theme");
+var panda = require("../../lib/panda");
 
 function safe(fn) {
   try {
@@ -26,6 +28,7 @@ Component({
     stage: "prep",
     phase: "contract",
     phaseText: "",
+    cueText: "",
     remaining: 3,
     prepN: 3,
     planSummary: "",
@@ -47,8 +50,16 @@ Component({
       this.lastPhase = "";
       this.pendingMilestone = null;
       this.wantShare = "";
+      this.pandaEngine = new panda.PandaEngine();
+      this.pandaCanvas = null;
+      this.pandaCtx = null;
+      this.pandaSize = 240;
+      this.pandaTimer = null;
+      this.pandaLastTs = 0;
+      this.themeMode = "light";
     },
     detached: function () {
+      this.stopPandaLoop();
       this.teardown();
       audio.dispose();
       this.setTabBarHidden(false);
@@ -87,6 +98,7 @@ Component({
           var share = self.wantShare;
           self.pendingMilestone = null;
           self.wantShare = "";
+          self.stopPandaLoop();
           self.setData({ visible: false, paused: false, doneSub: "", doneSummary: "" });
           self.setTabBarHidden(false);
           self.triggerEvent("close", {
@@ -107,6 +119,8 @@ Component({
       this.lastPhase = "";
       this.pendingMilestone = null;
       this.settings = appStore.getStore().getSettings();
+      this.themeMode = themeUtil.resolve(this.settings && this.settings.theme);
+      this.pandaEngine.reset();
 
       if (this.unsubscribe) this.unsubscribe();
       this.unsubscribe = metro.subscribe(function (s) {
@@ -129,16 +143,90 @@ Component({
           " 次 × " +
           plan.sets +
           " 组"
+      }, function () {
+        self.initPandaCanvas();
       });
       this.setTabBarHidden(true);
       metro.open(plan);
     },
 
+    initPandaCanvas: function () {
+      var self = this;
+      this.stopPandaLoop();
+      safe(function () {
+        var query = self.createSelectorQuery();
+        query
+          .select("#pandaCanvas")
+          .fields({ node: true, size: true })
+          .exec(function (res) {
+            if (!res || !res[0] || !res[0].node) return;
+            var canvas = res[0].node;
+            var w = res[0].width || 240;
+            var h = res[0].height || 240;
+            var size = Math.min(w, h);
+            var dpr = 2;
+            try {
+              dpr = (wx.getWindowInfo ? wx.getWindowInfo().pixelRatio : wx.getSystemInfoSync().pixelRatio) || 2;
+            } catch (e) {}
+            canvas.width = Math.round(size * dpr);
+            canvas.height = Math.round(size * dpr);
+            var ctx = canvas.getContext("2d");
+            ctx.scale(dpr, dpr);
+            self.pandaCanvas = canvas;
+            self.pandaCtx = ctx;
+            self.pandaSize = size;
+            self.pandaLastTs = Date.now();
+            self.startPandaLoop();
+          });
+      });
+    },
+
+    startPandaLoop: function () {
+      var self = this;
+      this.stopPandaLoop();
+      function tick() {
+        if (!self.pandaCtx || !self.data.visible) return;
+        var now = Date.now();
+        var dt = Math.min(0.05, Math.max(0.001, (now - self.pandaLastTs) / 1000));
+        self.pandaLastTs = now;
+        var frame = self.pandaEngine.step(dt, self.themeMode);
+        panda.drawPandaCanvas(self.pandaCtx, self.pandaSize, frame, self.themeMode);
+        if (self.pandaCanvas && self.pandaCanvas.requestAnimationFrame) {
+          self.pandaTimer = self.pandaCanvas.requestAnimationFrame(tick);
+        } else {
+          self.pandaTimer = setTimeout(tick, 33);
+        }
+      }
+      tick();
+    },
+
+    stopPandaLoop: function () {
+      if (this.pandaTimer) {
+        if (this.pandaCanvas && this.pandaCanvas.cancelAnimationFrame) {
+          try {
+            this.pandaCanvas.cancelAnimationFrame(this.pandaTimer);
+          } catch (e) {}
+        }
+        clearTimeout(this.pandaTimer);
+        this.pandaTimer = null;
+      }
+    },
+
     sync: function (s) {
       var plan = this.currentPlan || {};
-      var phaseText = "";
-      if (s.stage === "prep") phaseText = "准备开始";
-      else if (s.stage === "breath") phaseText = s.phase === "contract" ? "收 · 紧" : "放 · 松";
+      var copy = panda.getPandaCopy(s, plan.contract || 3);
+      var phaseText = copy.pillText;
+      var cueText = copy.cueText;
+
+      this.pandaEngine.sync({
+        stage: s.stage,
+        state: s.state,
+        phase: s.phase,
+        remaining: s.remaining,
+        startedReps: s.startedReps,
+        contractSec: plan.contract || 3,
+        relaxSec: plan.relax || 3
+      });
 
       var progressText =
         (s.sets || 1) > 1
@@ -160,6 +248,7 @@ Component({
         stage: s.stage,
         phase: s.phase,
         phaseText: phaseText,
+        cueText: cueText,
         remaining: s.remaining,
         prepN: s.prepN,
         progressText: progressText,

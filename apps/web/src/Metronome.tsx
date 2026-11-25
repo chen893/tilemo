@@ -9,6 +9,7 @@ import {
   type MetroSnapshot,
   completedCountOfDay,
   formatPlanDuration,
+  getPandaCopy,
   recordSession,
   todayKey,
 } from "@tilemo/core";
@@ -16,6 +17,7 @@ import { detectStreakMilestone, type MilestoneCopy } from "@tilemo/share-card";
 import type { Plan } from "@tilemo/data";
 import { useDataStore } from "./data";
 import { useOpenShare } from "./share/ShareContext";
+import { PandaStage } from "./PandaStage";
 
 export function Metronome({ plan, onClose }: { plan: Plan; onClose: (goHome?: boolean) => void }) {
   const store = useDataStore((s) => s.store);
@@ -156,8 +158,7 @@ export function Metronome({ plan, onClose }: { plan: Plan; onClose: (goHome?: bo
   if (!snap) return null;
   const stage = snap.stage;
   const isPaused = snap.state === "paused";
-  const phaseSec = snap.phase === "contract" ? plan.contract : plan.relax;
-  const phaseStyle = { animationDuration: `${phaseSec}s` };
+  const copy = getPandaCopy(snap, plan.contract);
   const rootClass =
     "metronome is-open" +
     (stage === "breath" ? (snap.phase === "contract" ? " is-contract" : " is-relax") : "") +
@@ -195,49 +196,39 @@ export function Metronome({ plan, onClose }: { plan: Plan; onClose: (goHome?: bo
       </div>
 
       <div className="metronome-stage">
+        {/* 小熊猫舞台全程保持挂载，确保 prep / breath / done 之间无缝阻尼过渡 */}
+        <PandaStage
+          snap={snap}
+          contractSec={plan.contract}
+          relaxSec={plan.relax}
+          className={stage === "done" ? "is-done" : ""}
+        />
+
         {stage === "prep" && (
-          <div className="prep">
-            <div className="ready">准备</div>
-            <div className="num-321">{snap.prepN}</div>
+          <div className="panda-readout">
+            <div className="breath-phase" aria-live="polite">{copy.pillText}</div>
+            <div className="prep-count-inline">{snap.prepN}</div>
+            <div className="panda-cue">{copy.cueText}</div>
           </div>
         )}
+
         {stage === "breath" && (
-          <>
-            <div className={"pause-banner" + (isPaused ? " is-show" : "")} aria-live="polite">
-              {isPaused ? "已暂停" : ""}
-            </div>
-            <div className="breath-organism">
-              <svg className="breath-svg" viewBox="0 0 200 200" aria-hidden="true">
-                <path
-                  className="breath-shape"
-                  style={phaseStyle}
-                  d="M100 18 C150 18 182 50 182 100 C182 150 150 182 100 182 C50 182 18 150 18 100 C18 50 50 18 100 18 Z"
-                />
-                <path
-                  className="breath-inner"
-                  style={phaseStyle}
-                  d="M100 50 C130 50 150 70 150 100 C150 130 130 150 100 150 C70 150 50 130 50 100 C50 70 70 50 100 50 Z"
-                />
-              </svg>
-              <div className="breath-core">
-                <div className="breath-count">
-                  {snap.remaining}
-                  <span className="breath-unit">秒</span>
-                </div>
-                <div className="breath-phase">
-                  {snap.phase === "contract" ? "收 · 紧" : "放 · 松"}
-                </div>
+          <div className="panda-readout">
+            <div className="panda-readout-row">
+              <div className="breath-phase" aria-live="polite">
+                {copy.pillText}
+              </div>
+              <div className="breath-count">
+                {isPaused ? "—" : snap.remaining}
+                {!isPaused && <span className="breath-unit">秒</span>}
               </div>
             </div>
-          </>
+            <div className="panda-cue">{copy.cueText}</div>
+          </div>
         )}
+
         {stage === "done" && (
           <div className="done">
-            <div className="done-blob" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M5 12l5 5 9-11" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" />
-              </svg>
-            </div>
             <h2 className="title">
               今天，<span className="em">提了</span>。
             </h2>

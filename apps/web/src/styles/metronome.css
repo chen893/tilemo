@@ -94,139 +94,87 @@
   position: relative;
 }
 
-/* —— 有机呼吸形（核心，反 v3/v4 同心圆环） —— */
-.breath-organism {
-  position: relative;
-  width: min(78vw, 380px);
-  height: min(78vw, 380px);
+/* —— 科学提肛 × 抽象小熊猫舞台 —— */
+.panda-stage {
+  width: min(70vw, 38vh, 320px);
+  height: min(70vw, 38vh, 320px);
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
-@media (min-width: 1024px){
-  /* 桌面：呼吸体更舒展更大，沉浸 */
-  .breath-organism {
-    width: min(42vw, 520px);
-    height: min(42vw, 520px);
-  }
-  .breath-count {
-    font-size: clamp(120px, 14vw, 200px);
-  }
-  .prep .num-321 {
-    font-size: clamp(180px, 22vw, 280px);
-  }
+.panda-stage.is-done {
+  width: min(56vw, 30vh, 240px);
+  height: min(56vw, 30vh, 240px);
+  margin-bottom: var(--s-2);
 }
-.breath-svg {
-  position: absolute;
-  inset: 0;
-  width: 100%; height: 100%;
+.panda-svg {
+  width: 100%;
+  height: 100%;
   overflow: visible;
+  user-select: none;
 }
-/* 主形：肺叶/身体状的有机 blob path
-   用 animation 而不是 transition：元素随 stage 挂载，挂载时已带 is-contract，
-   transition 找不到旧值 → 第一段收紧是静止的。keyframes 一挂载就从 0% 跑。 */
-.breath-shape {
-  fill: var(--accent-soft);
-  stroke: var(--accent);
-  stroke-width: 2;
-  animation-duration: var(--dur-breath, 3s);
-  /* 对称正弦呼吸：保证 3s / 8s / 9s 全程均匀收缩与舒展，不在前段提前停滞 */
-  animation-timing-function: cubic-bezier(0.37, 0, 0.63, 1);
-  animation-fill-mode: forwards;
-  transition: fill 320ms linear, stroke 320ms linear;
-  transform-origin: 50% 50%;
-  transform-box: fill-box;
-}
-/* 内层柔和形 */
-.breath-inner {
-  fill: var(--accent);
-  opacity: 0.25;
-  animation-duration: var(--dur-breath, 3s);
-  animation-timing-function: cubic-bezier(0.37, 0, 0.63, 1);
-  animation-fill-mode: forwards;
-  transition: fill 320ms linear, opacity 320ms linear;
-  transform-origin: 50% 50%;
-  transform-box: fill-box;
-}
-
-/* 收紧 phase：形向内收紧 + 升温（高对比暖朱底衬亮色数字） */
-.metronome.is-contract .breath-shape {
-  fill: var(--accent-btn);
-  stroke: var(--accent-hot);
-  animation-name: breath-contract;
-}
-.metronome.is-contract .breath-inner {
-  fill: var(--accent-hot);
-  opacity: 0.42;
-  animation-name: breath-inner-contract;
-}
-/* 放松 phase：鼠尾草绿舒展扩大 + 柔和降温（双通道辨识） */
-.metronome.is-relax .breath-shape {
-  fill: var(--relax-soft);
-  stroke: var(--relax);
-  animation-name: breath-relax;
-}
-.metronome.is-relax .breath-inner {
-  fill: var(--relax);
-  opacity: 0.22;
-  animation-name: breath-inner-relax;
-}
-.metronome.is-paused .breath-shape,
-.metronome.is-paused .breath-inner {
-  animation-play-state: paused;
-  fill: var(--paper-deep);
-  stroke: var(--rule-strong);
-  opacity: 0.85;
-}
-
-/* 交接点对齐：收紧终点 = 放松起点，切换时不跳变 */
-@keyframes breath-contract {
-  from { transform: scale(1.05); }
-  to { transform: scale(0.82); }
-}
-@keyframes breath-relax {
-  from { transform: scale(0.82); }
-  to { transform: scale(1.05); }
-}
-@keyframes breath-inner-contract {
-  from { transform: scale(1); }
-  to { transform: scale(0.7); }
-}
-@keyframes breath-inner-relax {
-  from { transform: scale(0.7); }
-  to { transform: scale(1); }
-}
-
-.breath-core {
-  position: relative;
-  z-index: 1;
+.panda-readout {
+  margin-top: var(--s-3);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: var(--s-3);
 }
+.panda-readout-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--s-4);
+}
+.panda-cue {
+  font-size: var(--t-sm);
+  color: var(--text-2);
+  max-width: 24em;
+  min-height: 1.5em;
+  line-height: 1.5;
+}
+.prep-count-inline {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(64px, 16vw, 108px);
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+}
+@media (min-width: 1024px) {
+  .panda-stage {
+    width: min(34vw, 44vh, 380px);
+    height: min(34vw, 44vh, 380px);
+  }
+  .panda-stage.is-done {
+    width: min(26vw, 34vh, 280px);
+    height: min(26vw, 34vh, 280px);
+  }
+}
+
 .breath-count {
   font-family: var(--font-num);
   font-variant-numeric: tabular-nums;
-  font-size: clamp(80px, 22vw, 150px);
+  font-size: clamp(56px, 15vw, 88px);
   font-weight: 800;
-  line-height: 0.85;
+  line-height: 0.9;
   letter-spacing: -0.04em;
   color: var(--text);
   transition: color var(--dur) var(--ease);
 }
-.metronome.is-contract .breath-count { color: var(--on-accent-btn); }
+.metronome.is-contract .breath-count { color: var(--accent-btn); }
 .metronome.is-relax .breath-count { color: var(--relax); }
-.metronome.is-paused .breath-count { color: var(--text); }
+.metronome.is-paused .breath-count { color: var(--text-2); }
 .breath-unit {
-  font-size: 0.28em;
+  font-size: 0.30em;
   font-weight: 700;
   color: var(--text-2);
-  margin-left: 6px;
+  margin-left: 5px;
 }
-.metronome.is-contract .breath-unit { color: var(--on-accent-btn); opacity: 0.85; }
-.metronome.is-relax .breath-unit { color: var(--relax); opacity: 0.85; }
+.metronome.is-contract .breath-unit { color: var(--accent-btn); opacity: 0.8; }
+.metronome.is-relax .breath-unit { color: var(--relax); opacity: 0.8; }
 .metronome.is-paused .breath-unit { color: var(--text-2); opacity: 1; }
 .pause-banner {
   min-height: 36px;
@@ -271,8 +219,8 @@
   transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
 }
 .metronome.is-contract .breath-phase {
-  background: var(--paper);
-  color: var(--accent-btn);
+  background: var(--accent-btn);
+  color: var(--on-accent-btn);
 }
 .metronome.is-relax .breath-phase {
   background: var(--relax);

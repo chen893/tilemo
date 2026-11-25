@@ -6,14 +6,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import Animated, {
-  cancelAnimation,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-  Easing,
-  useReducedMotion,
-} from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { Audio } from "expo-av";
 import { type Plan } from "@tilemo/data";
@@ -22,6 +14,7 @@ import {
   type MetroSnapshot,
   completedCountOfDay,
   formatPlanDuration,
+  getPandaCopy,
   recordSession,
 } from "@tilemo/core";
 import { detectStreakMilestone, type MilestoneCopy } from "@tilemo/share-card";
@@ -29,9 +22,7 @@ import { useDataStore } from "./data";
 import { useOpenShare } from "./share/ShareContext";
 import { useTheme } from "./theme";
 import { fs, rd, sp } from "./ui/primitives";
-
-const BREATH_CONTRACT = 0.78;
-const BREATH_RELAX = 1.06;
+import { PandaStage } from "./PandaStage";
 
 export function Metronome({
   plan,
@@ -51,9 +42,6 @@ export function Metronome({
   const streakMilestoneRef = useRef<MilestoneCopy | null>(null);
 
   const [snap, setSnap] = useState<MetroSnapshot | null>(null);
-  const scale = useSharedValue(1);
-  const ringScale = useSharedValue(1);
-  const reduceMotion = useReducedMotion();
   const lastPhase = useRef<string>("");
   const soundHi = useRef<Audio.Sound | null>(null);
   const soundLo = useRef<Audio.Sound | null>(null);
@@ -142,47 +130,16 @@ export function Metronome({
   const snapStage = snap?.stage ?? null;
   const snapState = snap?.state ?? null;
   const snapPhase = snap?.phase ?? null;
-  const remainingRef = useRef(0);
-  remainingRef.current = snap?.remaining ?? 0;
 
   useEffect(() => {
     if (!snapStage) return;
     if (snapStage !== "breath") {
       lastPhase.current = "";
-      scale.value = reduceMotion ? 1 : withTiming(1, { duration: 200 });
-      ringScale.value = reduceMotion ? 1 : withTiming(1, { duration: 200 });
-      return;
-    }
-    if (snapState === "paused") {
-      // 暂停时真正冻结在当前缩放进度，避免继续滑动或重置
-      cancelAnimation(scale);
-      cancelAnimation(ringScale);
       return;
     }
     if (snapState !== "running" || !snapPhase) return;
 
-    const isContract = snapPhase === "contract";
-    const target = isContract ? BREATH_CONTRACT : BREATH_RELAX;
-    const ringTarget = isContract ? 0.9 : 1.18;
     const isNewPhase = snapPhase !== lastPhase.current;
-    // 新阶段按完整秒数走；暂停恢复时按剩余秒数接着走到终点，避免 9s 动画提前结束或重新拖长
-    const phaseSec = isNewPhase
-      ? (isContract ? plan.contract : plan.relax)
-      : Math.max(0.4, remainingRef.current);
-
-    if (reduceMotion) {
-      scale.value = target;
-      ringScale.value = ringTarget;
-    } else {
-      // 对称正弦呼吸曲线（sine in-out）：无论 3s 还是 9s，全程均匀推进到最后一秒
-      const cfg = {
-        duration: Math.max(400, phaseSec * 1000),
-        easing: Easing.inOut(Easing.sin),
-      };
-      scale.value = withTiming(target, cfg);
-      ringScale.value = withTiming(ringTarget, cfg);
-    }
-
     if (isNewPhase) {
       lastPhase.current = snapPhase;
       if (hapticsOn) {
@@ -198,15 +155,7 @@ export function Metronome({
         else pendingBeep.current = snapPhase;
       }
     }
-  }, [snapStage, snapState, snapPhase, scale, ringScale, plan.contract, plan.relax, hapticsOn, soundOn, reduceMotion]);
-
-  const breathStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  const ringStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: ringScale.value }],
-  }));
+  }, [snapStage, snapState, snapPhase, hapticsOn, soundOn]);
 
   if (!snap) {
     return <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.paper }]} />;
@@ -216,115 +165,102 @@ export function Metronome({
   const isPaused = snap.state === "paused";
   const isContract = snap.phase === "contract";
   const phaseColor = isContract ? colors.accent : colors.relax;
-  const phaseSoft = isContract ? colors.accentSoft : colors.relaxSoft;
   const todayCompleted = completedCountOfDay(today);
+  const copy = getPandaCopy(snap, plan.contract);
 
   return (
     <View style={[styles.overlay, { backgroundColor: colors.paper }]}>
-      {/* Top context bar — 展示当前方案，不再放置重复退出 × */}
       <View style={styles.topBar}>
         <Text style={{ color: colors.text2, fontSize: fs.sm, fontWeight: "600" }}>
           {plan.name} · {formatPlanDuration(plan)}
         </Text>
       </View>
 
-      {stage === "prep" && (
-        <View style={styles.center}>
-          <Text style={[styles.eyebrow, { color: colors.text2 }]}>准备</Text>
-          <Text
-            style={{
-              color: colors.accent,
-              fontSize: 96,
-              fontWeight: "700",
-              marginTop: sp.s4,
-            }}
-          >
-            {snap.prepN}
-          </Text>
-          <Text style={[styles.hint, { color: colors.text2, marginTop: sp.s4 }]}>
-            跟着节拍
-          </Text>
-        </View>
-      )}
+      <View style={styles.center}>
+        {/* 小熊猫舞台全程保持挂载，确保 prep / breath / done 之间无缝阻尼过渡 */}
+        <PandaStage
+          snap={snap}
+          contractSec={plan.contract}
+          relaxSec={plan.relax}
+          size={stage === "done" ? 196 : 244}
+        />
 
-      {stage === "breath" && (
-        <View style={styles.center}>
-          {isPaused ? (
-            <View style={[styles.pausedBadge, { backgroundColor: colors.paperSoft, borderColor: colors.ruleStrong }]}>
-              <Text style={{ color: colors.text, fontSize: fs.sm, fontWeight: "700" }}>
-                已暂停
-              </Text>
+        {stage === "prep" && (
+          <>
+            <View style={[styles.pausedBadge, { backgroundColor: colors.paperSoft, borderColor: colors.ruleStrong, marginTop: sp.s2 }]}>
+              <Text style={{ color: colors.text, fontSize: fs.sm, fontWeight: "700" }}>{copy.pillText}</Text>
             </View>
-          ) : (
-            <View style={styles.pausedBadgePlaceholder} />
-          )}
-
-          <View style={styles.breathWrap}>
-            <Animated.View
-              style={[
-                styles.breathRing,
-                {
-                  borderColor: phaseColor,
-                  backgroundColor: phaseSoft,
-                  opacity: isPaused ? 0.25 : 0.45,
-                },
-                ringStyle,
-              ]}
-            />
-            <Animated.View
-              style={[
-                styles.breathBlob,
-                {
-                  backgroundColor: phaseColor,
-                  opacity: isPaused ? 0.45 : 1,
-                },
-                breathStyle,
-              ]}
-            />
-          </View>
-
-          <Text
-            style={{
-              color: isPaused ? colors.text2 : colors.text,
-              fontSize: fs.x2l,
-              fontWeight: "700",
-              letterSpacing: 4,
-              marginTop: sp.s5,
-            }}
-          >
-            {isContract ? "收 · 紧" : "放 · 松"}
-          </Text>
-
-          <View style={styles.secRow}>
-            <Text style={{ color: isPaused ? colors.text2 : phaseColor, fontSize: 56, fontWeight: "700" }}>
-              {snap.remaining}
+            <Text style={{ color: colors.accent, fontSize: 64, fontWeight: "700", marginTop: sp.s2 }}>
+              {snap.prepN}
             </Text>
-            <Text style={{ color: colors.text3, fontSize: fs.md, fontWeight: "600", marginLeft: sp.s1 }}>
-              秒
+            <Text style={[styles.hint, { color: colors.text2, marginTop: sp.s2 }]}>
+              {copy.cueText}
             </Text>
-          </View>
+          </>
+        )}
 
-          <Text style={[styles.hint, { color: colors.text2, marginTop: sp.s3 }]}>
-            {snap.sets > 1
-              ? `第 ${snap.setIdx + 1}/${snap.sets} 组 · ${snap.startedReps}/${snap.totalReps} 次`
-              : `${snap.startedReps} / ${snap.totalReps} 次`}
-          </Text>
-        </View>
-      )}
+        {stage === "breath" && (
+          <>
+            <View style={[styles.secRow, { marginTop: sp.s3, alignItems: "center", gap: 14 }]}>
+              <View
+                style={[
+                  styles.pausedBadge,
+                  {
+                    marginBottom: 0,
+                    backgroundColor: isPaused ? colors.paperSoft : isContract ? colors.accentBtn : colors.relax,
+                    borderColor: isPaused ? colors.ruleStrong : "transparent",
+                  },
+                ]}
+              >
+                <Text
+                  style={{
+                    color: isPaused ? colors.text : colors.onAccentBtn,
+                    fontSize: fs.sm,
+                    fontWeight: "800",
+                    letterSpacing: 1,
+                  }}
+                >
+                  {copy.pillText}
+                </Text>
+              </View>
+              <View style={{ flexDirection: "row", alignItems: "baseline" }}>
+                <Text style={{ color: isPaused ? colors.text2 : phaseColor, fontSize: 52, fontWeight: "800" }}>
+                  {isPaused ? "—" : snap.remaining}
+                </Text>
+                {!isPaused && (
+                  <Text style={{ color: colors.text3, fontSize: fs.md, fontWeight: "600", marginLeft: sp.s1 }}>
+                    秒
+                  </Text>
+                )}
+              </View>
+            </View>
 
-      {stage === "done" && (
-        <View style={styles.center}>
-          <Text style={{ color: colors.text, fontSize: fs.x2l, fontWeight: "700" }}>
-            今天，提了。
-          </Text>
-          <Text style={[styles.hint, { color: colors.text2, marginTop: sp.s3 }]}>
-            {snap.doneSub}
-          </Text>
-          <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: sp.s4 }}>
-            今日 {todayCompleted} / {goal} 组
-          </Text>
-        </View>
-      )}
+            <Text style={[styles.hint, { color: colors.text2, marginTop: sp.s3 }]}>
+              {copy.cueText}
+            </Text>
+
+            <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: sp.s2 }}>
+              {snap.sets > 1
+                ? `第 ${snap.setIdx + 1}/${snap.sets} 组 · ${snap.startedReps}/${snap.totalReps} 次`
+                : `${snap.startedReps} / ${snap.totalReps} 次`}
+            </Text>
+          </>
+        )}
+
+        {stage === "done" && (
+          <>
+            <Text style={{ color: colors.text, fontSize: fs.x2l, fontWeight: "700", marginTop: sp.s2 }}>
+              今天，提了。
+            </Text>
+            <Text style={[styles.hint, { color: colors.text2, marginTop: sp.s2 }]}>
+              {snap.doneSub}
+            </Text>
+            <Text style={{ color: colors.text3, fontSize: fs.sm, marginTop: sp.s3 }}>
+              今日 {todayCompleted} / {goal} 组
+            </Text>
+          </>
+        )}
+      </View>
 
       {/* Controls — 区分主次权重，防止误触 */}
       <View style={[styles.controls, { borderTopColor: colors.rule }]}>
