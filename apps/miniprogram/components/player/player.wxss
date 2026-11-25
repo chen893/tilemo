@@ -82,11 +82,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.28s ease;
 }
 
 .panda-wrap.is-done {
-  width: 380rpx;
-  height: 380rpx;
+  transform: scale(0.8);
 }
 
 .panda-canvas {

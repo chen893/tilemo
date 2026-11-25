@@ -212,7 +212,7 @@ export function PandaStage({ snap, contractSec, relaxSec, size = 240 }: PandaSta
               opacity: 0.65,
             }}
           />
-          {/* 盆底肌吊床弧线 */}
+          {/* 盆底肌吊床弧线（下沉弧与上提弧交叉淡入淡出，消除 lift=0.5 处跳变） */}
           <View
             style={{
               position: "absolute",
@@ -220,10 +220,23 @@ export function PandaStage({ snap, contractSec, relaxSec, size = 240 }: PandaSta
               top: hammockTop - 116,
               width: frame.hamW * 2,
               height: 18,
-              borderBottomWidth: lift < 0.5 ? 4 : 0,
-              borderTopWidth: lift >= 0.5 ? 4 : 0,
+              borderBottomWidth: 4,
               borderColor: frame.pistonColor,
               borderRadius: 18,
+              opacity: Math.max(0, Math.min(1, 1 - lift * 1.4)),
+            }}
+          />
+          <View
+            style={{
+              position: "absolute",
+              left: 48 - frame.hamW,
+              top: hammockTop - 116,
+              width: frame.hamW * 2,
+              height: 18,
+              borderTopWidth: 4,
+              borderColor: frame.pistonColor,
+              borderRadius: 18,
+              opacity: Math.max(0, Math.min(1, (lift - 0.25) * 1.4)),
             }}
           />
         </View>

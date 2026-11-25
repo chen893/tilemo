@@ -55,6 +55,9 @@ Component({
       this.pandaCtx = null;
       this.pandaSize = 240;
       this.pandaTimer = null;
+      this.pandaInitTimer = null;
+      this.pandaLoopSeq = 0;
+      this.pandaUseTimeout = false;
       this.pandaLastTs = 0;
       this.themeMode = "light";
     },
@@ -144,65 +147,112 @@ Component({
           plan.sets +
           " 组"
       }, function () {
-        self.initPandaCanvas();
+        if (typeof wx !== "undefined" && wx.nextTick) {
+          wx.nextTick(function () { self.initPandaCanvas(0); });
+        } else {
+          setTimeout(function () { self.initPandaCanvas(0); }, 16);
+        }
       });
       this.setTabBarHidden(true);
       metro.open(plan);
     },
 
-    initPandaCanvas: function () {
+    initPandaCanvas: function (retry) {
       var self = this;
+      var attempt = retry || 0;
+      if (!this.data.visible) return;
       this.stopPandaLoop();
+      var seq = ++this.pandaLoopSeq;
+
+      function scheduleRetry() {
+        if (!self.data.visible || seq !== self.pandaLoopSeq) return;
+        if (attempt >= 15) return;
+        self.pandaInitTimer = setTimeout(function () {
+          self.pandaInitTimer = null;
+          self.initPandaCanvas(attempt + 1);
+        }, 60);
+      }
+
       safe(function () {
         var query = self.createSelectorQuery();
         query
           .select("#pandaCanvas")
           .fields({ node: true, size: true })
           .exec(function (res) {
-            if (!res || !res[0] || !res[0].node) return;
-            var canvas = res[0].node;
-            var w = res[0].width || 240;
-            var h = res[0].height || 240;
-            var size = Math.min(w, h);
+            if (!self.data.visible || seq !== self.pandaLoopSeq) return;
+            var item = res && res[0];
+            if (!item || !item.node || !item.width || !item.height) {
+              scheduleRetry();
+              return;
+            }
+            var canvas = item.node;
+            var size = Math.min(item.width, item.height);
             var dpr = 2;
             try {
               dpr = (wx.getWindowInfo ? wx.getWindowInfo().pixelRatio : wx.getSystemInfoSync().pixelRatio) || 2;
             } catch (e) {}
+            dpr = Math.min(3, Math.max(1, dpr));
             canvas.width = Math.round(size * dpr);
             canvas.height = Math.round(size * dpr);
             var ctx = canvas.getContext("2d");
-            ctx.scale(dpr, dpr);
+            if (!ctx) {
+              scheduleRetry();
+              return;
+            }
+            if (ctx.setTransform) {
+              ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            } else {
+              ctx.scale(dpr, dpr);
+            }
             self.pandaCanvas = canvas;
             self.pandaCtx = ctx;
             self.pandaSize = size;
+            self.pandaUseTimeout = false;
             self.pandaLastTs = Date.now();
-            self.startPandaLoop();
+            self.startPandaLoop(seq);
           });
       });
     },
 
-    startPandaLoop: function () {
+    startPandaLoop: function (seq) {
       var self = this;
-      this.stopPandaLoop();
+      var runSeq = seq != null ? seq : ++this.pandaLoopSeq;
+      function scheduleNext() {
+        if (!self.data.visible || runSeq !== self.pandaLoopSeq) return;
+        if (!self.pandaUseTimeout && self.pandaCanvas && typeof self.pandaCanvas.requestAnimationFrame === "function") {
+          try {
+            self.pandaTimer = self.pandaCanvas.requestAnimationFrame(tick);
+            return;
+          } catch (e) {
+            self.pandaUseTimeout = true;
+          }
+        }
+        self.pandaTimer = setTimeout(tick, 33);
+      }
       function tick() {
-        if (!self.pandaCtx || !self.data.visible) return;
+        if (!self.pandaCtx || !self.data.visible || runSeq !== self.pandaLoopSeq) return;
         var now = Date.now();
         var dt = Math.min(0.05, Math.max(0.001, (now - self.pandaLastTs) / 1000));
         self.pandaLastTs = now;
-        var frame = self.pandaEngine.step(dt, self.themeMode);
-        panda.drawPandaCanvas(self.pandaCtx, self.pandaSize, frame, self.themeMode);
-        if (self.pandaCanvas && self.pandaCanvas.requestAnimationFrame) {
-          self.pandaTimer = self.pandaCanvas.requestAnimationFrame(tick);
-        } else {
-          self.pandaTimer = setTimeout(tick, 33);
+        try {
+          var frame = self.pandaEngine.step(dt, self.themeMode);
+          panda.drawPandaCanvas(self.pandaCtx, self.pandaSize, frame, self.themeMode);
+        } catch (e) {
+          // 单帧容错，不中断后续渲染循环
         }
+        scheduleNext();
       }
       tick();
     },
 
     stopPandaLoop: function () {
+      this.pandaLoopSeq++;
+      if (this.pandaInitTimer) {
+        clearTimeout(this.pandaInitTimer);
+        this.pandaInitTimer = null;
+      }
       if (this.pandaTimer) {
-        if (this.pandaCanvas && this.pandaCanvas.cancelAnimationFrame) {
+        if (this.pandaCanvas && typeof this.pandaCanvas.cancelAnimationFrame === "function") {
           try {
             this.pandaCanvas.cancelAnimationFrame(this.pandaTimer);
           } catch (e) {}

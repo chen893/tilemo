@@ -394,6 +394,19 @@ function traceTorso(ctx, ribW) {
   ctx.closePath();
 }
 
+function traceEllipse(ctx, x, y, rx, ry, rot) {
+  if (typeof ctx.ellipse === "function") {
+    ctx.ellipse(x, y, rx, ry, rot || 0, 0, Math.PI * 2);
+    return;
+  }
+  ctx.save();
+  ctx.translate(x, y);
+  if (rot) ctx.rotate(rot);
+  ctx.scale(rx, ry);
+  ctx.arc(0, 0, 1, 0, Math.PI * 2);
+  ctx.restore();
+}
+
 function drawPandaCanvas(ctx, size, f, theme) {
   var pal = PALETTES[theme === "dark" ? "dark" : "light"];
   ctx.save();
@@ -401,6 +414,8 @@ function drawPandaCanvas(ctx, size, f, theme) {
   ctx.scale(size / 280, size / 280);
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
+  if (typeof ctx.setLineDash === "function") ctx.setLineDash([]);
+  ctx.lineDashOffset = 0;
 
   // 1. 氛围光晕
   var aura = ctx.createRadialGradient(140, 156, 4, 140, 156, f.auraR);
@@ -419,7 +434,7 @@ function drawPandaCanvas(ctx, size, f, theme) {
   ctx.globalAlpha = 0.12;
   ctx.fillStyle = pal.shadow;
   ctx.beginPath();
-  ctx.ellipse(140, 238, 76, 12, 0, 0, Math.PI * 2);
+  traceEllipse(ctx, 140, 238, 76, 12, 0);
   ctx.fill();
   ctx.restore();
 
@@ -476,7 +491,7 @@ function drawPandaCanvas(ctx, size, f, theme) {
   ctx.globalAlpha = 0.14;
   ctx.fillStyle = f.pistonColor;
   ctx.beginPath();
-  ctx.ellipse(140, 186, 32, 34, 0, 0, Math.PI * 2);
+  traceEllipse(ctx, 140, 186, 32, 34, 0);
   ctx.fill();
   ctx.restore();
 
@@ -592,7 +607,7 @@ function drawPandaCanvas(ctx, size, f, theme) {
   ctx.strokeStyle = pal.furEdge;
   ctx.lineWidth = 2.2;
   ctx.beginPath();
-  ctx.ellipse(101, 54, 14, 13, (-18 * Math.PI) / 180, 0, Math.PI * 2);
+  traceEllipse(ctx, 101, 54, 14, 13, (-18 * Math.PI) / 180);
   ctx.fill();
   ctx.stroke();
   ctx.restore();
@@ -605,7 +620,7 @@ function drawPandaCanvas(ctx, size, f, theme) {
   ctx.strokeStyle = pal.furEdge;
   ctx.lineWidth = 2.2;
   ctx.beginPath();
-  ctx.ellipse(179, 53, 14.5, 13, (16 * Math.PI) / 180, 0, Math.PI * 2);
+  traceEllipse(ctx, 179, 53, 14.5, 13, (16 * Math.PI) / 180);
   ctx.fill();
   ctx.stroke();
   ctx.restore();
@@ -624,26 +639,28 @@ function drawPandaCanvas(ctx, size, f, theme) {
   ctx.fill();
   ctx.stroke();
 
-  // 腮红
+  // 腮红（左右独立 beginPath 防止中间连线）
   ctx.save();
   ctx.globalAlpha = f.blushOp * 0.45;
   ctx.fillStyle = pal.accent;
   ctx.beginPath();
-  ctx.ellipse(108, 100, 11, 6.5, 0, 0, Math.PI * 2);
-  ctx.ellipse(172, 100, 11, 6.5, 0, 0, Math.PI * 2);
+  traceEllipse(ctx, 108, 100, 11, 6.5, 0);
+  ctx.fill();
+  ctx.beginPath();
+  traceEllipse(ctx, 172, 100, 11, 6.5, 0);
   ctx.fill();
   ctx.restore();
 
   // 斜椭圆黑眼圈
   ctx.fillStyle = pal.blackFur;
   ctx.beginPath();
-  ctx.ellipse(120, 86, 12.5, 15, (16 * Math.PI) / 180, 0, Math.PI * 2);
+  traceEllipse(ctx, 120, 86, 12.5, 15, (16 * Math.PI) / 180);
   ctx.fill();
   ctx.beginPath();
-  ctx.ellipse(160, 86, 12.5, 15, (-16 * Math.PI) / 180, 0, Math.PI * 2);
+  traceEllipse(ctx, 160, 86, 12.5, 15, (-16 * Math.PI) / 180);
   ctx.fill();
 
-  // 眼睛
+  // 眼睛（左右独立 beginPath 防止中间连线）
   if (f.useLineEyes) {
     ctx.strokeStyle = "#FFFDF9";
     ctx.lineWidth = 3.1;
@@ -663,13 +680,17 @@ function drawPandaCanvas(ctx, size, f, theme) {
     var ry = Math.max(0.8, 5.6 * f.eyeScaleY);
     ctx.fillStyle = "#FFFDF9";
     ctx.beginPath();
-    ctx.ellipse(121, 85, 5.3, ry, 0, 0, Math.PI * 2);
-    ctx.ellipse(159, 85, 5.3, ry, 0, 0, Math.PI * 2);
+    traceEllipse(ctx, 121, 85, 5.3, ry, 0);
+    ctx.fill();
+    ctx.beginPath();
+    traceEllipse(ctx, 159, 85, 5.3, ry, 0);
     ctx.fill();
     if (f.eyeScaleY > 0.3) {
       ctx.fillStyle = pal.lineInk;
       ctx.beginPath();
       ctx.arc(122 + f.pupilOffsetX, 85.5 + f.pupilOffsetY, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
       ctx.arc(158 + f.pupilOffsetX, 85.5 + f.pupilOffsetY, 2.5, 0, Math.PI * 2);
       ctx.fill();
     }
@@ -678,7 +699,7 @@ function drawPandaCanvas(ctx, size, f, theme) {
   // 小黑鼻
   ctx.fillStyle = pal.lineInk;
   ctx.beginPath();
-  ctx.ellipse(140, 95, 4.2, 2.8, 0, 0, Math.PI * 2);
+  traceEllipse(ctx, 140, 95, 4.2, 2.8, 0);
   ctx.fill();
 
   // 嘴巴
@@ -687,7 +708,7 @@ function drawPandaCanvas(ctx, size, f, theme) {
   ctx.beginPath();
   if (f.mouthBlow > 0.35) {
     var r = 2.4 + f.mouthBlow * 1.1;
-    ctx.ellipse(140, 106, r, r * 0.92, 0, 0, Math.PI * 2);
+    traceEllipse(ctx, 140, 106, r, r * 0.92, 0);
   } else if (f.confettiOp > 0.5) {
     ctx.moveTo(129, 102); ctx.quadraticCurveTo(140, 115, 151, 102);
   } else if (f.pauseOp > 0.1) {
@@ -768,6 +789,8 @@ function drawPandaCanvas(ctx, size, f, theme) {
     ctx.fillStyle = pal.accent;
     ctx.beginPath();
     ctx.arc(56, 108, 4.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
     ctx.arc(140, 22, 4.5, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = pal.relax;

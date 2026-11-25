@@ -139,7 +139,7 @@ struct Index {
     const now = Date.now();
     const dt = this.pandaLastTs > 0 ? Math.min(0.05, Math.max(0.001, (now - this.pandaLastTs) / 1000)) : 0.032;
     this.pandaLastTs = now;
-    const size = this.r(this.snapshot.stage === 'done' ? 380 : 480);
+    const size = this.r(480);
     const frame = this.pandaEngine.step(dt, this.dark());
     drawPandaCanvas(this.pandaCanvas, size, frame, this.dark());
   }
@@ -153,11 +153,16 @@ struct Index {
   onPageHide(): void {
     this.metro?.pause();
     if (this.snapshot?.state === 'prep') this.metro?.endEarly();
+    this.stopBreathingAnimation();
   }
 
   onPageShow(): void {
     this.currentStore()?.refreshStreak();
     this.revision++;
+    if (this.snapshot && this.snapshot.state !== 'idle' && this.animationTimer < 0) {
+      this.pandaLastTs = Date.now();
+      this.animationTimer = setInterval(() => this.renderPandaFrame(), 32);
+    }
   }
 
   aboutToDisappear(): void {
@@ -667,10 +672,14 @@ struct Index {
       Text(this.plan!.name + ' · ' + formatPlanDuration(this.plan!)).fontSize(this.r(28))
         .fontWeight(FontWeight.Medium).fontColor(this.secondary()).margin({ top: this.r(64) })
       Column() {
-        // 小熊猫 Canvas 舞台全程保持挂载，确保 prep / breath / done 无缝阻尼过渡
+        // 小熊猫 Canvas 舞台全程保持固定尺寸，完成态用 scale 缩放避免 Canvas 重绘残影
         Canvas(this.pandaCanvas)
-          .width(this.r(this.snapshot!.stage === 'done' ? 380 : 480))
-          .height(this.r(this.snapshot!.stage === 'done' ? 380 : 480))
+          .width(this.r(480))
+          .height(this.r(480))
+          .scale({
+            x: this.snapshot!.stage === 'done' ? 0.8 : 1,
+            y: this.snapshot!.stage === 'done' ? 0.8 : 1
+          })
           .onReady(() => {
             this.pandaReady = true;
             this.pandaLastTs = Date.now();

@@ -359,18 +359,32 @@ check("里程碑识别", () => {
   if (core.detectStreakMilestone(7, 8)) throw new Error("不该命中");
 });
 
-// 静态回归：呼吸圆必须由 keyframes 驱动，不能被改回 transition
-check("呼吸动画由 keyframes 驱动（首段收紧不能静止）", () => {
+// 静态与运行时回归：小熊猫 Canvas 2D 舞台挂载与绘制链路
+check("小熊猫 Canvas 2D 动画舞台与绘制链路正常", () => {
   const fs = require("fs");
-  const wxss = fs.readFileSync(path.join(ROOT, "components/player/player.wxss"), "utf8");
   const wxml = fs.readFileSync(path.join(ROOT, "components/player/player.wxml"), "utf8");
-  ["@keyframes blob-contract", "@keyframes blob-relax"].forEach((k) => {
-    if (!wxss.includes(k)) throw new Error("缺少 " + k);
-  });
-  if (!/animation-name:\s*blob-contract/.test(wxss)) throw new Error("is-contract 未绑动画名");
-  if (/transition-property:\s*transform/.test(wxss)) throw new Error("又被改回 transition 了");
-  if (!/animation-duration:\s*\{\{phaseSec\}\}s/.test(wxml)) throw new Error("wxml 没有把时长传给 animation");
-  if (/transition-duration/.test(wxml)) throw new Error("wxml 还在写 transition-duration");
+  const js = fs.readFileSync(path.join(ROOT, "components/player/player.js"), "utf8");
+  const panda = require(path.join(ROOT, "lib/panda"));
+  if (!/canvas[^>]*type="2d"[^>]*id="pandaCanvas"/.test(wxml)) {
+    throw new Error("player.wxml 缺少 type=2d 的 #pandaCanvas");
+  }
+  if (!js.includes("initPandaCanvas") || !js.includes("scheduleRetry")) {
+    throw new Error("player.js 缺少 Canvas 2D 初始化重试逻辑");
+  }
+  const engine = new panda.PandaEngine();
+  engine.sync({ stage: "breath", state: "running", phase: "contract", remaining: 3, startedReps: 1, contractSec: 3, relaxSec: 3 });
+  const frame = engine.step(0.032, "light");
+  if (!(frame.lift >= 0 && frame.lift <= 1)) throw new Error("PandaEngine step 返回异常 lift");
+  const noop = () => {};
+  const mockCtx = {
+    save: noop, restore: noop, clearRect: noop, scale: noop, translate: noop, rotate: noop,
+    beginPath: noop, closePath: noop, moveTo: noop, lineTo: noop, quadraticCurveTo: noop,
+    bezierCurveTo: noop, arc: noop, ellipse: noop, fill: noop, stroke: noop, clip: noop,
+    setLineDash: noop,
+    createRadialGradient: () => ({ addColorStop: noop })
+  };
+  panda.drawPandaCanvas(mockCtx, 240, frame, "light");
+  panda.drawPandaCanvas(mockCtx, 240, frame, "dark");
 });
 
 shareCheck()

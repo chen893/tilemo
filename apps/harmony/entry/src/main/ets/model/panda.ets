@@ -671,6 +671,8 @@ export function drawPandaCanvas(ctx: CanvasRenderingContext2D, size: number, f: 
   ctx.fillStyle = pal.accent;
   ctx.beginPath();
   ctx.ellipse(108, 100, 11, 6.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
   ctx.ellipse(172, 100, 11, 6.5, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
@@ -703,12 +705,16 @@ export function drawPandaCanvas(ctx: CanvasRenderingContext2D, size: number, f: 
     ctx.fillStyle = '#FFFDF9';
     ctx.beginPath();
     ctx.ellipse(121, 85, 5.3, ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
     ctx.ellipse(159, 85, 5.3, ry, 0, 0, Math.PI * 2);
     ctx.fill();
     if (f.eyeScaleY > 0.3) {
       ctx.fillStyle = pal.lineInk;
       ctx.beginPath();
       ctx.arc(122 + f.pupilOffsetX, 85.5 + f.pupilOffsetY, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
       ctx.arc(158 + f.pupilOffsetX, 85.5 + f.pupilOffsetY, 2.5, 0, Math.PI * 2);
       ctx.fill();
     }
@@ -798,6 +804,8 @@ export function drawPandaCanvas(ctx: CanvasRenderingContext2D, size: number, f: 
     ctx.fillStyle = pal.accent;
     ctx.beginPath();
     ctx.arc(56, 108, 4.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
     ctx.arc(140, 22, 4.5, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = pal.relax;
