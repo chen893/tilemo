@@ -1,3 +1,5 @@
+
+
 <p align="center">
   <img src="apps/web/public/icon.svg" width="84" alt="今天提了么" />
 </p>
@@ -58,6 +60,7 @@ tilemo/
 │  ├─ data/           # Store + StorageAdapter + tgm: 数据模型(两端共用,localStorage / AsyncStorage)
 │  ├─ core/           # Metro 节拍引擎 + 域数学(heatLevel/recomputeStreak/recordSession)+ QUOTES
 │  ├─ design-tokens/  # 视觉 token 单一源(浅/深,RN 直读 TS,web 注入 CSS 变量)
+│  ├─ share-card/     # 成就卡片与二维码(两端共用)
 │  └─ store/          # Zustand 响应层(移动端用)
 ├─ index.html         # 迁移前的原始单文件(保留为参照,勿改)
 └─ turbo.json / pnpm-workspace.yaml
